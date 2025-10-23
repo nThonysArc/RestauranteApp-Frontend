@@ -114,7 +114,7 @@ public class LoginController {
         scene.getStylesheets().add(org.kordamp.bootstrapfx.BootstrapFX.bootstrapFXStylesheet());
 
         // Configura y muestra el nuevo Stage
-        currentStage.setTitle("Restaurante POS - Panel Principal");
+        currentStage.setTitle("Restaurante POS - Panel Principasl");
         currentStage.setScene(scene);
         currentStage.setResizable(true); // El Dashboard suele ser redimensionable
         currentStage.centerOnScreen();
