@@ -26,4 +26,6 @@ module proyectopos.restauranteappfrontend {
 
     // Exponer el modelo para que Gson pueda acceder a él si es necesario (buena práctica)
     exports proyectopos.restauranteappfrontend.model;
+
+    opens proyectopos.restauranteappfrontend.model to com.google.gson;
 }

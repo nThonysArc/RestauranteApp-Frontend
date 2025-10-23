@@ -2,6 +2,7 @@ package proyectopos.restauranteappfrontend.services;
 
 import com.google.gson.Gson;
 import proyectopos.restauranteappfrontend.model.LoginRequest;
+import proyectopos.restauranteappfrontend.model.LoginResponse;
 
 import java.io.IOException;
 import java.net.URI;
@@ -9,12 +10,8 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
-/**
- * Maneja la comunicación con el endpoint de autenticación del backend.
- */
 public class AuthService {
 
-    // URL base de tu backend (Ajustar si es diferente)
     private static final String BASE_URL = "http://localhost:8080";
     private static final String LOGIN_ENDPOINT = BASE_URL + "/api/auth/login";
 
@@ -27,34 +24,34 @@ public class AuthService {
     }
 
     /**
-     * Realiza la llamada HTTP POST al backend para intentar iniciar sesión.
-     * * @param username Nombre de usuario.
+     * Intenta autenticar al usuario contra el backend.
+     * @param username Nombre de usuario.
      * @param password Contraseña.
-     * @return true si el backend devuelve un código 200 (OK), false en caso contrario.
-     * @throws IOException Si hay un error de red o de I/O.
+     * @return El token JWT si la autenticación es exitosa (status 200), null en caso contrario.
+     * @throws IOException Si hay un error de red o I/O.
      * @throws InterruptedException Si la operación es interrumpida.
      */
-    public boolean authenticate(String username, String password) throws IOException, InterruptedException {
-
-        // 1. Crear el objeto de petición
+    public String authenticate(String username, String password) throws IOException, InterruptedException {
         LoginRequest loginRequest = new LoginRequest(username, password);
-
-        // 2. Serializar el objeto a JSON
         String jsonPayload = gson.toJson(loginRequest);
 
-        // 3. Construir la petición HTTP
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(LOGIN_ENDPOINT))
-                .header("Content-Type", "application/json") // Indica que estamos enviando JSON
+                .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(jsonPayload))
                 .build();
 
-        // 4. Enviar la petición y obtener la respuesta
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
-        // 5. Verificar el código de estado (200 OK -> éxito)
-        // Nota: En un sistema real, un 200 contendría un JWT o un token de sesión.
-        // Por ahora, solo verificamos el éxito de la conexión.
-        return response.statusCode() == 200;
+        if (response.statusCode() == 200) {
+            // Deserializar la respuesta JSON para obtener el token
+            LoginResponse loginResponse = gson.fromJson(response.body(), LoginResponse.class);
+            return loginResponse.getToken();
+        } else {
+            // Podrías analizar otros códigos de error (401, 403, 500) si quieres
+            // y lanzar excepciones específicas. Por ahora, devolvemos null.
+            System.err.println("Error en login - Status: " + response.statusCode() + ", Body: " + response.body());
+            return null;
+        }
     }
 }
