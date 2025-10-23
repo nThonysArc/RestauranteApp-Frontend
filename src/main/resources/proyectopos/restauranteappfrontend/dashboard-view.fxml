@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane
+        xmlns="http://javafx.com/javafx/20.0.1"
+        xmlns:fx="http://javafx.com/fxml/1"
+        prefHeight="700.0" prefWidth="1200.0"
+        style="-fx-background-color: #f8f9fa;">
+
+    <Label layoutX="400.0" layoutY="300.0" text="PANEL PRINCIPAL DEL POS"
+           textFill="#343a40">
+        <font>
+            <Font name="System Bold" size="36.0" />
+        </font>
+    </Label>
+    <Label layoutX="400.0" layoutY="350.0" text="Aquí irán los pedidos, productos y la caja."
+           textFill="#6c757d">
+        <font>
+            <Font size="18.0" />
+        </font>
+    </Label>
+</AnchorPane>
