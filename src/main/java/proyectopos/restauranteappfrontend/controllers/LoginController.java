@@ -101,26 +101,19 @@ public class LoginController {
     private void navigateToDashboard() throws IOException {
         // Obtiene el Stage (ventana) actual a partir del botón de login
         Stage currentStage = (Stage) loginButton.getScene().getWindow();
-
-        // Carga el nuevo FXML del Dashboard
-        // Nota: La ruta debe coincidir con la ubicación en la carpeta resources
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/proyectopos/restauranteappfrontend/dashboard-view.fxml"));
         Parent root = loader.load();
 
         // Crea una nueva escena
         Scene scene = new Scene(root);
-
-        // Aplica el estilo BootstrapFX a la nueva escena
+        // Aplica el estilo BootstrapFX
         scene.getStylesheets().add(org.kordamp.bootstrapfx.BootstrapFX.bootstrapFXStylesheet());
-
-        // Configura y muestra el nuevo Stage
         currentStage.setTitle("Restaurante POS - Panel Principasl");
         currentStage.setScene(scene);
-        currentStage.setResizable(true); // El Dashboard suele ser redimensionable
+        currentStage.setResizable(true);
         currentStage.centerOnScreen();
         currentStage.show();
     }
-
 
     /**
      * Habilita o deshabilita los controles durante el proceso de login.
@@ -131,7 +124,7 @@ public class LoginController {
         passwordField.setDisable(disabled);
         loginButton.setDisable(disabled);
     }
-    // Método auxiliar para manejar errores y mostrar en UI
+    // Método auxiliar para manejar errores y mostrar en la interfaz
     private void handleUIError(String message, Exception e) {
         System.err.println(message + ": " + e.getMessage());
         e.printStackTrace(); // Imprime el stack trace completo en la consola

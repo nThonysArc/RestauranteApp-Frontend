@@ -4,13 +4,13 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
-import org.kordamp.bootstrapfx.BootstrapFX; // Importación necesaria para el estilo
+import org.kordamp.bootstrapfx.BootstrapFX;
 
 import java.io.IOException;
 
 public class MainApplication extends Application {
 
-    // Nombre del archivo FXML
+    // name del archivo FXML
     private static final String LOGIN_VIEW_FILE = "login-view.fxml";
     private static final int WIDTH = 800;
     private static final int HEIGHT = 600;
@@ -18,17 +18,16 @@ public class MainApplication extends Application {
     @Override
     public void start(Stage stage) throws IOException {
         try {
-            // 1. Cargar el FXML de login.
+            // para cargar el FXML de login
             FXMLLoader fxmlLoader = new FXMLLoader(MainApplication.class.getResource(LOGIN_VIEW_FILE));
 
-            // 2. Configurar la escena con el tamaño deseado.
+            // tamaño deseado de la escene
             Scene scene = new Scene(fxmlLoader.load(), WIDTH, HEIGHT);
 
-            // 3. APLICAR BOOTSTRAPFX CSS
-            // Esto carga los estilos de la librería para dar una apariencia moderna.
+            // BOOTSTRAPFX CSS
             scene.getStylesheets().add(BootstrapFX.bootstrapFXStylesheet());
 
-            // 4. Configurar y mostrar la ventana (Stage)
+            // Configurar y mostrar la ventana
             stage.setTitle("Restaurante POS - Iniciar Sesión");
             stage.setScene(scene);
             stage.setResizable(false); // La ventana de login no debería ser redimensionable
