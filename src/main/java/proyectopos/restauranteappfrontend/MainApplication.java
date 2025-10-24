@@ -4,39 +4,47 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
-import org.kordamp.bootstrapfx.BootstrapFX;
+import org.kordamp.bootstrapfx.BootstrapFX; // Asegúrate que está importado
 
 import java.io.IOException;
+import java.net.URL; // ⬅️ AÑADIDO
 
 public class MainApplication extends Application {
 
-    // name del archivo FXML
     private static final String LOGIN_VIEW_FILE = "login-view.fxml";
+    private static final String DARK_THEME_CSS = "dark-theme.css"; // ⬅️ AÑADIDO
     private static final int WIDTH = 800;
     private static final int HEIGHT = 600;
 
     @Override
     public void start(Stage stage) throws IOException {
         try {
-            // para cargar el FXML de login
             FXMLLoader fxmlLoader = new FXMLLoader(MainApplication.class.getResource(LOGIN_VIEW_FILE));
-
-            // tamaño deseado de la escene
             Scene scene = new Scene(fxmlLoader.load(), WIDTH, HEIGHT);
 
-            // BOOTSTRAPFX CSS
+            // --- ESTILOS (MODIFICADO) ---
+            // 1. Cargar BootstrapFX (como ya lo hacías)
             scene.getStylesheets().add(BootstrapFX.bootstrapFXStylesheet());
 
-            // Configurar y mostrar la ventana
+            // 2. Cargar nuestro tema oscuro DESPUÉS
+            URL cssUrl = MainApplication.class.getResource(DARK_THEME_CSS);
+            if (cssUrl != null) {
+                scene.getStylesheets().add(cssUrl.toExternalForm());
+                System.out.println("Dark theme loaded successfully."); // Mensaje de depuración
+            } else {
+                System.err.println("Warning: Could not load dark theme CSS (" + DARK_THEME_CSS + ")");
+            }
+            // --- FIN ESTILOS ---
+
             stage.setTitle("Restaurante POS - Iniciar Sesión");
             stage.setScene(scene);
-            stage.setResizable(false); // La ventana de login no debería ser redimensionable
+            stage.setResizable(false);
             stage.show();
 
         } catch (IOException e) {
-            // Manejo de errores si el archivo FXML no se encuentra o no se puede cargar
             System.err.println("Error al cargar la vista FXML (" + LOGIN_VIEW_FILE + "): " + e.getMessage());
             e.printStackTrace();
+            throw e; // Relanzar para que se vea el error
         } catch (Exception e) {
             System.err.println("Error al iniciar la aplicación: " + e.getMessage());
             e.printStackTrace();

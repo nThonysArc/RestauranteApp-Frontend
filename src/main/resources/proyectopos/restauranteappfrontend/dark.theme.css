@@ -1,0 +1,123 @@
+/* --- dark-theme.css --- */
+
+/* Estilos Generales y Tema Oscuro */
+.root {
+    -fx-base: #1f2937; /* Gris oscuro para base */
+    -fx-background: #111827; /* Fondo aún más oscuro */
+    -fx-control-inner-background: #374151; /* Interior de controles (listas, tablas) */
+    -fx-control-inner-background-alt: derive(-fx-control-inner-background, 20%);
+    -fx-accent: #3b82f6; /* Azul como color de acento principal */
+    -fx-focus-color: #3b82f6;
+    -fx-faint-focus-color: #3b82f633; /* Azul con transparencia */
+
+    /* Colores de texto */
+    -fx-text-base-color: #d1d5db; /* Gris claro para texto normal */
+    -fx-text-background-color: derive(-fx-text-base-color, 20%);
+    -fx-text-fill: -fx-text-base-color; /* Alias para consistencia */
+    -fx-prompt-text-fill: #6b7280; /* Texto de 'prompt' más tenue */
+
+    /* Colores específicos */
+    -color-success: #10b981; /* Verde */
+    -color-danger: #ef4444; /* Rojo */
+    -color-warning: #f59e0b; /* Amarillo/Naranja */
+    -color-info: #3b82f6; /* Azul */
+    -color-secondary: #6b7280; /* Gris */
+}
+
+/* Fondo principal */
+.background {
+    -fx-background-color: -fx-background;
+}
+
+/* Estilo de Tarjeta (para paneles) */
+.card {
+    -fx-background-color: #1f2937; /* Gris oscuro */
+    -fx-padding: 15px;
+    -fx-border-color: #4b5563; /* Borde gris más claro */
+    -fx-border-width: 1px;
+    -fx-border-radius: 8px;
+    -fx-background-radius: 8px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 10, 0.5, 0, 2);
+}
+
+/* Encabezados */
+.h1 { -fx-font-size: 24pt; -fx-font-weight: bold; -fx-text-fill: -fx-accent; }
+.h2 { -fx-font-size: 18pt; -fx-font-weight: bold; -fx-text-fill: #e5e7eb; } /* Gris más claro */
+.h3 { -fx-font-size: 14pt; -fx-font-weight: bold; -fx-text-fill: #d1d5db; }
+
+/* Labels de Información (similar a Bootstrap) */
+.lbl-info { -fx-text-fill: -color-info; }
+.lbl-success { -fx-text-fill: -color-success; }
+.lbl-warning { -fx-text-fill: -color-warning; }
+.lbl-danger { -fx-text-fill: -color-danger; }
+
+/* Estilos para Tablas y Listas */
+.table-view, .list-view {
+    -fx-background-color: -fx-control-inner-background;
+    -fx-border-color: #4b5563;
+    -fx-border-width: 1px;
+}
+.table-view .column-header-background {
+    -fx-background-color: #4b5563; /* Cabeceras más oscuras */
+}
+.table-view .column-header {
+    -fx-background-color: transparent;
+    -fx-font-weight: bold;
+    -fx-text-fill: #e5e7eb;
+}
+.table-view .cell, .list-view .list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: -fx-text-base-color;
+    -fx-border-color: transparent transparent #4b5563 transparent; /* Líneas separadoras */
+}
+.table-view .cell:selected, .list-view .list-cell:selected {
+    -fx-background-color: -fx-accent;
+    -fx-text-fill: white;
+}
+.table-view .placeholder, .list-view .placeholder {
+    -fx-alignment: center;
+}
+.table-view .placeholder .label, .list-view .placeholder .label {
+    -fx-text-fill: #6b7280; /* Placeholder más tenue */
+}
+
+
+/* Estilos para Botones (BootstrapFX + Colores HTML) */
+.button {
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 6px;
+    -fx-border-radius: 6px;
+    -fx-padding: 8px 15px; /* Ajusta el padding si es necesario */
+}
+/* Reemplaza colores de BootstrapFX si ya los usas, o añade estos */
+.btn-primary { -fx-background-color: #2563eb; }
+.btn-primary:hover { -fx-background-color: #1d4ed8; }
+.btn-success { -fx-background-color: #059669; }
+.btn-success:hover { -fx-background-color: #047857; }
+.btn-danger { -fx-background-color: #dc2626; }
+.btn-danger:hover { -fx-background-color: #b91c1c; }
+.btn-warning { -fx-background-color: #d97706; -fx-text-fill: #111827; } /* Texto oscuro para amarillo */
+.btn-warning:hover { -fx-background-color: #b45309; }
+.btn-info { -fx-background-color: #0ea5e9; }
+.btn-info:hover { -fx-background-color: #0284c7; }
+.btn-secondary { -fx-background-color: #4b5563; }
+.btn-secondary:hover { -fx-background-color: #374151; }
+
+/* Estilo específico para botones de mesa */
+.mesa-button {
+    -fx-font-size: 14pt;
+    -fx-min-width: 80px;
+    -fx-min-height: 80px;
+    -fx-pref-width: 80px;
+    -fx-pref-height: 80px;
+    -fx-alignment: center;
+    -fx-text-alignment: center;
+}
+.mesa-button .label { /* Para centrar texto si usas Graphic */
+     -fx-alignment: center;
+}
+.mesa-libre { -fx-background-color: -color-success; }
+.mesa-ocupada { -fx-background-color: -color-danger; }
+.mesa-pagando { -fx-background-color: -color-warning; -fx-text-fill: #111827; }
+.mesa-reservada { -fx-background-color: -color-secondary; -fx-cursor: default; } /* Gris, no clickeable */

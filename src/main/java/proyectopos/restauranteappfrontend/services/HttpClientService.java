@@ -41,7 +41,27 @@ public class HttpClientService {
         return sendRequest(request, responseType);
     }
 
-    // --- (Añadir métodos PUT, DELETE genéricos si los necesitas) ---
+    // --- AÑADIDO: Método PUT Genérico ---
+    public <T> T put(String endpoint, Object bodyPayload, Type responseType) throws IOException, InterruptedException, AuthenticationException {
+        String jsonPayload = gson.toJson(bodyPayload);
+        HttpRequest request = buildAuthenticatedRequest(endpoint)
+                .header("Content-Type", "application/json")
+                .PUT(HttpRequest.BodyPublishers.ofString(jsonPayload))
+                .build();
+        return sendRequest(request, responseType);
+    }
+
+    // --- AÑADIDO: Método DELETE Genérico ---
+    public <T> T delete(String endpoint, Type responseType) throws IOException, InterruptedException, AuthenticationException {
+        HttpRequest request = buildAuthenticatedRequest(endpoint)
+                .DELETE()
+                .build();
+        // A menudo, DELETE devuelve un 204 No Content con cuerpo vacío
+        // sendRequest puede necesitar un ajuste si el cuerpo está vacío y Gson falla
+        // Por ahora, asumimos que devuelve un objeto o lo manejamos en el servicio
+        return sendRequest(request, responseType);
+    }
+
 
     // --- Método auxiliar para construir la petición con Token ---
     private HttpRequest.Builder buildAuthenticatedRequest(String endpoint) throws AuthenticationException {
@@ -59,9 +79,13 @@ public class HttpClientService {
     private <T> T sendRequest(HttpRequest request, Type responseType) throws IOException, InterruptedException, AuthenticationException {
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
-        if (response.statusCode() == 200) {
+        // 200 (OK) o 201 (Created)
+        if (response.statusCode() == 200 || response.statusCode() == 201) {
             // Deserializa el cuerpo JSON al tipo esperado (puede ser un objeto o una lista)
             return gson.fromJson(response.body(), responseType);
+        } else if (response.statusCode() == 204) {
+            // 204 (No Content) - Común en DELETE
+            return null; // Devolvemos null
         } else if (response.statusCode() == 401 || response.statusCode() == 403) {
             // Error de autenticación o autorización
             System.err.println("Error de autenticación/autorización - Status: " + response.statusCode());
@@ -71,7 +95,7 @@ public class HttpClientService {
             // Otros errores del servidor
             System.err.println("Error del servidor - Status: " + response.statusCode() + ", Body: " + response.body());
             // Lanza una excepción genérica de I/O o crea una personalizada
-            throw new IOException("Error del servidor: " + response.statusCode());
+            throw new IOException("Error del servidor: " + response.statusCode() + " - " + response.body());
         }
     }
 
