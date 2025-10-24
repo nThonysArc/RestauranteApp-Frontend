@@ -1,0 +1,99 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "▶️ Ejecutar Frontend",
+            "type": "shell",
+            "command": "${workspaceFolder}/mvnw",
+            "args": ["javafx:run"],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated",
+                "focus": true,
+                "echo": true,
+                "showReuseMessage": false,
+                "clear": true
+            },
+            "problemMatcher": [],
+            "detail": "Ejecuta la aplicación JavaFX usando Maven"
+        },
+        {
+            "label": "🧹 Limpiar Proyecto",
+            "type": "shell",
+            "command": "${workspaceFolder}/mvnw",
+            "args": ["clean"],
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "focus": false
+            },
+            "problemMatcher": [],
+            "detail": "Limpia los archivos compilados (target/)"
+        },
+        {
+            "label": "🔨 Compilar",
+            "type": "shell",
+            "command": "${workspaceFolder}/mvnw",
+            "args": ["compile"],
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            },
+            "problemMatcher": [
+                "$maven"
+            ],
+            "detail": "Compila el código fuente"
+        },
+        {
+            "label": "📦 Compilar e Instalar",
+            "type": "shell",
+            "command": "${workspaceFolder}/mvnw",
+            "args": ["clean", "install"],
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            },
+            "problemMatcher": [
+                "$maven"
+            ],
+            "detail": "Limpia, compila y empaqueta el proyecto"
+        },
+        {
+            "label": "🔄 Limpiar + Compilar + Ejecutar",
+            "type": "shell",
+            "command": "${workspaceFolder}/mvnw",
+            "args": ["clean", "compile", "javafx:run"],
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated",
+                "focus": true,
+                "clear": true
+            },
+            "problemMatcher": [],
+            "detail": "Proceso completo: limpia, compila y ejecuta"
+        },
+        {
+            "label": "🧪 Ejecutar Tests",
+            "type": "shell",
+            "command": "${workspaceFolder}/mvnw",
+            "args": ["test"],
+            "group": "test",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            },
+            "problemMatcher": [
+                "$maven"
+            ],
+            "detail": "Ejecuta las pruebas unitarias"
+        }
+    ]
+}

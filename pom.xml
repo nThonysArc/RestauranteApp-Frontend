@@ -12,8 +12,8 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <junit.version>5.10.2</junit.version>
-    <java.version>20</java.version> <!-- Uso de propiedad para versión de Java -->
-    <javafx.version>20.0.1</javafx.version> <!-- Uso de propiedad para versión de JavaFX -->
+    <java.version>20</java.version>
+    <javafx.version>20.0.1</javafx.version>
     <maven.compiler.plugin.version>3.13.0</maven.compiler.plugin.version>
     <javafx.maven.plugin.version>0.0.8</javafx.maven.plugin.version>
   </properties>
@@ -60,12 +60,11 @@
       <version>0.4.0</version>
     </dependency>
 
-    <!-- CONEXIÓN CON EL BACKEND (Añadido) -->
-    <!-- Necesitas un cliente HTTP para comunicarte con tu API REST (backend Spring Boot) -->
+    <!-- CONEXIÓN CON EL BACKEND -->
     <dependency>
       <groupId>com.google.code.gson</groupId>
       <artifactId>gson</artifactId>
-      <version>2.11.0</version> <!-- Popular para serializar/deserializar JSON -->
+      <version>2.11.0</version>
     </dependency>
 
     <!-- Pruebas -->
@@ -96,7 +95,7 @@
         </configuration>
       </plugin>
 
-      <!-- JavaFX Plugin (AJUSTE CRÍTICO EN mainClass) -->
+      <!-- JavaFX Plugin -->
       <plugin>
         <groupId>org.openjfx</groupId>
         <artifactId>javafx-maven-plugin</artifactId>
@@ -105,8 +104,8 @@
           <execution>
             <id>default-cli</id>
             <configuration>
-              <!-- RUTA CORREGIDA: Paquete + Clase Principal -->
-              <mainClass>proyectopos.restauranteappfrontend.MainApplication</mainClass>              <launcher>app</launcher>
+              <mainClass>proyectopos.restauranteappfrontend.MainApplication</mainClass>
+              <launcher>app</launcher>
               <jlinkZipName>app</jlinkZipName>
               <jlinkImageName>app</jlinkImageName>
               <noManPages>true</noManPages>
