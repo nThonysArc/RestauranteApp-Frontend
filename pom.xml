@@ -106,8 +106,7 @@
             <id>default-cli</id>
             <configuration>
               <!-- RUTA CORREGIDA: Paquete + Clase Principal -->
-              <mainClass>com.restauranteapp.frontend.MainApplication</mainClass>
-              <launcher>app</launcher>
+              <mainClass>proyectopos.restauranteappfrontend.MainApplication</mainClass>              <launcher>app</launcher>
               <jlinkZipName>app</jlinkZipName>
               <jlinkImageName>app</jlinkImageName>
               <noManPages>true</noManPages>
