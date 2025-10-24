@@ -17,8 +17,10 @@ import proyectopos.restauranteappfrontend.services.CategoriaService;
 import proyectopos.restauranteappfrontend.services.HttpClientService;
 import proyectopos.restauranteappfrontend.services.MesaService;
 import proyectopos.restauranteappfrontend.services.ProductoService;
+import com.google.gson.JsonSyntaxException;
 // ❗️(Importar PedidoMesaService y DTOs cuando los crees)
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional; // ⬅️ IMPORTAR para diálogo
 
@@ -109,8 +111,98 @@ public class DashboardController {
     }
 
 
-    private void cargarDatosIniciales() { /* ... (sin cambios) ... */ }
-    private void mostrarMesas(List<MesaDTO> mesas) { /* ... (sin cambios, usa Botones) ... */ }
+    private void cargarDatosIniciales() {
+        infoLabel.setText("Cargando datos iniciales..."); // Mensaje inicial
+        infoLabel.getStyleClass().setAll("lbl-warning"); // Estilo de carga
+
+        new Thread(() -> {
+            List<MesaDTO> mesas = null;
+            List<CategoriaDTO> categorias = null;
+            List<ProductoDTO> productos = null;
+            String errorMessage = null; // Variable para guardar mensaje de error específico
+            Exception caughtException = null; // Variable para guardar la excepción
+
+            try {
+                System.out.println("Dashboard: Iniciando carga de datos en hilo secundario..."); // DEBUG
+
+                System.out.println("Dashboard: Intentando cargar mesas..."); // DEBUG
+                mesas = mesaService.getAllMesas();
+                System.out.println("Dashboard: Mesas cargadas OK (" + (mesas != null ? mesas.size() : 0) + " encontradas)."); // DEBUG
+
+                System.out.println("Dashboard: Intentando cargar categorías..."); // DEBUG
+                categorias = categoriaService.getAllCategorias();
+                System.out.println("Dashboard: Categorías cargadas OK (" + (categorias != null ? categorias.size() : 0) + " encontradas)."); // DEBUG
+
+                System.out.println("Dashboard: Intentando cargar productos..."); // DEBUG
+                productos = productoService.getAllProductos();
+                System.out.println("Dashboard: Productos cargados OK (" + (productos != null ? productos.size() : 0) + " encontrados)."); // DEBUG
+
+            } catch (HttpClientService.AuthenticationException e) {
+                errorMessage = "Error de autenticación: Sesión inválida o expirada.";
+                caughtException = e;
+                System.err.println("Dashboard: Error de autenticación al cargar datos."); // DEBUG
+            } catch (JsonSyntaxException e) { // Captura específica para errores de formato JSON
+                errorMessage = "Error al procesar respuesta del servidor (formato JSON inválido).";
+                caughtException = e;
+                System.err.println("Dashboard: Error de sintaxis JSON."); // DEBUG
+            } catch (IOException e) { // Captura errores de red / IO / Status != 2xx
+                errorMessage = "Error de conexión con el servidor: " + e.getMessage();
+                caughtException = e;
+                System.err.println("Dashboard: Error de IO/Red."); // DEBUG
+            } catch (InterruptedException e) {
+                errorMessage = "Carga de datos interrumpida.";
+                caughtException = e;
+                Thread.currentThread().interrupt(); // Restablecer estado de interrupción
+                System.err.println("Dashboard: Hilo interrumpido."); // DEBUG
+            } catch (Exception e) { // Captura cualquier otro error inesperado
+                errorMessage = "Error inesperado al cargar datos.";
+                caughtException = e;
+                System.err.println("Dashboard: Error inesperado general."); // DEBUG
+            }
+
+            // --- Actualización de la UI ---
+            // Se ejecuta siempre, haya error o no.
+            final List<MesaDTO> finalMesas = mesas;
+            final List<CategoriaDTO> finalCategorias = categorias;
+            final List<ProductoDTO> finalProductos = productos;
+            final String finalErrorMessage = errorMessage;
+            final Exception finalCaughtException = caughtException;
+
+            Platform.runLater(() -> {
+                if (finalErrorMessage == null) {
+                    // Éxito: Mostrar todos los datos
+                    System.out.println("Dashboard: Actualizando UI con datos cargados."); // DEBUG
+                    mostrarMesas(finalMesas);
+                    mostrarCategorias(finalCategorias);
+                    mostrarProductos(finalProductos);
+                    infoLabel.setText("Datos cargados correctamente.");
+                    infoLabel.getStyleClass().setAll("lbl-success");
+                } else {
+                    // Error: Mostrar mensaje de error y limpiar vistas
+                    System.out.println("Dashboard: Actualizando UI con mensaje de error: " + finalErrorMessage); // DEBUG
+                    infoLabel.setText(finalErrorMessage);
+                    infoLabel.getStyleClass().setAll("lbl-danger");
+                    // Limpiar vistas para que no se queden en "Cargando..."
+                    mesasContainer.getChildren().clear();
+                    mesasContainer.getChildren().add(new Label("Error al cargar mesas"));
+                    categoriasListView.getItems().clear();
+                    categoriasListView.setPlaceholder(new Label("Error al cargar categorías"));
+                    productosData.clear();
+                    productosTableView.setPlaceholder(new Label("Error al cargar productos"));
+
+                    if (finalCaughtException != null) {
+                        // Imprimir el stack trace en la consola para más detalles
+                        finalCaughtException.printStackTrace();
+                    }
+                    if (finalCaughtException instanceof HttpClientService.AuthenticationException) {
+                        // TODO: Implementar lógica para cerrar sesión y volver al login
+                        System.out.println("Dashboard: Redirigir a Login debido a AuthenticationException.");
+                    }
+                }
+            });
+
+        }).start();
+    }    private void mostrarMesas(List<MesaDTO> mesas) { /* ... (sin cambios, usa Botones) ... */ }
 
     private void handleSeleccionarMesa(MesaDTO mesa) {
         if ("DISPONIBLE".equals(mesa.getEstado())) {
