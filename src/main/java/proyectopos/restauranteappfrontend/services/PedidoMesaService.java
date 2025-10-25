@@ -32,24 +32,32 @@ public class PedidoMesaService {
         return httpClientService.get(PEDIDOS_ENDPOINT, listType);
     }
 
-    // --- NUEVO MÉTODO: Cambiar Estado del Pedido ---
     /**
      * Solicita al backend cambiar el estado de un pedido.
      * @param pedidoId El ID del pedido a modificar.
      * @param nuevoEstado El nuevo estado deseado (ej. "LISTO_PARA_ENTREGAR").
      * @return El PedidoMesaDTO actualizado devuelto por el backend.
+     */
+    public PedidoMesaDTO cambiarEstadoPedido(Long pedidoId, String nuevoEstado) throws IOException, InterruptedException, HttpClientService.AuthenticationException {
+        String endpoint = PEDIDOS_ENDPOINT + "/" + pedidoId + "/estado/" + nuevoEstado;
+        return httpClientService.put(endpoint, null, PedidoMesaDTO.class); // Enviamos null como cuerpo
+    }
+
+    // --- ¡¡NUEVO MÉTODO: Cerrar Pedido!! ---
+    /**
+     * Solicita al backend cerrar un pedido específico.
+     * Esto usualmente cambia el estado a CERRADO y libera la mesa.
+     * @param pedidoId El ID del pedido a cerrar.
+     * @return El PedidoMesaDTO actualizado con el estado CERRADO.
      * @throws IOException Si hay error de red.
      * @throws InterruptedException Si se interrumpe la llamada.
      * @throws HttpClientService.AuthenticationException Si el token no es válido o no tiene permisos.
      */
-    public PedidoMesaDTO cambiarEstadoPedido(Long pedidoId, String nuevoEstado) throws IOException, InterruptedException, HttpClientService.AuthenticationException {
-        String endpoint = PEDIDOS_ENDPOINT + "/" + pedidoId + "/estado/" + nuevoEstado;
-        // La llamada PUT no necesita cuerpo en este caso, solo la URL
-        return httpClientService.put(endpoint, null, PedidoMesaDTO.class); // Enviamos null como cuerpo
+    public PedidoMesaDTO cerrarPedido(Long pedidoId) throws IOException, InterruptedException, HttpClientService.AuthenticationException {
+        String endpoint = PEDIDOS_ENDPOINT + "/" + pedidoId + "/cerrar";
+        // La llamada PUT a este endpoint específico no requiere cuerpo
+        return httpClientService.put(endpoint, null, PedidoMesaDTO.class);
     }
     // --- FIN NUEVO MÉTODO ---
-
-
-    // --- (Aquí se podrían añadir métodos para cerrar o eliminar pedidos si no los tienes ya) ---
 
 }
