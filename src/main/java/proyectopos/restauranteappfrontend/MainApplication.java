@@ -1,38 +1,46 @@
 package proyectopos.restauranteappfrontend;
 
+import java.io.IOException;
+import java.net.URL;
+
+import org.kordamp.bootstrapfx.BootstrapFX;
+
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
-import org.kordamp.bootstrapfx.BootstrapFX; // Asegúrate que está importado
-
-import java.io.IOException;
-import java.net.URL; // ⬅️ AÑADIDO
 
 public class MainApplication extends Application {
 
     private static final String LOGIN_VIEW_FILE = "login-view.fxml";
-    private static final String DARK_THEME_CSS = "dark-theme.css"; // ⬅️ AÑADIDO
+    // --- RUTA MODIFICADA ---
+    // Añadimos la ruta completa desde la raíz de resources (classpath)
+    private static final String DARK_THEME_CSS = "/proyectopos/restauranteappfrontend/dark-theme.css"; 
+    // --- FIN RUTA MODIFICADA ---
     private static final int WIDTH = 800;
     private static final int HEIGHT = 600;
 
     @Override
     public void start(Stage stage) throws IOException {
         try {
-            FXMLLoader fxmlLoader = new FXMLLoader(MainApplication.class.getResource(LOGIN_VIEW_FILE));
+            // --- CORRECCIÓN AL CARGAR FXML ---
+            // Usar getResource con la ruta absoluta también para FXML por consistencia
+            FXMLLoader fxmlLoader = new FXMLLoader(MainApplication.class.getResource("/proyectopos/restauranteappfrontend/" + LOGIN_VIEW_FILE));
+            // --- FIN CORRECCIÓN FXML ---
+            
             Scene scene = new Scene(fxmlLoader.load(), WIDTH, HEIGHT);
 
-            // --- ESTILOS (MODIFICADO) ---
-            // 1. Cargar BootstrapFX (como ya lo hacías)
+            // --- ESTILOS ---
             scene.getStylesheets().add(BootstrapFX.bootstrapFXStylesheet());
 
-            // 2. Cargar nuestro tema oscuro DESPUÉS
-            URL cssUrl = MainApplication.class.getResource(DARK_THEME_CSS);
+            // Cargar nuestro tema oscuro
+            URL cssUrl = MainApplication.class.getResource(DARK_THEME_CSS); // Usamos la ruta modificada
             if (cssUrl != null) {
                 scene.getStylesheets().add(cssUrl.toExternalForm());
-                System.out.println("Dark theme loaded successfully."); // Mensaje de depuración
+                System.out.println("Dark theme loaded successfully."); 
             } else {
-                System.err.println("Warning: Could not load dark theme CSS (" + DARK_THEME_CSS + ")");
+                // Mensaje de error más específico
+                System.err.println("Error: Could not load dark theme CSS from path: " + DARK_THEME_CSS);
             }
             // --- FIN ESTILOS ---
 
@@ -44,7 +52,7 @@ public class MainApplication extends Application {
         } catch (IOException e) {
             System.err.println("Error al cargar la vista FXML (" + LOGIN_VIEW_FILE + "): " + e.getMessage());
             e.printStackTrace();
-            throw e; // Relanzar para que se vea el error
+            throw e; 
         } catch (Exception e) {
             System.err.println("Error al iniciar la aplicación: " + e.getMessage());
             e.printStackTrace();
