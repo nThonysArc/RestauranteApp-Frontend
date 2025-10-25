@@ -8,14 +8,14 @@ import java.util.stream.Collectors;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
-import javafx.application.Platform;
+import javafx.application.Platform; // Importado en paso anterior
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.fxml.FXML;
-import javafx.geometry.Insets;
+import javafx.fxml.FXML; // Importado en paso anterior
+import javafx.geometry.Insets; // Importado en paso anterior
 import javafx.scene.Node;
-import javafx.scene.control.Button; // <-- IMPORTACIÓN AÑADIDA
-import javafx.scene.control.Label;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label; // Importado en paso anterior
 import javafx.scene.control.ListView;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.layout.TilePane;
@@ -26,7 +26,9 @@ import proyectopos.restauranteappfrontend.model.dto.PedidoMesaDTO;
 import proyectopos.restauranteappfrontend.services.HttpClientService;
 import proyectopos.restauranteappfrontend.services.PedidoMesaService;
 
-public class KitchenController {
+// --- ¡¡IMPLEMENTAR INTERFAZ!! ---
+public class KitchenController implements CleanableController {
+// --- FIN IMPLEMENTACIÓN ---
 
     @FXML private TilePane pedidosContainer;
     @FXML private Label statusLabelKitchen;
@@ -65,9 +67,10 @@ public class KitchenController {
 
         new Thread(() -> {
             try {
+                // Idealmente filtrar en backend: ?estado=ABIERTO
                 List<PedidoMesaDTO> todosLosPedidos = pedidoMesaService.getAllPedidos();
                 List<PedidoMesaDTO> pedidosPendientes = todosLosPedidos.stream()
-                        .filter(p -> "ABIERTO".equalsIgnoreCase(p.getEstado()))
+                        .filter(p -> "ABIERTO".equalsIgnoreCase(p.getEstado())) // O añadir EN_COCINA
                         .collect(Collectors.toList());
 
                 Platform.runLater(() -> {
@@ -114,22 +117,20 @@ public class KitchenController {
         try {
             LocalDateTime fechaHora = LocalDateTime.parse(pedido.getFechaHoraCreacion());
             horaFormateada = fechaHora.format(TIME_FORMATTER);
-        } catch (Exception e) {
-            System.err.println("Advertencia: No se pudo formatear la fecha/hora del pedido " + pedido.getIdPedidoMesa());
-        }
+        } catch (Exception e) { /* Ignorar error de formato */ }
         Label horaLabel = new Label("Hora: " + horaFormateada);
         horaLabel.setStyle("-fx-font-size: 10pt; -fx-text-fill: #9ca3af;");
 
         ListView<String> productosList = new ListView<>();
-        // Esta línea ahora debería funcionar con la importación correcta
         ObservableList<String> items = FXCollections.observableArrayList();
-        for (DetallePedidoMesaDTO detalle : pedido.getDetalles()) {
-            items.add(detalle.getCantidad() + " x " + detalle.getNombreProducto());
+        if (pedido.getDetalles() != null) { // Comprobar si detalles no es null
+            for (DetallePedidoMesaDTO detalle : pedido.getDetalles()) {
+                items.add(detalle.getCantidad() + " x " + detalle.getNombreProducto());
+            }
         }
         productosList.setItems(items);
         productosList.setPrefHeight(100);
         productosList.setFocusTraversable(false);
-        // Esta línea ahora debería funcionar con la importación correcta
         productosList.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 
 
@@ -143,65 +144,43 @@ public class KitchenController {
         return tarjeta;
     }
 
-// --- MÉTODO MODIFICADO: handleMarcarListo ---
     private void handleMarcarListo(PedidoMesaDTO pedido, Node tarjetaNode) {
         tarjetaNode.setOpacity(0.5);
         tarjetaNode.setDisable(true);
         statusLabelKitchen.setText("Marcando pedido Mesa " + pedido.getNumeroMesa() + " como listo...");
         statusLabelKitchen.getStyleClass().setAll("lbl-warning");
 
-        // --- Definir el nuevo estado ---
-        // Puedes cambiarlo a "EN_COCINA" si implementaste ese paso intermedio
-        final String NUEVO_ESTADO = "LISTO_PARA_ENTREGAR";
+        final String NUEVO_ESTADO = "LISTO_PARA_ENTREGAR"; // O el estado que definiste
 
         new Thread(() -> {
             try {
-                // --- ¡¡LLAMADA REAL AL SERVICIO!! ---
-                System.out.println("Llamando al backend para cambiar estado del pedido ID: "
-                                    + pedido.getIdPedidoMesa() + " a " + NUEVO_ESTADO);
                 PedidoMesaDTO pedidoActualizado = pedidoMesaService.cambiarEstadoPedido(pedido.getIdPedidoMesa(), NUEVO_ESTADO);
-                // --- FIN LLAMADA REAL ---
 
                 Platform.runLater(() -> {
-                    // Verificar si el estado realmente cambió (el backend devuelve el DTO actualizado)
                     if (pedidoActualizado != null && NUEVO_ESTADO.equalsIgnoreCase(pedidoActualizado.getEstado())) {
                         statusLabelKitchen.setText("Pedido Mesa " + pedido.getNumeroMesa() + " marcado como listo.");
                         statusLabelKitchen.getStyleClass().setAll("lbl-success");
-                        // Quitar la tarjeta de la vista
                         pedidosContainer.getChildren().remove(tarjetaNode);
                         if (pedidosContainer.getChildren().isEmpty()) {
                             pedidosContainer.getChildren().add(new Label("No hay pedidos pendientes."));
                         }
                     } else {
-                        // Si el estado no cambió como se esperaba (raro, pero posible)
-                        handleError("Error: El estado del pedido no se actualizó correctamente en el backend.", null);
+                        handleError("Error: El estado del pedido no se actualizó correctamente.", null);
                         tarjetaNode.setOpacity(1.0);
                         tarjetaNode.setDisable(false);
                     }
                 });
 
-            // Capturar excepciones específicas del servicio
             } catch (HttpClientService.AuthenticationException e) {
-                 Platform.runLater(() -> {
-                    handleError("Error de permisos al marcar pedido.", e);
-                    tarjetaNode.setOpacity(1.0);
-                    tarjetaNode.setDisable(false);
-                 });
+                 Platform.runLater(() -> { handleError("Error de permisos.", e); tarjetaNode.setOpacity(1.0); tarjetaNode.setDisable(false); });
             } catch (IOException | InterruptedException e) {
-                 Platform.runLater(() -> {
-                    handleError("Error de red al marcar pedido.", e);
-                    tarjetaNode.setOpacity(1.0);
-                    tarjetaNode.setDisable(false);
-                 });
-            } catch (Exception e) { // Captura genérica para otros errores (ej. IllegalArgumentException del backend)
-                 Platform.runLater(() -> {
-                    handleError("Error al marcar pedido: " + e.getMessage(), e);
-                    tarjetaNode.setOpacity(1.0);
-                    tarjetaNode.setDisable(false);
-                 });
+                 Platform.runLater(() -> { handleError("Error de red.", e); tarjetaNode.setOpacity(1.0); tarjetaNode.setDisable(false); });
+            } catch (Exception e) {
+                 Platform.runLater(() -> { handleError("Error al marcar pedido: " + e.getMessage(), e); tarjetaNode.setOpacity(1.0); tarjetaNode.setDisable(false); });
             }
         }).start();
     }
+
 
     private void handleError(String message, Exception e) {
         System.err.println(message);
@@ -210,6 +189,10 @@ public class KitchenController {
         statusLabelKitchen.getStyleClass().setAll("lbl-danger");
     }
 
+    /**
+     * Método de la interfaz CleanableController. Detiene el Timeline.
+     */
+    @Override // <-- AÑADIR @Override
     public void cleanup() {
         if (refreshTimeline != null) {
             refreshTimeline.stop();
