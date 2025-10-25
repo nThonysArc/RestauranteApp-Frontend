@@ -1,16 +1,17 @@
 package proyectopos.restauranteappfrontend.services;
 
-import com.google.gson.reflect.TypeToken;
-import proyectopos.restauranteappfrontend.model.dto.PedidoMesaDTO;
-
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.List;
 
+import com.google.gson.reflect.TypeToken;
+
+import proyectopos.restauranteappfrontend.model.dto.PedidoMesaDTO;
+
 public class PedidoMesaService {
 
     private final HttpClientService httpClientService;
-    private static final String PEDIDOS_ENDPOINT = "/api/pedidosMesa"; // Endpoint del backend
+    private static final String PEDIDOS_ENDPOINT = "/api/pedidosMesa";
 
     public PedidoMesaService() {
         this.httpClientService = new HttpClientService();
@@ -18,30 +19,37 @@ public class PedidoMesaService {
 
     /**
      * Envía un nuevo pedido (POST) al backend.
-     *
-     * @param nuevoPedido El DTO del pedido a crear.
-     * @return El PedidoMesaDTO guardado, con el ID y totales asignados por el backend.
-     * @throws IOException Si hay error de red.
-     * @throws InterruptedException Si se interrumpe la llamada.
-     * @throws HttpClientService.AuthenticationException Si el token no es válido.
      */
     public PedidoMesaDTO crearPedido(PedidoMesaDTO nuevoPedido) throws IOException, InterruptedException, HttpClientService.AuthenticationException {
-        // Usa el método post genérico del HttpClientService
-        // 1. Endpoint: "/api/pedidosMesa"
-        // 2. Body: El objeto nuevoPedido (Gson lo convertirá a JSON)
-        // 3. Clase de respuesta esperada: PedidoMesaDTO.class
         return httpClientService.post(PEDIDOS_ENDPOINT, nuevoPedido, PedidoMesaDTO.class);
     }
 
     /**
-     * (Opcional) Obtiene la lista de todos los pedidos.
-     * @return Una lista de PedidoMesaDTO.
+     * Obtiene la lista de todos los pedidos.
      */
     public List<PedidoMesaDTO> getAllPedidos() throws IOException, InterruptedException, HttpClientService.AuthenticationException {
         Type listType = new TypeToken<List<PedidoMesaDTO>>() {}.getType();
         return httpClientService.get(PEDIDOS_ENDPOINT, listType);
     }
 
-    // --- (Aquí se podrían añadir métodos para listar, cerrar o eliminar pedidos) ---
+    // --- NUEVO MÉTODO: Cambiar Estado del Pedido ---
+    /**
+     * Solicita al backend cambiar el estado de un pedido.
+     * @param pedidoId El ID del pedido a modificar.
+     * @param nuevoEstado El nuevo estado deseado (ej. "LISTO_PARA_ENTREGAR").
+     * @return El PedidoMesaDTO actualizado devuelto por el backend.
+     * @throws IOException Si hay error de red.
+     * @throws InterruptedException Si se interrumpe la llamada.
+     * @throws HttpClientService.AuthenticationException Si el token no es válido o no tiene permisos.
+     */
+    public PedidoMesaDTO cambiarEstadoPedido(Long pedidoId, String nuevoEstado) throws IOException, InterruptedException, HttpClientService.AuthenticationException {
+        String endpoint = PEDIDOS_ENDPOINT + "/" + pedidoId + "/estado/" + nuevoEstado;
+        // La llamada PUT no necesita cuerpo en este caso, solo la URL
+        return httpClientService.put(endpoint, null, PedidoMesaDTO.class); // Enviamos null como cuerpo
+    }
+    // --- FIN NUEVO MÉTODO ---
+
+
+    // --- (Aquí se podrían añadir métodos para cerrar o eliminar pedidos si no los tienes ya) ---
 
 }

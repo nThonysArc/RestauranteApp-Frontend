@@ -1,9 +1,11 @@
 package proyectopos.restauranteappfrontend.controllers;
 
+import java.io.IOException;
+import java.net.URL;
+
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -11,11 +13,10 @@ import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
-
-import java.io.IOException;
-
+import proyectopos.restauranteappfrontend.MainApplication; // <-- MODIFICADO: Necesario para cargar CSS
+import proyectopos.restauranteappfrontend.model.LoginResponse; // <-- MODIFICADO: Necesario para cargar CSS
 import proyectopos.restauranteappfrontend.services.AuthService;
-import proyectopos.restauranteappfrontend.util.SessionManager;
+import proyectopos.restauranteappfrontend.util.SessionManager; // <-- AÑADIR IMPORT
 
 public class LoginController {
 
@@ -49,23 +50,21 @@ public class LoginController {
         // Usamos un nuevo hilo para no bloquear la UI durante la llamada de red
         new Thread(() -> {
             try {
-                // Llamamos al servicio de autenticación
-                String receivedToken = authService.authenticate(username, password);
+               // <-- MODIFICADO: Esperamos un objeto LoginResponse, no un String
+                LoginResponse response = authService.authenticate(username, password);
 
-                // Volvemos al hilo de JavaFX para actualizar la UI
                 Platform.runLater(() -> {
-                    if (receivedToken != null) {
+                    // <-- MODIFICADO: Verificamos el objeto
+                    if (response != null) { 
                         messageLabel.setText("¡Inicio de sesión exitoso!");
                         messageLabel.getStyleClass().setAll("lbl-success");
 
-                        // ❗️ PASO IMPORTANTE: Guardar el token para futuras peticiones
-                        // Por ahora, lo guardaremos en una variable estática simple
-                        // (En una app real, usarías un gestor de sesión/estado)
-                        SessionManager.getInstance().setToken(receivedToken);
-                        System.out.println("Token recibido y guardado: " + receivedToken); // Para depuración
+                        // <-- MODIFICADO: Guardamos el objeto completo en la sesión
+                        SessionManager.getInstance().setLoginResponse(response);
+                        System.out.println("Login exitoso. Rol: " + response.getRol());
 
                         try {
-                            navigateToDashboard();
+                            navigateToMainView(); 
                         } catch (IOException e) {
                             handleUIError("Error interno al cargar la app.", e);
                         }
@@ -95,25 +94,39 @@ public class LoginController {
     }
 
     /**
-     * Carga y muestra la ventana principal de la aplicación (Dashboard), reemplazando la de login.
+     * Carga y muestra la ventana principal de la aplicación (MainView),
+     * que actúa como el "caparazón" o enrutador.
      * @throws IOException si el archivo FXML no se encuentra.
      */
-    private void navigateToDashboard() throws IOException {
+    // <-- MODIFICADO: Método 'navigateToDashboard' renombrado y actualizado
+    private void navigateToMainView() throws IOException {
         // Obtiene el Stage (ventana) actual a partir del botón de login
         Stage currentStage = (Stage) loginButton.getScene().getWindow();
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/proyectopos/restauranteappfrontend/dashboard-view.fxml"));
+        
+        // 1. Carga el NUEVO "main-view.fxml"
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/proyectopos/restauranteappfrontend/main-view.fxml"));
         Parent root = loader.load();
 
-        // Crea una nueva escena
-        Scene scene = new Scene(root);
-        // Aplica el estilo BootstrapFX
+        // 2. Crea una nueva escena (más grande para la app principal)
+        Scene scene = new Scene(root, 1280, 720); // Tamaño más grande
+        
+        // 3. Aplica los estilos (BootstrapFX y nuestro tema oscuro)
         scene.getStylesheets().add(org.kordamp.bootstrapfx.BootstrapFX.bootstrapFXStylesheet());
-        currentStage.setTitle("Restaurante POS - Panel Principasl");
+        
+        URL cssUrl = MainApplication.class.getResource("/proyectopos/restauranteappfrontend/dark-theme.css");
+        if (cssUrl != null) {
+            scene.getStylesheets().add(cssUrl.toExternalForm());
+        } else {
+            System.err.println("Error: No se pudo cargar dark-theme.css en LoginController");
+        }
+
+        currentStage.setTitle("Restaurante POS"); // Título general de la app
         currentStage.setScene(scene);
-        currentStage.setResizable(true);
+        currentStage.setResizable(true); // Permitir redimensionar la app principal
         currentStage.centerOnScreen();
         currentStage.show();
     }
+    // <-- FIN MODIFICADO
 
     /**
      * Habilita o deshabilita los controles durante el proceso de login.
@@ -124,6 +137,7 @@ public class LoginController {
         passwordField.setDisable(disabled);
         loginButton.setDisable(disabled);
     }
+    
     // Método auxiliar para manejar errores y mostrar en la interfaz
     private void handleUIError(String message, Exception e) {
         System.err.println(message + ": " + e.getMessage());

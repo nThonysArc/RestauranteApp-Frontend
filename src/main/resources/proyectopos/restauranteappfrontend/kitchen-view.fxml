@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.TilePane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<VBox spacing="10.0" styleClass="background" xmlns="http://javafx.com/javafx/20.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="proyectopos.restauranteappfrontend.controllers.KitchenController">
+   <padding>
+      <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+   </padding>
+   <children>
+      <Label text="Pedidos Pendientes para Cocina" styleClass="h2">
+         <VBox.margin>
+            <Insets bottom="10.0" />
+         </VBox.margin>
+      </Label>
+
+      <ScrollPane fitToWidth="true" hbarPolicy="NEVER" styleClass="card" VBox.vgrow="ALWAYS">
+         <content>
+            <TilePane fx:id="pedidosContainer" hgap="15.0" vgap="15.0" prefColumns="4">
+               <padding>
+                  <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+               </padding>
+               <Label text="Cargando pedidos..." />
+            </TilePane>
+         </content>
+      </ScrollPane>
+
+      <Label fx:id="statusLabelKitchen" text="Inicializando..." />
+   </children>
+</VBox>

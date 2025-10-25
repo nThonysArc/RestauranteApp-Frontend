@@ -1,14 +1,15 @@
 package proyectopos.restauranteappfrontend.services;
 
-import com.google.gson.Gson;
-import proyectopos.restauranteappfrontend.model.LoginRequest;
-import proyectopos.restauranteappfrontend.model.LoginResponse;
-
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+
+import com.google.gson.Gson;
+
+import proyectopos.restauranteappfrontend.model.LoginRequest;
+import proyectopos.restauranteappfrontend.model.LoginResponse;
 
 public class AuthService {
 
@@ -27,11 +28,12 @@ public class AuthService {
      * Intenta autenticar al usuario contra el backend.
      * @param username Nombre de usuario.
      * @param password Contraseña.
-     * @return El token JWT si la autenticación es exitosa (status 200), null en caso contrario.
+     * @return El objeto LoginResponse completo (token + datos de usuario) o null si falla. // <-- MODIFICADO
      * @throws IOException Si hay un error de red o I/O.
      * @throws InterruptedException Si la operación es interrumpida.
      */
-    public String authenticate(String username, String password) throws IOException, InterruptedException {
+    // <-- MODIFICADO: El tipo de retorno ahora es LoginResponse
+    public LoginResponse authenticate(String username, String password) throws IOException, InterruptedException {
         LoginRequest loginRequest = new LoginRequest(username, password);
         String jsonPayload = gson.toJson(loginRequest);
 
@@ -44,12 +46,11 @@ public class AuthService {
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
         if (response.statusCode() == 200) {
-            // Deserializar la respuesta JSON para obtener el token
+            // Deserializar la respuesta JSON completa
             LoginResponse loginResponse = gson.fromJson(response.body(), LoginResponse.class);
-            return loginResponse.getToken();
+            // <-- MODIFICADO: Devolvemos el objeto completo
+            return loginResponse;
         } else {
-            // Podrías analizar otros códigos de error (401, 403, 500) si quieres
-            // y lanzar excepciones específicas. Por ahora, devolvemos null.
             System.err.println("Error en login - Status: " + response.statusCode() + ", Body: " + response.body());
             return null;
         }

@@ -1,38 +1,52 @@
 package proyectopos.restauranteappfrontend.controllers;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import com.google.gson.JsonSyntaxException;
+
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
-import javafx.scene.control.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Dialog;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
+import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.TilePane;
-import javafx.geometry.Pos;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.TilePane;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.Text; // ⬅️ AÑADIDO para texto en botones de mesa
+import javafx.scene.text.Text;
 import proyectopos.restauranteappfrontend.model.dto.CategoriaDTO;
 import proyectopos.restauranteappfrontend.model.dto.DetallePedidoMesaDTO;
 import proyectopos.restauranteappfrontend.model.dto.MesaDTO;
 import proyectopos.restauranteappfrontend.model.dto.PedidoMesaDTO;
 import proyectopos.restauranteappfrontend.model.dto.ProductoDTO;
-import proyectopos.restauranteappfrontend.services.*;
-import com.google.gson.JsonSyntaxException;
-
-// Import Ikonli si decides usar iconos (ejemplo comentado abajo)
-// import org.kordamp.ikonli.javafx.FontIcon;
-// import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
+import proyectopos.restauranteappfrontend.services.CategoriaService;
+import proyectopos.restauranteappfrontend.services.HttpClientService;
+import proyectopos.restauranteappfrontend.services.MesaService;
+import proyectopos.restauranteappfrontend.services.PedidoMesaService;
+import proyectopos.restauranteappfrontend.services.ProductoService;
+import proyectopos.restauranteappfrontend.util.SessionManager;
 
 public class DashboardController {
 
@@ -83,7 +97,11 @@ public class DashboardController {
         configurarTablaPedidoActual();
         cargarDatosIniciales();
         configurarSeleccionProducto();
+        
+        // --- MODIFICADO (PASO 3) ---
+        // Esta llamada ahora SÓLO añadirá los botones si el rol es ADMIN
         configurarBotonesAdmin();
+        // --- FIN MODIFICADO ---
 
         crearPedidoButton.setDisable(true);
 
@@ -180,7 +198,22 @@ public class DashboardController {
         });
     }
 
+    // --- MÉTODO MODIFICADO (PASO 3) ---
     private void configurarBotonesAdmin() {
+        
+        // 1. Obtener el rol de la sesión
+        String userRole = SessionManager.getInstance().getRole();
+
+        // 2. Comprobar si NO es Admin
+        if (userRole == null || !userRole.equals("ROLE_ADMIN")) {
+            // Si no es admin, no crear ni añadir los botones.
+            System.out.println("Ocultando botones de admin. Rol de usuario: " + userRole); // Log de depuración
+            return; 
+        }
+        
+        // 3. Si llegamos aquí, ES ADMIN. Creamos los botones como antes.
+        System.out.println("Mostrando botones de admin. Rol de usuario: " + userRole); // Log de depuración
+        
         Button crearProductoBtn = new Button("Crear Producto");
         crearProductoBtn.getStyleClass().addAll("btn", "btn-info");
         crearProductoBtn.setOnAction(e -> handleCrearProducto());
@@ -219,6 +252,8 @@ public class DashboardController {
             e.printStackTrace();
         }
     }
+    // --- FIN MÉTODO MODIFICADO ---
+
 
     private void cargarDatosIniciales() {
         infoLabel.setText("Cargando datos iniciales...");
@@ -455,7 +490,9 @@ public class DashboardController {
         ComboBox<CategoriaDTO> categoriaPadreComboBox = new ComboBox<>();
         ObservableList<CategoriaDTO> categoriasPadre = categoriasData.stream()
                 .filter(c -> c.getIdCategoriaPadre() == null)
+                // --- CORRECCIÓN DE ERROR AQUÍ ---
                 .collect(Collectors.toCollection(FXCollections::observableArrayList));
+                // --- FIN DE CORRECCIÓN ---
 
         categoriaPadreComboBox.setItems(categoriasPadre);
         categoriaPadreComboBox.setPromptText("Opcional: Seleccione categoría padre");
@@ -547,7 +584,9 @@ public class DashboardController {
         ComboBox<CategoriaDTO> comboCategoriaPadre = new ComboBox<>();
         ObservableList<CategoriaDTO> categoriasPadre = categoriasData.stream()
                 .filter(c -> c.getIdCategoriaPadre() == null)
+                // --- CORRECCIÓN DE ERROR AQUÍ (Identico al anterior) ---
                 .collect(Collectors.toCollection(FXCollections::observableArrayList));
+                // --- FIN DE CORRECCIÓN ---
         comboCategoriaPadre.setItems(categoriasPadre);
         comboCategoriaPadre.setPromptText("Seleccione categoría principal");
 
@@ -562,7 +601,9 @@ public class DashboardController {
             if (categoriaPadreSeleccionada != null) {
                 ObservableList<CategoriaDTO> subcategoriasFiltradas = categoriasData.stream()
                         .filter(sub -> categoriaPadreSeleccionada.getIdCategoria().equals(sub.getIdCategoriaPadre()))
+                        // --- CORRECCIÓN DE ERROR AQUÍ (Tercera instancia) ---
                         .collect(Collectors.toCollection(FXCollections::observableArrayList));
+                        // --- FIN DE CORRECCIÓN ---
 
                 if (!subcategoriasFiltradas.isEmpty()) {
                     comboSubcategoria.setItems(subcategoriasFiltradas);
@@ -786,7 +827,14 @@ public class DashboardController {
         infoLabel.getStyleClass().setAll("lbl-danger");
         System.err.println("Error de autenticación, se debería redirigir al login.");
         mostrarAlerta("Sesión Expirada", "Su sesión ha expirado o no es válida. Por favor, vuelva a iniciar sesión.");
-        // (Lógica de cierre de sesión y cambio de ventana iría aquí)
+        
+        // --- MODIFICACIÓN (PASO 3) ---
+        // Si hay un error de autenticación, deberíamos cerrar la sesión
+        // y volver al login. Esta lógica ya está en MainController,
+        // pero podríamos necesitar una forma de llamarla desde aquí.
+        
+        // (Por ahora, lo dejamos así, pero idealmente esto
+        // llamaría a un método en MainController para cerrar sesión)
     }
 
     private void handleGenericError(String message, Exception e) {

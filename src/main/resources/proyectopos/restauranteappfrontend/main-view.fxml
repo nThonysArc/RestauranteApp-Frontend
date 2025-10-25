@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<BorderPane xmlns="http://javafx.com/javafx/20.0.1"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="proyectopos.restauranteappfrontend.controllers.MainController"
+            prefHeight="720.0" prefWidth="1280.0"
+            styleClass="background">
+
+    <top>
+        <VBox>
+            <MenuBar fx:id="mainMenuBar"> 
+                <Menu text="Navegación">
+                    <MenuItem text="Panel Principal (Mesas)" onAction="#handleShowDashboard" />
+                    <MenuItem text="Vista de Cocina" onAction="#handleShowCocina" />
+                    <MenuItem text="Vista de Caja" onAction="#handleShowCaja" />
+                </Menu>
+                
+                <Menu fx:id="adminMenu" text="Administración"> 
+                    <MenuItem text="Gestionar Empleados" onAction="#handleShowEmployeeManagement" />
+                    </Menu>
+                <Menu text="Sistema">
+                    <MenuItem text="Cerrar Sesión" onAction="#handleCerrarSesion" />
+                </Menu>
+            </MenuBar>
+            
+            <Label fx:id="userInfoLabel" text="Usuario: Cargando..." 
+                   style="-fx-padding: 5 10 5 10; -fx-text-fill: -fx-text-base-color;">
+                <font>
+                    <Font name="System Bold" size="12.0" />
+                </font>
+            </Label>
+        </VBox>
+    </top>
+
+    <center>
+        <StackPane fx:id="mainContentPane" BorderPane.alignment="CENTER">
+            <Label text="Cargando vista..." styleClass="h2"/>
+        </StackPane>
+    </center>
+    
+</BorderPane>
