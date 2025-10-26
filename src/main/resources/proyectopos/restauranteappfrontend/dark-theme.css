@@ -119,5 +119,5 @@
 }
 .mesa-libre { -fx-background-color: -color-success; }
 .mesa-ocupada { -fx-background-color: -color-danger; }
-.mesa-pagando { -fx-background-color: -color-warning; -fx-text-fill: #111827; }
+.mesa-pagando { -fx-background-color: -color-warning; -fx-text-fill: #111827; } /* Amarillo para LISTO */
 .mesa-reservada { -fx-background-color: -color-secondary; -fx-cursor: default; } /* Gris, no clickeable */

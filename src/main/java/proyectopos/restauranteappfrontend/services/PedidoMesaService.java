@@ -24,6 +24,15 @@ public class PedidoMesaService {
         return httpClientService.post(PEDIDOS_ENDPOINT, nuevoPedido, PedidoMesaDTO.class);
     }
 
+    // --- ¡¡NUEVO MÉTODO AÑADIDO!! ---
+    /**
+     * Envía una actualización (PUT) a un pedido existente en el backend.
+     */
+    public PedidoMesaDTO actualizarPedido(Long pedidoId, PedidoMesaDTO pedido) throws IOException, InterruptedException, HttpClientService.AuthenticationException {
+        String endpoint = PEDIDOS_ENDPOINT + "/" + pedidoId;
+        return httpClientService.put(endpoint, pedido, PedidoMesaDTO.class);
+    }
+
     /**
      * Obtiene la lista de todos los pedidos.
      */
@@ -31,6 +40,16 @@ public class PedidoMesaService {
         Type listType = new TypeToken<List<PedidoMesaDTO>>() {}.getType();
         return httpClientService.get(PEDIDOS_ENDPOINT, listType);
     }
+
+    // --- ¡¡NUEVO MÉTODO AÑADIDO!! ---
+    /**
+     * Obtiene el pedido activo de una mesa específica.
+     */
+    public PedidoMesaDTO getPedidoActivoPorMesa(Long mesaId) throws IOException, InterruptedException, HttpClientService.AuthenticationException {
+        String endpoint = PEDIDOS_ENDPOINT + "/mesa/" + mesaId + "/activo";
+        return httpClientService.get(endpoint, PedidoMesaDTO.class);
+    }
+
 
     /**
      * Solicita al backend cambiar el estado de un pedido.

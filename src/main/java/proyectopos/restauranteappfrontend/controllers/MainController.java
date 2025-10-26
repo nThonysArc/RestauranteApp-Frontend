@@ -10,6 +10,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
+import javafx.scene.control.MenuItem; // Import necesario
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import proyectopos.restauranteappfrontend.MainApplication;
@@ -22,9 +23,12 @@ public class MainController {
     @FXML private MenuBar mainMenuBar;
     @FXML private Menu adminMenu;
 
-    // --- NUEVO: Variable para guardar el controlador actual ---
+    @FXML private MenuItem menuItemDashboard;
+    @FXML private MenuItem menuItemCocina;
+    @FXML private MenuItem menuItemCaja;
+
+
     private Object currentController = null;
-    // --- FIN NUEVO ---
 
 
     @FXML
@@ -35,20 +39,36 @@ public class MainController {
         if (userRole == null || !SessionManager.getInstance().isAuthenticated()) {
             userInfoLabel.setText("Usuario: SESIÓN INVÁLIDA");
             if (adminMenu != null) adminMenu.setVisible(false);
+            if(menuItemDashboard != null) menuItemDashboard.setVisible(false);
+            if(menuItemCocina != null) menuItemCocina.setVisible(false);
+            if(menuItemCaja != null) menuItemCaja.setVisible(false);
             handleCerrarSesion();
             return;
         }
 
         userInfoLabel.setText("Usuario: " + userName + " (" + userRole.replace("ROLE_", "") + ")");
 
-        // Mostrar/Ocultar Menú Admin
         if (adminMenu != null) {
             adminMenu.setVisible("ROLE_ADMIN".equals(userRole));
         } else {
              System.err.println("Advertencia: No se pudo encontrar el Menu 'adminMenu'.");
         }
 
-        // Carga inicial de vista según rol
+        boolean esAdmin = "ROLE_ADMIN".equals(userRole);
+        boolean esMesero = "ROLE_MESERO".equals(userRole);
+        boolean esCocina = "ROLE_COCINA".equals(userRole);
+        boolean esCajero = "ROLE_CAJERO".equals(userRole);
+
+        if (menuItemDashboard != null) {
+            menuItemDashboard.setVisible(esAdmin || esMesero);
+        }
+        if (menuItemCocina != null) {
+            menuItemCocina.setVisible(esAdmin || esCocina);
+        }
+        if (menuItemCaja != null) {
+            menuItemCaja.setVisible(esAdmin || esCajero);
+        }
+
         switch (userRole) {
             case "ROLE_ADMIN":
             case "ROLE_MESERO":
@@ -72,8 +92,8 @@ public class MainController {
      * Antes de cargar la nueva vista, llama a cleanup() en el controlador anterior si existe.
      * @param fxmlFile El nombre del archivo FXML (ej. "dashboard-view.fxml")
      */
-    // --- ¡¡MÉTODO MODIFICADO PARA LLAMAR A CLEANUP!! ---
     private void loadView(String fxmlFile) {
+        FXMLLoader loader = null; // Declarar loader fuera del try para acceder en el catch
         try {
             // 1. Limpiar el controlador anterior si es necesario
             if (currentController != null && currentController instanceof CleanableController) {
@@ -83,11 +103,11 @@ public class MainController {
 
             // 2. Cargar la nueva vista y su controlador
             String fxmlPath = "/proyectopos/restauranteappfrontend/" + fxmlFile;
-            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
+            loader = new FXMLLoader(getClass().getResource(fxmlPath)); // Asignar al loader declarado fuera
             Parent view = loader.load();
 
             // 3. Obtener y guardar la referencia al NUEVO controlador
-            currentController = loader.getController();
+            currentController = loader.getController(); // Asignación correcta dentro del try
             System.out.println("Vista cargada: " + fxmlFile + ", Controlador: " + (currentController != null ? currentController.getClass().getSimpleName() : "null"));
 
             // 4. Mostrar la nueva vista
@@ -96,14 +116,11 @@ public class MainController {
 
         } catch (IOException e) {
             e.printStackTrace();
-            // Limpiar controlador actual en caso de error de carga
             currentController = null;
             mainContentPane.getChildren().clear();
             mainContentPane.getChildren().add(new Label("Error al cargar la vista: " + fxmlFile));
-            // Mostrar alerta al usuario
              new Alert(Alert.AlertType.ERROR, "No se pudo cargar la vista: " + fxmlFile + "\n" + e.getMessage()).showAndWait();
         } catch (Exception e) {
-             // Captura genérica para otros posibles errores durante la carga o cleanup
              e.printStackTrace();
              currentController = null;
              mainContentPane.getChildren().clear();
@@ -111,10 +128,7 @@ public class MainController {
              new Alert(Alert.AlertType.ERROR, "Ocurrió un error inesperado al cargar la vista:\n" + e.getMessage()).showAndWait();
         }
     }
-    // --- FIN MÉTODO MODIFICADO ---
 
-
-    // --- Métodos para los Menús (sin cambios en su lógica interna, solo llaman a loadView) ---
 
     @FXML private void handleShowDashboard() { loadView("dashboard-view.fxml"); }
     @FXML private void handleShowCocina() { loadView("kitchen-view.fxml"); }
@@ -129,7 +143,6 @@ public class MainController {
 
     @FXML
     private void handleCerrarSesion() {
-        // --- AÑADIDO: Asegurarse de limpiar el controlador actual antes de cerrar sesión ---
         if (currentController != null && currentController instanceof CleanableController) {
              try {
                   System.out.println("Llamando cleanup() antes de cerrar sesión en: " + currentController.getClass().getSimpleName());
@@ -138,12 +151,8 @@ public class MainController {
                   System.err.println("Error durante cleanup al cerrar sesión: " + e.getMessage());
                   e.printStackTrace();
              }
-             currentController = null; // Limpiar referencia
+             currentController = null;
         }
-        // --- FIN AÑADIDO ---
-
-
-        // Lógica existente para volver al login
         SessionManager.getInstance().clearSession();
         try {
             Stage stage = (Stage) mainContentPane.getScene().getWindow();

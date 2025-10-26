@@ -169,10 +169,13 @@ public class CashierController {
         new Thread(() -> {
             try {
                 List<PedidoMesaDTO> todosLosPedidos = pedidoMesaService.getAllPedidos();
-                // AJUSTA ESTOS ESTADOS SEGÚN TU FLUJO
+                
+                // --- ¡¡MODIFICACIÓN CLAVE!! ---
+                // El cajero SOLO debe ver los pedidos listos para cobrar.
                 List<PedidoMesaDTO> pedidosParaCaja = todosLosPedidos.stream()
-                        .filter(p -> "LISTO_PARA_ENTREGAR".equalsIgnoreCase(p.getEstado()) || "OCUPADA".equalsIgnoreCase(p.getEstado()))
+                        .filter(p -> "LISTO_PARA_ENTREGAR".equalsIgnoreCase(p.getEstado()))
                         .collect(Collectors.toList());
+                // --- FIN DE MODIFICACIÓN ---
 
                 Platform.runLater(() -> {
                     pedidosListData.clear();
@@ -201,8 +204,16 @@ public class CashierController {
             if (pedido.getDetalles() != null) { detallePedidoData.addAll(pedido.getDetalles()); }
 
             double subtotal = 0;
-            if(pedido.getTotal() != null) { subtotal = pedido.getTotal() / 1.18; }
-            else { subtotal = detallePedidoData.stream().mapToDouble(DetallePedidoMesaDTO::getSubtotal).sum(); }
+            if(pedido.getTotal() != null) { 
+                // Usamos el total del backend y recalculamos el subtotal base
+                subtotal = pedido.getTotal() / 1.18; 
+            }
+            // --- MODIFICACIÓN: Si el total es 0 o nulo, calcularlo desde los detalles ---
+            if (subtotal == 0) {
+                 subtotal = detallePedidoData.stream().mapToDouble(DetallePedidoMesaDTO::getSubtotal).sum();
+            }
+            // --- FIN MODIFICACIÓN ---
+            
             double igv = subtotal * 0.18;
             double total = subtotal + igv;
 

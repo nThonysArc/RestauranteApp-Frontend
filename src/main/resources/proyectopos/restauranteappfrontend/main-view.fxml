@@ -17,22 +17,23 @@
 
     <top>
         <VBox>
-            <MenuBar fx:id="mainMenuBar"> 
+            <MenuBar fx:id="mainMenuBar">
+
                 <Menu text="Navegación">
-                    <MenuItem text="Panel Principal (Mesas)" onAction="#handleShowDashboard" />
-                    <MenuItem text="Vista de Cocina" onAction="#handleShowCocina" />
-                    <MenuItem text="Vista de Caja" onAction="#handleShowCaja" />
-                </Menu>
-                
-                <Menu fx:id="adminMenu" text="Administración"> 
+                    <MenuItem fx:id="menuItemDashboard" text="Panel Principal (Mesas)" onAction="#handleShowDashboard" />
+                    <MenuItem fx:id="menuItemCocina" text="Vista de Cocina" onAction="#handleShowCocina" />
+                    <MenuItem fx:id="menuItemCaja" text="Vista de Caja" onAction="#handleShowCaja" />
+                    </Menu>
+
+                <Menu fx:id="adminMenu" text="Administración">
                     <MenuItem text="Gestionar Empleados" onAction="#handleShowEmployeeManagement" />
                     </Menu>
                 <Menu text="Sistema">
                     <MenuItem text="Cerrar Sesión" onAction="#handleCerrarSesion" />
                 </Menu>
             </MenuBar>
-            
-            <Label fx:id="userInfoLabel" text="Usuario: Cargando..." 
+
+            <Label fx:id="userInfoLabel" text="Usuario: Cargando..."
                    style="-fx-padding: 5 10 5 10; -fx-text-fill: -fx-text-base-color;">
                 <font>
                     <Font name="System Bold" size="12.0" />
@@ -43,8 +44,8 @@
 
     <center>
         <StackPane fx:id="mainContentPane" BorderPane.alignment="CENTER">
-            <Label text="Cargando vista..." styleClass="h2"/>
+             <Label text="Cargando vista..." styleClass="h2"/>
         </StackPane>
     </center>
-    
+
 </BorderPane>
