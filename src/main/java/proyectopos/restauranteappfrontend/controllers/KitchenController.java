@@ -61,6 +61,7 @@ public class KitchenController implements CleanableController {
         refreshTimeline.play();
     }
 
+    // --- ¡¡MÉTODO MODIFICADO!! ---
     private void cargarPedidosPendientes() {
         statusLabelKitchen.setText("Actualizando...");
         statusLabelKitchen.getStyleClass().setAll("lbl-warning");
@@ -69,13 +70,20 @@ public class KitchenController implements CleanableController {
             try {
                 // Idealmente filtrar en backend: ?estado=ABIERTO
                 List<PedidoMesaDTO> todosLosPedidos = pedidoMesaService.getAllPedidos();
+                
+                // --- ¡¡MODIFICACIÓN CLAVE!! ---
+                // Filtramos pedidos ABIERTOS (enviados por mesero)
+                // Y que además tengan AL MENOS UN item en estado "PENDIENTE"
                 List<PedidoMesaDTO> pedidosPendientes = todosLosPedidos.stream()
-                        .filter(p -> "ABIERTO".equalsIgnoreCase(p.getEstado())) // O añadir EN_COCINA
+                        .filter(p -> "ABIERTO".equalsIgnoreCase(p.getEstado()))
+                        .filter(p -> p.getDetalles() != null && p.getDetalles().stream()
+                                .anyMatch(d -> "PENDIENTE".equalsIgnoreCase(d.getEstadoDetalle())))
                         .collect(Collectors.toList());
+                // --- FIN MODIFICACIÓN ---
 
                 Platform.runLater(() -> {
                     mostrarPedidosEnUI(pedidosPendientes);
-                    statusLabelKitchen.setText("Pedidos actualizados. Mostrando " + pedidosPendientes.size() + " pendientes.");
+                    statusLabelKitchen.setText("Pedidos actualizados. Mostrando " + pedidosPendientes.size() + " comandas pendientes.");
                     statusLabelKitchen.getStyleClass().setAll("lbl-success");
                 });
 
@@ -103,6 +111,7 @@ public class KitchenController implements CleanableController {
         }
     }
 
+    // --- ¡¡MÉTODO MODIFICADO!! ---
     private VBox crearTarjetaPedido(PedidoMesaDTO pedido) {
         VBox tarjeta = new VBox(10);
         tarjeta.setPadding(new Insets(10));
@@ -123,11 +132,20 @@ public class KitchenController implements CleanableController {
 
         ListView<String> productosList = new ListView<>();
         ObservableList<String> items = FXCollections.observableArrayList();
-        if (pedido.getDetalles() != null) { // Comprobar si detalles no es null
-            for (DetallePedidoMesaDTO detalle : pedido.getDetalles()) {
+        
+        // --- ¡¡MODIFICACIÓN CLAVE!! ---
+        // Mostramos SOLAMENTE los items que están PENDIENTES
+        if (pedido.getDetalles() != null) { 
+            List<DetallePedidoMesaDTO> detallesPendientes = pedido.getDetalles().stream()
+                    .filter(d -> "PENDIENTE".equalsIgnoreCase(d.getEstadoDetalle()))
+                    .collect(Collectors.toList());
+
+            for (DetallePedidoMesaDTO detalle : detallesPendientes) {
                 items.add(detalle.getCantidad() + " x " + detalle.getNombreProducto());
             }
         }
+        // --- FIN MODIFICACIÓN ---
+        
         productosList.setItems(items);
         productosList.setPrefHeight(100);
         productosList.setFocusTraversable(false);
@@ -144,30 +162,40 @@ public class KitchenController implements CleanableController {
         return tarjeta;
     }
 
+    // --- ¡¡MÉTODO MODIFICADO!! ---
     private void handleMarcarListo(PedidoMesaDTO pedido, Node tarjetaNode) {
         tarjetaNode.setOpacity(0.5);
         tarjetaNode.setDisable(true);
-        statusLabelKitchen.setText("Marcando pedido Mesa " + pedido.getNumeroMesa() + " como listo...");
+        statusLabelKitchen.setText("Marcando comanda Mesa " + pedido.getNumeroMesa() + " como lista...");
         statusLabelKitchen.getStyleClass().setAll("lbl-warning");
 
-        final String NUEVO_ESTADO = "LISTO_PARA_ENTREGAR"; // O el estado que definiste
+        // Ya no usamos NUEVO_ESTADO, llamamos al endpoint específico
+        // final String NUEVO_ESTADO = "LISTO_PARA_ENTREGAR"; 
 
         new Thread(() -> {
             try {
-                PedidoMesaDTO pedidoActualizado = pedidoMesaService.cambiarEstadoPedido(pedido.getIdPedidoMesa(), NUEVO_ESTADO);
+                // --- ¡¡MODIFICACIÓN CLAVE!! ---
+                // Llamamos al nuevo endpoint que marca solo los PENDIENTES como LISTO
+                PedidoMesaDTO pedidoActualizado = pedidoMesaService.marcarPendientesComoListos(pedido.getIdPedidoMesa());
+                // --- FIN MODIFICACIÓN ---
 
                 Platform.runLater(() -> {
-                    if (pedidoActualizado != null && NUEVO_ESTADO.equalsIgnoreCase(pedidoActualizado.getEstado())) {
-                        statusLabelKitchen.setText("Pedido Mesa " + pedido.getNumeroMesa() + " marcado como listo.");
+                    // La lógica de respuesta sigue siendo válida:
+                    // El backend pondrá el pedido como LISTO_PARA_ENTREGAR si marcó items.
+                    if (pedidoActualizado != null && "LISTO_PARA_ENTREGAR".equalsIgnoreCase(pedidoActualizado.getEstado())) {
+                        statusLabelKitchen.setText("Comanda Mesa " + pedido.getNumeroMesa() + " marcada como lista.");
                         statusLabelKitchen.getStyleClass().setAll("lbl-success");
-                        pedidosContainer.getChildren().remove(tarjetaNode);
+                        pedidosContainer.getChildren().remove(tarjetaNode); // Quitamos la tarjeta
                         if (pedidosContainer.getChildren().isEmpty()) {
                             pedidosContainer.getChildren().add(new Label("No hay pedidos pendientes."));
                         }
                     } else {
-                        handleError("Error: El estado del pedido no se actualizó correctamente.", null);
+                        // Esto podría pasar si hubo un error o si el mesero añadió
+                        // más items justo ahora, volviendo el pedido a ABIERTO.
+                        handleError("Error: El estado del pedido no se actualizó (quizás fue modificado).", null);
                         tarjetaNode.setOpacity(1.0);
                         tarjetaNode.setDisable(false);
+                        cargarPedidosPendientes(); // Recargar por si acaso
                     }
                 });
 

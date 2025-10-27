@@ -27,10 +27,11 @@ public class PedidoMesaService {
     // --- ¡¡NUEVO MÉTODO AÑADIDO!! ---
     /**
      * Envía una actualización (PUT) a un pedido existente en el backend.
+     * IMPORTANTE: El DTO solo debe contener los NUEVOS items.
      */
-    public PedidoMesaDTO actualizarPedido(Long pedidoId, PedidoMesaDTO pedido) throws IOException, InterruptedException, HttpClientService.AuthenticationException {
+    public PedidoMesaDTO actualizarPedido(Long pedidoId, PedidoMesaDTO pedidoConNuevosItems) throws IOException, InterruptedException, HttpClientService.AuthenticationException {
         String endpoint = PEDIDOS_ENDPOINT + "/" + pedidoId;
-        return httpClientService.put(endpoint, pedido, PedidoMesaDTO.class);
+        return httpClientService.put(endpoint, pedidoConNuevosItems, PedidoMesaDTO.class);
     }
 
     /**
@@ -47,12 +48,21 @@ public class PedidoMesaService {
      */
     public PedidoMesaDTO getPedidoActivoPorMesa(Long mesaId) throws IOException, InterruptedException, HttpClientService.AuthenticationException {
         String endpoint = PEDIDOS_ENDPOINT + "/mesa/" + mesaId + "/activo";
-        return httpClientService.get(endpoint, PedidoMesaDTO.class);
+        try {
+            return httpClientService.get(endpoint, PedidoMesaDTO.class);
+        } catch (IOException e) {
+            // Si da un 404 (Not Found), HttpClientService lanza IOException.
+            // Lo interpretamos como que no hay pedido activo.
+            if (e.getMessage() != null && e.getMessage().contains("404")) {
+                return null; // No hay pedido activo, no es un error.
+            }
+            throw e; // Lanzar si es otro tipo de error (ej. 500, 401)
+        }
     }
 
 
     /**
-     * Solicita al backend cambiar el estado de un pedido.
+     * (DEPRECADO POR COCINA) Solicita al backend cambiar el estado de un pedido.
      * @param pedidoId El ID del pedido a modificar.
      * @param nuevoEstado El nuevo estado deseado (ej. "LISTO_PARA_ENTREGAR").
      * @return El PedidoMesaDTO actualizado devuelto por el backend.
@@ -61,6 +71,18 @@ public class PedidoMesaService {
         String endpoint = PEDIDOS_ENDPOINT + "/" + pedidoId + "/estado/" + nuevoEstado;
         return httpClientService.put(endpoint, null, PedidoMesaDTO.class); // Enviamos null como cuerpo
     }
+
+    // --- ¡¡NUEVO MÉTODO PARA COCINA!! ---
+    /**
+     * Solicita al backend marcar todos los items PENDIENTES como LISTOS.
+     * @param pedidoId El ID del pedido a modificar.
+     * @return El PedidoMesaDTO actualizado.
+     */
+    public PedidoMesaDTO marcarPendientesComoListos(Long pedidoId) throws IOException, InterruptedException, HttpClientService.AuthenticationException {
+        String endpoint = PEDIDOS_ENDPOINT + "/" + pedidoId + "/marcarListos";
+        return httpClientService.put(endpoint, null, PedidoMesaDTO.class);
+    }
+
 
     // --- ¡¡NUEVO MÉTODO: Cerrar Pedido!! ---
     /**

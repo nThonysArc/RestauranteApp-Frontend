@@ -1,3 +1,4 @@
+// DetallePedidoMesaDTO.java (Frontend)
 package proyectopos.restauranteappfrontend.model.dto;
 
 // NO más imports de jakarta.validation
@@ -13,6 +14,10 @@ public class DetallePedidoMesaDTO {
     // SIN @NotNull y @Positive
     private Double precioUnitario;
     private Double subtotal; // Campo para el subtotal
+    
+    // --- ¡¡NUEVO CAMPO AÑADIDO!! ---
+    private String estadoDetalle;
+
 
     public DetallePedidoMesaDTO() {}
 
@@ -23,6 +28,7 @@ public class DetallePedidoMesaDTO {
         this.cantidad = cantidad;
         this.precioUnitario = precioUnitario;
         calcularSubtotal(); // Calcular al crear
+        this.estadoDetalle = "PENDIENTE"; // Asumir PENDIENTE si se crea en el frontend
     }
 
     // Getters y setters (sin cambios en su lógica interna)
@@ -58,6 +64,11 @@ public class DetallePedidoMesaDTO {
     public void setSubtotal(Double subtotal){
         this.subtotal = subtotal;
     }
+
+    // --- NUEVO GETTER/SETTER ---
+    public String getEstadoDetalle() { return estadoDetalle; }
+    public void setEstadoDetalle(String estadoDetalle) { this.estadoDetalle = estadoDetalle; }
+
 
     // Método privado para calcular subtotal
     private void calcularSubtotal() {
