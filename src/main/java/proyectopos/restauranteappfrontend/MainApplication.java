@@ -14,8 +14,8 @@ public class MainApplication extends Application {
 
     private static final String LOGIN_VIEW_FILE = "login-view.fxml";
     // --- RUTA MODIFICADA ---
-    // Añadimos la ruta completa desde la raíz de resources (classpath)
-    private static final String DARK_THEME_CSS = "/proyectopos/restauranteappfrontend/dark-theme.css"; 
+    // Cambiamos al nuevo archivo de tema
+    private static final String RAIZ_IQUENA_THEME_CSS = "/proyectopos/restauranteappfrontend/raiz-iquena-theme.css";
     // --- FIN RUTA MODIFICADA ---
     private static final int WIDTH = 800;
     private static final int HEIGHT = 600;
@@ -23,28 +23,23 @@ public class MainApplication extends Application {
     @Override
     public void start(Stage stage) throws IOException {
         try {
-            // --- CORRECCIÓN AL CARGAR FXML ---
-            // Usar getResource con la ruta absoluta también para FXML por consistencia
             FXMLLoader fxmlLoader = new FXMLLoader(MainApplication.class.getResource("/proyectopos/restauranteappfrontend/" + LOGIN_VIEW_FILE));
-            // --- FIN CORRECCIÓN FXML ---
-            
             Scene scene = new Scene(fxmlLoader.load(), WIDTH, HEIGHT);
 
             // --- ESTILOS ---
-            scene.getStylesheets().add(BootstrapFX.bootstrapFXStylesheet());
+            scene.getStylesheets().add(BootstrapFX.bootstrapFXStylesheet()); // Mantenemos BootstrapFX como base
 
-            // Cargar nuestro tema oscuro
-            URL cssUrl = MainApplication.class.getResource(DARK_THEME_CSS); // Usamos la ruta modificada
+            // Cargar nuestro tema Raíz Iqueña
+            URL cssUrl = MainApplication.class.getResource(RAIZ_IQUENA_THEME_CSS); // Usamos la nueva ruta
             if (cssUrl != null) {
                 scene.getStylesheets().add(cssUrl.toExternalForm());
-                System.out.println("Dark theme loaded successfully."); 
+                System.out.println("Tema Raíz Iqueña cargado.");
             } else {
-                // Mensaje de error más específico
-                System.err.println("Error: Could not load dark theme CSS from path: " + DARK_THEME_CSS);
+                System.err.println("Error: No se pudo cargar raiz-iquena-theme.css desde: " + RAIZ_IQUENA_THEME_CSS);
             }
             // --- FIN ESTILOS ---
 
-            stage.setTitle("Restaurante POS - Iniciar Sesión");
+            stage.setTitle("Restaurante POS Raíz Iqueña - Iniciar Sesión"); // Título actualizado
             stage.setScene(scene);
             stage.setResizable(false);
             stage.show();
@@ -52,7 +47,7 @@ public class MainApplication extends Application {
         } catch (IOException e) {
             System.err.println("Error al cargar la vista FXML (" + LOGIN_VIEW_FILE + "): " + e.getMessage());
             e.printStackTrace();
-            throw e; 
+            throw e;
         } catch (Exception e) {
             System.err.println("Error al iniciar la aplicación: " + e.getMessage());
             e.printStackTrace();

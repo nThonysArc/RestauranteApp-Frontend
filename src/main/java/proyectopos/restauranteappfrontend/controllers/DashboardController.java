@@ -772,15 +772,10 @@ public class DashboardController implements CleanableController {
         PedidoMesaDTO pedidoDTO = new PedidoMesaDTO();
         pedidoDTO.setIdMesa(mesaSeleccionada.getIdMesa());
         pedidoDTO.setEstado("ABIERTO"); // Siempre se marca como ABIERTO para que cocina lo vea
-        
-        // --- ¡¡MODIFICACIÓN CLAVE!! ---
-        // Enviamos SOLAMENTE los items nuevos
         pedidoDTO.setDetalles(new ArrayList<>(itemsNuevosData));
-        // --- FIN MODIFICACIÓN ---
 
 
         if (this.pedidoActual == null) {
-            // --- CREAR PEDIDO (Lógica sin cambios) ---
             new Thread(() -> {
                 try {
                     PedidoMesaDTO pedidoCreado = pedidoMesaService.crearPedido(pedidoDTO);
@@ -799,7 +794,6 @@ public class DashboardController implements CleanableController {
                 }
             }).start();
         } else {
-            // --- ACTUALIZAR PEDIDO (Lógica modificada) ---
             Long idPedidoAActualizar = this.pedidoActual.getIdPedidoMesa();
             new Thread(() -> {
                 try {
@@ -821,15 +815,10 @@ public class DashboardController implements CleanableController {
             }).start();
         }
     }
-    // --- FIN MODIFICACIÓN ---
-
-
-    // --- ¡¡MÉTODO MODIFICADO!! ---
     private void resetearPanelPedido() {
         this.mesaSeleccionada = null;
         this.pedidoActual = null;
         
-        // Limpiar las 3 listas
         itemsCompletosData.clear();
         itemsEnviadosData.clear();
         itemsNuevosData.clear();
@@ -843,8 +832,6 @@ public class DashboardController implements CleanableController {
         categoriasListView.getSelectionModel().clearSelection();
         subCategoriasListView.getSelectionModel().clearSelection();
     }
-    // --- FIN MODIFICACIÓN ---
-
 
     private void mostrarAlerta(String titulo, String contenido) {
         Alert alert = new Alert(Alert.AlertType.WARNING);

@@ -1,0 +1,229 @@
+/* --- raiz-iquena-theme.css --- */
+
+/* Carga de Fuentes (Ajusta las rutas si es necesario) */
+@font-face {
+    src: url("fonts/PlayfairDisplay-VariableFont_wght.ttf");
+}
+@font-face {
+    src: url("fonts/Montserrat-Regular.ttf");
+}
+
+/* Estilos Generales y Tema Raíz Iqueña */
+.root {
+    /* Fondo: Blanco */
+    -fx-background: #FFFFFF;
+
+    /* Base: Beige arena claro para tarjetas/paneles */
+    -fx-base: #f3e9d2; /* Tono beige de la web */
+
+    /* Interior de controles (listas, tablas) */
+    -fx-control-inner-background: #FAF6ED; /* Un beige muy claro, casi blanco */
+    -fx-control-inner-background-alt: derive(-fx-control-inner-background, -5%);
+
+    /* Acento: Rojo vino oscuro de la web */
+    -fx-accent: #781C1C;
+    -fx-focus-color: -fx-accent;
+    -fx-faint-focus-color: derive(-fx-accent, 70%); /* Más claro para el foco */
+
+    /* Colores de texto */
+    -fx-text-base-color: #212529; /* Negro suave */
+    -fx-text-background-color: derive(-fx-text-base-color, 80%);
+    -fx-text-fill: -fx-text-base-color;
+    -fx-prompt-text-fill: #6c757d; /* Gris para 'prompt' */
+
+    /* Colores semánticos (Ajustados para tema claro) */
+    -color-success: #198754; /* Verde Bootstrap */
+    -color-danger: #dc3545;  /* Rojo Bootstrap */
+    -color-warning: #ffc107; /* Amarillo Bootstrap */
+    -color-info: #0dcaf0;    /* Cyan Bootstrap */
+    -color-secondary: #6c757d; /* Gris Bootstrap */
+
+    /* Fuente por defecto */
+    -fx-font-family: 'Montserrat';
+}
+
+/* Fondo principal */
+.background {
+    -fx-background-color: -fx-background;
+}
+
+/* Estilo de Tarjeta (para paneles) */
+.card {
+    -fx-background-color: -fx-base; /* Beige arena */
+    -fx-padding: 15px;
+    -fx-background-radius: 8px;
+    -fx-border-radius: 8px; /* Mantener bordes redondeados */
+    /* Sombra sutil para "flotar" sobre el fondo blanco */
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 10, 0.2, 0, 3);
+    -fx-border-width: 0px; /* Sin borde explícito */
+}
+
+/* Encabezados */
+.h1, .h2, .h3 {
+    -fx-font-family: 'Playfair Display';
+    -fx-text-fill: -fx-accent; /* Títulos con el color vino */
+    -fx-font-weight: bold; /* Asegurar negrita si la fuente lo requiere */
+}
+.h1 { -fx-font-size: 24pt; }
+.h2 { -fx-font-size: 18pt; }
+.h3 { -fx-font-size: 14pt; }
+
+/* Labels de Información (similar a Bootstrap) */
+.lbl-info { -fx-text-fill: -color-info; }
+.lbl-success { -fx-text-fill: -color-success; }
+.lbl-warning { -fx-text-fill: -color-warning; -fx-font-weight: bold;} /* Amarillo a veces necesita negrita */
+.lbl-danger { -fx-text-fill: -color-danger; }
+
+/* Estilos para Tablas y Listas */
+.table-view, .list-view {
+    -fx-background-color: -fx-control-inner-background;
+    -fx-border-color: derive(-fx-base, -10%); /* Borde beige un poco más oscuro */
+    -fx-border-width: 1px;
+}
+.table-view .column-header-background {
+    -fx-background-color: derive(-fx-base, -5%); /* Cabeceras beige ligeramente más oscuro */
+}
+.table-view .column-header {
+    -fx-background-color: transparent;
+    -fx-font-weight: bold;
+    -fx-text-fill: derive(-fx-text-base-color, -20%); /* Texto de cabecera un poco más oscuro */
+}
+.table-view .cell, .list-view .list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: -fx-text-base-color;
+    -fx-border-color: transparent transparent derive(-fx-base, -10%) transparent; /* Líneas separadoras beige oscuro */
+    -fx-padding: 5px; /* Añadir padding para mejor lectura */
+}
+/* Selección con el color vino */
+.table-view .cell:selected, .list-view .list-cell:selected {
+    -fx-background-color: -fx-accent;
+    -fx-text-fill: white;
+}
+.table-view .placeholder, .list-view .placeholder {
+    -fx-alignment: center;
+}
+.table-view .placeholder .label, .list-view .placeholder .label {
+    -fx-text-fill: -fx-prompt-text-fill; /* Placeholder gris tenue */
+}
+
+
+/* Estilos para Botones (Adaptados a Raíz Iqueña) */
+.button {
+    -fx-font-family: 'Montserrat'; /* Asegurar fuente sans-serif */
+    -fx-text-fill: white; /* Texto blanco por defecto */
+    -fx-font-weight: bold;
+    -fx-background-radius: 6px;
+    -fx-border-radius: 6px;
+    -fx-padding: 8px 15px;
+    -fx-cursor: hand; /* Cursor de mano */
+}
+.btn-primary { -fx-background-color: -fx-accent; } /* Color vino */
+.btn-primary:hover { -fx-background-color: derive(-fx-accent, -10%); }
+
+.btn-success { -fx-background-color: -color-success; }
+.btn-success:hover { -fx-background-color: derive(-color-success, -10%); }
+
+.btn-danger { -fx-background-color: -color-danger; }
+.btn-danger:hover { -fx-background-color: derive(-color-danger, -10%); }
+
+.btn-warning {
+    -fx-background-color: -color-warning;
+    -fx-text-fill: #333333; /* Texto oscuro para amarillo */
+}
+.btn-warning:hover { -fx-background-color: derive(-color-warning, -10%); }
+
+.btn-info { -fx-background-color: -color-info; }
+.btn-info:hover { -fx-background-color: derive(-color-info, -10%); }
+
+.btn-secondary { -fx-background-color: -color-secondary; }
+.btn-secondary:hover { -fx-background-color: derive(-color-secondary, -10%); }
+
+/* Ajuste para botones pequeños usados en tablas */
+.btn-sm {
+    -fx-padding: 4px 8px;
+    -fx-font-size: 0.85em; /* Ligeramente más pequeño */
+}
+
+/* Estilo específico para botones de mesa */
+.mesa-button {
+    -fx-font-size: 14pt;
+    -fx-min-width: 80px;
+    -fx-min-height: 80px;
+    -fx-pref-width: 80px;
+    -fx-pref-height: 80px;
+    -fx-alignment: center;
+    -fx-text-alignment: center;
+    -fx-background-radius: 8px; /* Bordes redondeados */
+    -fx-border-radius: 8px;
+}
+.mesa-button .label, .mesa-button .text { /* Para centrar texto */
+     -fx-alignment: center;
+     -fx-text-alignment: center;
+}
+/* Colores de botones de mesa */
+.mesa-libre { -fx-background-color: #556B2F; } /* Verde Olivo */
+.mesa-ocupada { -fx-background-color: -fx-accent; } /* Rojo Vino (Acento) */
+.mesa-pagando {
+    -fx-background-color: #DAA520; /* Dorado Suave */
+    /* Asegurar que el texto dentro sea legible */
+    /* -fx-text-fill: #333333; NO aplica directamente al Text node */
+}
+.mesa-reservada { -fx-background-color: -color-secondary; -fx-cursor: default; } /* Gris */
+
+/* Asegurar texto blanco por defecto en botones de mesa (excepto pagando) */
+.mesa-libre .text, .mesa-ocupada .text, .mesa-reservada .text {
+    -fx-fill: white;
+}
+/* Texto oscuro para el estado pagando */
+.mesa-pagando .text {
+    -fx-fill: #333333; /* Texto oscuro */
+}
+
+/* Barra de Menú */
+.menu-bar {
+    -fx-background-color: -fx-accent; /* Color vino */
+}
+.menu-bar .label {
+    -fx-text-fill: white; /* Texto blanco */
+    -fx-font-family: 'Montserrat'; /* Fuente sans-serif */
+}
+.menu-item .label {
+     -fx-text-fill: -fx-text-base-color; /* Texto normal para items */
+     -fx-font-family: 'Montserrat';
+}
+.menu-item:focused {
+    -fx-background-color: derive(-fx-accent, 60%); /* Resaltado claro al pasar ratón/seleccionar */
+}
+.menu-item:focused .label {
+     -fx-text-fill: white; /* Texto blanco al seleccionar */
+}
+.context-menu { /* Menú desplegable */
+     -fx-background-color: #FFFFFF; /* Fondo blanco */
+     -fx-border-color: derive(-fx-base, -10%);
+}
+
+/* Estilos para Comandas de Cocina */
+.kitchen-command-card {
+    -fx-background-color: #FFFFF0; /* Marfil */
+    -fx-padding: 10px;
+    -fx-background-radius: 4px;
+    -fx-border-radius: 4px;
+    -fx-border-color: #DDD;
+    -fx-border-width: 1px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 5, 0.1, 0, 1);
+}
+.kitchen-command-card .label {
+    -fx-font-family: 'Montserrat'; /* O tu fuente sans-serif */
+    -fx-text-fill: #333;
+}
+.kitchen-command-card .list-view {
+     -fx-font-family: "Courier New", monospace; /* Fuente monoespaciada */
+     -fx-background-color: transparent;
+     -fx-border-width: 0;
+}
+.kitchen-command-card .list-view .list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: #333;
+    -fx-border-width: 0;
+    -fx-padding: 2px 0; /* Menos padding */
+}
