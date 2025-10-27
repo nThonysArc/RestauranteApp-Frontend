@@ -23,7 +23,7 @@
 
     <top>
         <VBox style="-fx-background-color: #1f2937; -fx-padding: 10; -fx-border-color: #4b5563 transparent transparent transparent; -fx-border-width: 1;">
-            <Label text="PANEL PRINCIPAL DEL POS" styleClass="h1" />
+            <Label text="PANEL PRINCIPAL" styleClass="h1" />
             <Label fx:id="infoLabel" text="Bienvenido" styleClass="lbl-info"/>
         </VBox>
     </top>
