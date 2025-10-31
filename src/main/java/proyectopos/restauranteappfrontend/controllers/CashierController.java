@@ -279,12 +279,4 @@ public class CashierController {
         statusLabelCashier.setText(message);
         statusLabelCashier.getStyleClass().setAll("lbl-danger");
     }
-
-    // Si necesitas cleanup en el futuro (ej. para un Timeline de refresco)
-    /*
-    @Override
-    public void cleanup() {
-        // ...
-    }
-    */
 }

@@ -1,45 +1,52 @@
 /* --- raiz-iquena-theme.css --- */
+/* Inspirado en la imagen image_37b63d.png y archivos del proyecto */
 
-/* Carga de Fuentes (Ajusta las rutas si es necesario) */
+/* Carga de Fuentes (Usando los nombres de archivo subidos) */
 @font-face {
+    /* Fuente Serif para títulos */
     src: url("fonts/PlayfairDisplay-VariableFont_wght.ttf");
 }
 @font-face {
-    src: url("fonts/Montserrat-Regular.ttf");
+    /* Fuente Sans-serif para cuerpo (asumiendo que este es el regular) */
+    src: url("fonts/Montserrat-VariableFont_wght.ttf");
 }
+/* Nota: No se subió Montserrat-Bold.ttf ni CourierPrime-Regular.ttf. Usaremos pesos variables si es posible. */
+
 
 /* Estilos Generales y Tema Raíz Iqueña */
 .root {
-    /* Fondo: Blanco */
-    -fx-background: #FFFFFF;
+    /* Fondo: Blanco hueso / Beige muy claro */
+    -fx-background: #FDFBF5;
 
-    /* Base: Beige arena claro para tarjetas/paneles */
-    -fx-base: #f3e9d2; /* Tono beige de la web */
+    /* Base: Color beige medio/cálido para tarjetas */
+    -fx-base: #EAE0C8;
 
     /* Interior de controles (listas, tablas) */
-    -fx-control-inner-background: #FAF6ED; /* Un beige muy claro, casi blanco */
-    -fx-control-inner-background-alt: derive(-fx-control-inner-background, -5%);
+    -fx-control-inner-background: #FFFEF9; /* Casi blanco */
+    -fx-control-inner-background-alt: derive(-fx-control-inner-background, -3%);
 
-    /* Acento: Rojo vino oscuro de la web */
-    -fx-accent: #781C1C;
+    /* Acento: Rojo vino oscuro / Borgoña del logo */
+    -fx-accent: #6D2932; /* Estimado del logo, ajustar si es necesario */
     -fx-focus-color: -fx-accent;
-    -fx-faint-focus-color: derive(-fx-accent, 70%); /* Más claro para el foco */
+    -fx-faint-focus-color: derive(-fx-accent, 75%);
 
     /* Colores de texto */
-    -fx-text-base-color: #212529; /* Negro suave */
-    -fx-text-background-color: derive(-fx-text-base-color, 80%);
+    -fx-text-base-color: #4B3832; /* Marrón oscuro */
+    -fx-text-background-color: derive(-fx-text-base-color, 90%);
     -fx-text-fill: -fx-text-base-color;
-    -fx-prompt-text-fill: #6c757d; /* Gris para 'prompt' */
+    -fx-prompt-text-fill: #A08C7D; /* Marrón grisáceo tenue */
 
-    /* Colores semánticos (Ajustados para tema claro) */
-    -color-success: #198754; /* Verde Bootstrap */
-    -color-danger: #dc3545;  /* Rojo Bootstrap */
-    -color-warning: #ffc107; /* Amarillo Bootstrap */
-    -color-info: #0dcaf0;    /* Cyan Bootstrap */
-    -color-secondary: #6c757d; /* Gris Bootstrap */
+    /* Colores semánticos */
+    -color-success: #556B2F; /* Verde Olivo */
+    -color-danger: #A0522D;  /* Siena / Marrón Rojizo */
+    -color-warning: #DAA520; /* Dorado / Ocre */
+    -color-info: #4682B4;    /* Azul Acero */
+    -color-secondary: #8B7D6B; /* Marrón grisáceo */
 
-    /* Fuente por defecto */
-    -fx-font-family: 'Montserrat';
+    /* Fuentes */
+    /* Usar el nombre de la fuente tal como lo define el archivo .ttf */
+    -fx-font-family: 'Montserrat'; /* Asumiendo que el archivo define este nombre */
+    -fx-font-size: 13px;
 }
 
 /* Fondo principal */
@@ -47,183 +54,324 @@
     -fx-background-color: -fx-background;
 }
 
-/* Estilo de Tarjeta (para paneles) */
+/* Estilo de Tarjeta */
 .card {
-    -fx-background-color: -fx-base; /* Beige arena */
-    -fx-padding: 15px;
-    -fx-background-radius: 8px;
-    -fx-border-radius: 8px; /* Mantener bordes redondeados */
-    /* Sombra sutil para "flotar" sobre el fondo blanco */
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 10, 0.2, 0, 3);
-    -fx-border-width: 0px; /* Sin borde explícito */
+    -fx-background-color: -fx-base; /* Beige cálido */
+    -fx-padding: 18px;
+    -fx-background-radius: 6px;
+    -fx-border-radius: 6px;
+    -fx-effect: dropshadow(gaussian, rgba(75, 56, 50, 0.25), 12, 0.3, 0, 4);
+    -fx-border-width: 0px;
 }
 
 /* Encabezados */
 .h1, .h2, .h3 {
-    -fx-font-family: 'Playfair Display';
-    -fx-text-fill: -fx-accent; /* Títulos con el color vino */
-    -fx-font-weight: bold; /* Asegurar negrita si la fuente lo requiere */
+    /* Usar el nombre de la fuente tal como lo define el archivo .ttf */
+    -fx-font-family: 'Playfair Display'; /* Asumiendo que el archivo define este nombre */
+    -fx-text-fill: -fx-accent; /* Color vino */
+    -fx-font-weight: bold; /* O especificar peso si la fuente es variable */
 }
-.h1 { -fx-font-size: 24pt; }
-.h2 { -fx-font-size: 18pt; }
-.h3 { -fx-font-size: 14pt; }
+.h1 { -fx-font-size: 26pt; }
+.h2 { -fx-font-size: 20pt; }
+.h3 { -fx-font-size: 16pt; }
 
-/* Labels de Información (similar a Bootstrap) */
+/* Labels de Información */
 .lbl-info { -fx-text-fill: -color-info; }
-.lbl-success { -fx-text-fill: -color-success; }
-.lbl-warning { -fx-text-fill: -color-warning; -fx-font-weight: bold;} /* Amarillo a veces necesita negrita */
-.lbl-danger { -fx-text-fill: -color-danger; }
+.lbl-success { -fx-text-fill: -color-success; -fx-font-weight: bold;}
+.lbl-warning { -fx-text-fill: -color-warning; -fx-font-weight: bold;}
+.lbl-danger { -fx-text-fill: -color-danger; -fx-font-weight: bold;}
 
 /* Estilos para Tablas y Listas */
 .table-view, .list-view {
-    -fx-background-color: -fx-control-inner-background;
-    -fx-border-color: derive(-fx-base, -10%); /* Borde beige un poco más oscuro */
+    -fx-background-color: -fx-control-inner-background; /* Casi blanco */
+    -fx-border-color: derive(-fx-base, -10%); /* Borde beige oscuro */
     -fx-border-width: 1px;
+    -fx-background-radius: 4px;
+    -fx-border-radius: 4px;
 }
 .table-view .column-header-background {
-    -fx-background-color: derive(-fx-base, -5%); /* Cabeceras beige ligeramente más oscuro */
+    -fx-background-color: derive(-fx-base, -5%); /* Cabeceras beige */
+    -fx-background-radius: 4px 4px 0 0;
+    -fx-border-radius: 4px 4px 0 0;
 }
 .table-view .column-header {
     -fx-background-color: transparent;
-    -fx-font-weight: bold;
-    -fx-text-fill: derive(-fx-text-base-color, -20%); /* Texto de cabecera un poco más oscuro */
+    -fx-font-family: 'Montserrat';
+    -fx-font-weight: bold; /* O un peso específico, ej: -fx-font-weight: 600; */
+    -fx-text-fill: derive(-fx-text-base-color, -30%); /* Marrón más oscuro */
+    -fx-padding: 8px;
 }
 .table-view .cell, .list-view .list-cell {
     -fx-background-color: transparent;
-    -fx-text-fill: -fx-text-base-color;
-    -fx-border-color: transparent transparent derive(-fx-base, -10%) transparent; /* Líneas separadoras beige oscuro */
-    -fx-padding: 5px; /* Añadir padding para mejor lectura */
+    -fx-text-fill: -fx-text-base-color; /* Marrón oscuro */
+    -fx-border-color: transparent transparent derive(-fx-base, -5%) transparent; /* Líneas beige */
+    -fx-padding: 6px 8px;
+    -fx-font-family: 'Montserrat'; /* Asegurar fuente correcta */
 }
-/* Selección con el color vino */
+/* Selección con color vino */
 .table-view .cell:selected, .list-view .list-cell:selected {
     -fx-background-color: -fx-accent;
     -fx-text-fill: white;
 }
-.table-view .placeholder, .list-view .placeholder {
-    -fx-alignment: center;
-}
 .table-view .placeholder .label, .list-view .placeholder .label {
-    -fx-text-fill: -fx-prompt-text-fill; /* Placeholder gris tenue */
+    -fx-text-fill: -fx-prompt-text-fill; /* Marrón grisáceo tenue */
+    -fx-font-family: 'Montserrat';
 }
 
-
-/* Estilos para Botones (Adaptados a Raíz Iqueña) */
+/* Estilos para Botones */
 .button {
-    -fx-font-family: 'Montserrat'; /* Asegurar fuente sans-serif */
-    -fx-text-fill: white; /* Texto blanco por defecto */
-    -fx-font-weight: bold;
+    -fx-font-family: 'Montserrat';
+    -fx-text-fill: white;
+    -fx-font-weight: bold; /* O peso específico */
     -fx-background-radius: 6px;
     -fx-border-radius: 6px;
-    -fx-padding: 8px 15px;
-    -fx-cursor: hand; /* Cursor de mano */
+    -fx-padding: 8px 18px;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 4, 0.1, 0, 1);
 }
+.button:hover {
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.25), 6, 0.2, 0, 2);
+}
+
+/* Colores de Botones BootstrapFX */
 .btn-primary { -fx-background-color: -fx-accent; } /* Color vino */
 .btn-primary:hover { -fx-background-color: derive(-fx-accent, -10%); }
 
-.btn-success { -fx-background-color: -color-success; }
+.btn-success { -fx-background-color: -color-success; } /* Verde Olivo */
 .btn-success:hover { -fx-background-color: derive(-color-success, -10%); }
 
-.btn-danger { -fx-background-color: -color-danger; }
+.btn-danger { -fx-background-color: -color-danger; } /* Siena */
 .btn-danger:hover { -fx-background-color: derive(-color-danger, -10%); }
 
-.btn-warning {
-    -fx-background-color: -color-warning;
-    -fx-text-fill: #333333; /* Texto oscuro para amarillo */
-}
+.btn-warning { -fx-background-color: -color-warning; -fx-text-fill: #4B3832;} /* Dorado, texto marrón */
 .btn-warning:hover { -fx-background-color: derive(-color-warning, -10%); }
 
-.btn-info { -fx-background-color: -color-info; }
+.btn-info { -fx-background-color: -color-info; } /* Azul Acero */
 .btn-info:hover { -fx-background-color: derive(-color-info, -10%); }
 
-.btn-secondary { -fx-background-color: -color-secondary; }
+.btn-secondary { -fx-background-color: -color-secondary; } /* Marrón grisáceo */
 .btn-secondary:hover { -fx-background-color: derive(-color-secondary, -10%); }
 
-/* Ajuste para botones pequeños usados en tablas */
+/* Botones pequeños (para tablas) */
 .btn-sm {
-    -fx-padding: 4px 8px;
-    -fx-font-size: 0.85em; /* Ligeramente más pequeño */
+    -fx-padding: 5px 10px;
+    -fx-font-size: 0.9em;
 }
 
 /* Estilo específico para botones de mesa */
 .mesa-button {
     -fx-font-size: 14pt;
-    -fx-min-width: 80px;
-    -fx-min-height: 80px;
-    -fx-pref-width: 80px;
-    -fx-pref-height: 80px;
+    -fx-min-width: 90px;
+    -fx-min-height: 90px;
+    -fx-pref-width: 90px;
+    -fx-pref-height: 90px;
     -fx-alignment: center;
     -fx-text-alignment: center;
-    -fx-background-radius: 8px; /* Bordes redondeados */
+    -fx-background-radius: 8px;
     -fx-border-radius: 8px;
+    -fx-border-color: derive(-fx-accent, -20%); /* Borde vino oscuro sutil */
+    -fx-border-width: 1px;
 }
-.mesa-button .label, .mesa-button .text { /* Para centrar texto */
-     -fx-alignment: center;
-     -fx-text-alignment: center;
+/* Estilo para los nodos Text DENTRO del VBox del botón */
+.mesa-button .text {
+     -fx-font-family: 'Montserrat';
+     -fx-font-weight: bold; /* O peso específico */
 }
-/* Colores de botones de mesa */
-.mesa-libre { -fx-background-color: #556B2F; } /* Verde Olivo */
-.mesa-ocupada { -fx-background-color: -fx-accent; } /* Rojo Vino (Acento) */
-.mesa-pagando {
-    -fx-background-color: #DAA520; /* Dorado Suave */
-    /* Asegurar que el texto dentro sea legible */
-    /* -fx-text-fill: #333333; NO aplica directamente al Text node */
+/* El número de mesa (asumiendo que es el primer Text) */
+.mesa-button .text:first-child {
+    -fx-font-size: 1.6em; /* Aumentar tamaño del número */
 }
-.mesa-reservada { -fx-background-color: -color-secondary; -fx-cursor: default; } /* Gris */
+/* El estado (asumiendo que es el último Text) */
+.mesa-button .text:last-child {
+    -fx-font-size: 0.8em;
+    -fx-translate-y: 2px; /* Bajar un poco el texto de estado */
+}
 
-/* Asegurar texto blanco por defecto en botones de mesa (excepto pagando) */
+/* Colores de fondo de botones de mesa */
+.mesa-libre { -fx-background-color: -color-success; } /* Verde Olivo */
+.mesa-ocupada { -fx-background-color: -fx-accent; } /* Rojo Vino */
+.mesa-pagando { -fx-background-color: -color-warning; } /* Dorado */
+.mesa-reservada { -fx-background-color: -color-secondary; -fx-cursor: default; } /* Marrón grisáceo */
+
+/* Colores de texto para botones de mesa */
 .mesa-libre .text, .mesa-ocupada .text, .mesa-reservada .text {
     -fx-fill: white;
 }
-/* Texto oscuro para el estado pagando */
 .mesa-pagando .text {
-    -fx-fill: #333333; /* Texto oscuro */
+    -fx-fill: #4B3832; /* Texto marrón oscuro para el dorado */
 }
 
 /* Barra de Menú */
 .menu-bar {
     -fx-background-color: -fx-accent; /* Color vino */
+    -fx-border-width: 0 0 1 0;
+    -fx-border-color: derive(-fx-accent, -15%);
 }
 .menu-bar .label {
-    -fx-text-fill: white; /* Texto blanco */
-    -fx-font-family: 'Montserrat'; /* Fuente sans-serif */
+    -fx-text-fill: white;
+    -fx-font-family: 'Montserrat';
+    -fx-font-weight: bold; /* O peso específico */
+    -fx-padding: 6px 12px;
 }
+.menu:hover, .menu:showing {
+    -fx-background-color: derive(-fx-accent, -10%);
+}
+/* Estilo del texto del MenuItem cuando se muestra */
 .menu-item .label {
-     -fx-text-fill: -fx-text-base-color; /* Texto normal para items */
+     -fx-text-fill: -fx-text-base-color; /* Marrón oscuro */
      -fx-font-family: 'Montserrat';
+     -fx-font-weight: normal;
+     -fx-padding: 6px 10px;
 }
+/* Estilo del MenuItem al pasar el ratón o seleccionar */
 .menu-item:focused {
-    -fx-background-color: derive(-fx-accent, 60%); /* Resaltado claro al pasar ratón/seleccionar */
+    -fx-background-color: derive(-fx-base, -5%); /* Resaltado beige */
 }
 .menu-item:focused .label {
-     -fx-text-fill: white; /* Texto blanco al seleccionar */
+     -fx-text-fill: -fx-accent; /* Texto vino */
 }
-.context-menu { /* Menú desplegable */
-     -fx-background-color: #FFFFFF; /* Fondo blanco */
+/* Contenedor del menú desplegable */
+.context-menu {
+     -fx-background-color: #FFFEF9; /* Fondo casi blanco */
      -fx-border-color: derive(-fx-base, -10%);
+     -fx-background-insets: 0, 1;
+     -fx-padding: 5px;
+     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 8, 0.1, 0, 2);
 }
 
-/* Estilos para Comandas de Cocina */
-.kitchen-command-card {
+/* Estilos para Comandas de Cocina (como ticket) */
+.kitchen-command-card { /* Asegúrate de añadir esta clase en KitchenController */
     -fx-background-color: #FFFFF0; /* Marfil */
-    -fx-padding: 10px;
-    -fx-background-radius: 4px;
-    -fx-border-radius: 4px;
-    -fx-border-color: #DDD;
+    -fx-padding: 12px;
+    -fx-background-radius: 0px;
+    -fx-border-radius: 0px;
+    -fx-border-color: #D3C0A5; /* Borde beige/marrón claro */
     -fx-border-width: 1px;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 5, 0.1, 0, 1);
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 6, 0.1, 1, 1);
 }
 .kitchen-command-card .label {
-    -fx-font-family: 'Montserrat'; /* O tu fuente sans-serif */
-    -fx-text-fill: #333;
+    -fx-font-family: 'Montserrat';
+    -fx-text-fill: #4B3832; /* Marrón oscuro */
+}
+.kitchen-command-card .label:first-child { /* Título (Mesa X) */
+     -fx-font-family: 'Montserrat';
+     -fx-font-weight: bold; /* O peso específico */
+     -fx-font-size: 1.1em;
 }
 .kitchen-command-card .list-view {
-     -fx-font-family: "Courier New", monospace; /* Fuente monoespaciada */
+     /* Usar Courier New si está disponible, si no, genérico monospace */
+     -fx-font-family: "Courier New", monospace;
      -fx-background-color: transparent;
      -fx-border-width: 0;
+     -fx-padding: 5px 0;
 }
 .kitchen-command-card .list-view .list-cell {
     -fx-background-color: transparent;
-    -fx-text-fill: #333;
+    -fx-text-fill: #4B3832; /* Marrón oscuro */
     -fx-border-width: 0;
-    -fx-padding: 2px 0; /* Menos padding */
+    -fx-padding: 1px 0; /* Menos padding */
+}
+.kitchen-command-card .button { /* Botón 'Marcar Listo' */
+    -fx-font-family: 'Montserrat';
+    -fx-background-color: -color-success; /* Verde olivo */
+}
+.kitchen-command-card .button:hover {
+    -fx-background-color: derive(-color-success, -10%);
+}
+
+/* Estilos para campos de texto, contraseña y área de texto */
+.text-field, .password-field, .text-area {
+    -fx-background-color: white; /* Fondo blanco explícito */
+    -fx-background-insets: 0;
+    -fx-background-radius: 3px;
+    -fx-prompt-text-fill: -fx-prompt-text-fill;
+    -fx-text-fill: -fx-text-base-color;
+    -fx-border-color: derive(-fx-base, -15%); /* Borde beige oscuro */
+    -fx-border-radius: 3px;
+    -fx-border-width: 1px;
+    -fx-padding: 6px 10px;
+    -fx-font-family: 'Montserrat';
+}
+.text-field:focused, .password-field:focused, .text-area:focused {
+    -fx-border-color: -fx-accent; /* Borde vino al enfocar */
+    -fx-border-width: 1.5px;
+    -fx-background-color: white; /* Mantener fondo blanco */
+}
+.text-area {
+    -fx-wrap-text: true;
+}
+
+/* Estilos para ComboBox */
+.combo-box-base {
+    -fx-border-color: derive(-fx-base, -15%);
+    -fx-border-radius: 3px;
+    -fx-background-radius: 3px;
+    -fx-background-color: white;
+    -fx-padding: 0; /* Sin padding extra en la base */
+}
+.combo-box-base .arrow-button { /* Contenedor de la flecha */
+    -fx-background-color: derive(-fx-base, -5%); /* Fondo beige */
+    -fx-background-radius: 0 3px 3px 0;
+    -fx-padding: 6px 8px;
+}
+.combo-box-base .arrow { /* La flecha */
+    -fx-background-color: -fx-text-base-color; /* Flecha marrón */
+}
+.combo-box-base:hover .arrow-button {
+    -fx-background-color: derive(-fx-base, -10%);
+}
+.combo-box-base:focused {
+     -fx-border-color: -fx-accent;
+     -fx-border-width: 1.5px;
+}
+/* Celda mostrada cuando no está desplegado */
+.combo-box .list-cell {
+    -fx-background-color: white;
+    -fx-text-fill: -fx-text-base-color;
+    -fx-padding: 6px 10px;
+    -fx-font-family: 'Montserrat';
+}
+/* Celdas en el popup desplegable */
+.combo-box-popup .list-view .list-cell {
+    -fx-background-color: #FFFEF9; /* Fondo casi blanco */
+    -fx-text-fill: -fx-text-base-color;
+    -fx-padding: 6px 10px;
+    -fx-font-family: 'Montserrat';
+}
+.combo-box-popup .list-view .list-cell:filled:selected,
+.combo-box-popup .list-view .list-cell:filled:selected:hover {
+    -fx-background-color: -fx-accent; /* Selección vino */
+    -fx-text-fill: white;
+}
+.combo-box-popup .list-view .list-cell:filled:hover {
+    -fx-background-color: derive(-fx-base, -5%); /* Resaltado beige */
+    -fx-text-fill: -fx-text-base-color;
+}
+
+/* ScrollPane y ScrollBar */
+.scroll-pane {
+    -fx-background-color: transparent; /* Hacer transparente para ver el fondo */
+}
+.scroll-pane .corner { /* Esquina entre barras */
+    -fx-background-color: transparent;
+}
+.scroll-bar:horizontal, .scroll-bar:vertical{
+    -fx-background-color:transparent;
+}
+.increment-button, .decrement-button {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+.scroll-bar .thumb {
+    -fx-background-color: derive(-fx-base, -15%); /* Thumb beige oscuro */
+    -fx-background-insets: 2, 0, 0;
+    -fx-background-radius: 4px;
+}
+.scroll-bar .thumb:hover {
+     -fx-background-color: derive(-fx-base, -25%);
+}
+
+/* TilePane (usado en Dashboard y Cocina) */
+.tile-pane {
+    -fx-padding: 10px; /* Espaciado interno */
 }

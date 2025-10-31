@@ -1,46 +1,54 @@
 package proyectopos.restauranteappfrontend.controllers;
 
+import java.io.IOException;
+import java.util.List;
+import java.util.Optional;
+import java.util.regex.Pattern;
+
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.geometry.Pos; // <-- AÑADIR IMPORT
-import javafx.scene.control.*;
+import javafx.geometry.Pos;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.PasswordField;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
+import javafx.scene.control.TextFormatter;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.layout.HBox; // <-- AÑADIR IMPORT
-import javafx.util.Callback; // <-- AÑADIR IMPORT
+import javafx.scene.layout.HBox; 
+import javafx.util.Callback;
 import proyectopos.restauranteappfrontend.model.dto.EmpleadoDTO;
 import proyectopos.restauranteappfrontend.model.dto.RolDTO;
 import proyectopos.restauranteappfrontend.services.EmpleadoService;
 import proyectopos.restauranteappfrontend.services.HttpClientService;
 import proyectopos.restauranteappfrontend.services.RolService;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.Optional; // <-- AÑADIR IMPORT
-import java.util.regex.Pattern;
-
 public class EmployeeManagementController {
 
-    // --- Campos del Formulario ---
-    @FXML private Label formTitleLabel; // <-- NUEVO
+    @FXML private Label formTitleLabel; 
     @FXML private TextField nombreField;
     @FXML private TextField dniField;
     @FXML private TextField usuarioField;
     @FXML private PasswordField contrasenaField;
     @FXML private ComboBox<RolDTO> rolComboBox;
-    @FXML private Button saveButton; // <-- Renombrado (antes crearButton)
-    @FXML private Button cancelEditButton; // <-- NUEVO
+    @FXML private Button saveButton; 
+    @FXML private Button cancelEditButton; 
     @FXML private Label statusLabel;
-    @FXML private HBox formButtonsBox; // <-- NUEVO
+    @FXML private HBox formButtonsBox; 
 
-    // --- Campos Tabla ---
     @FXML private TableView<EmpleadoDTO> empleadosTableView;
     @FXML private TableColumn<EmpleadoDTO, String> nombreCol;
     @FXML private TableColumn<EmpleadoDTO, String> dniCol;
     @FXML private TableColumn<EmpleadoDTO, String> usuarioCol;
     @FXML private TableColumn<EmpleadoDTO, String> rolCol;
-    @FXML private TableColumn<EmpleadoDTO, Void> accionesCol; // <-- TIPO CAMBIADO A Void
+    @FXML private TableColumn<EmpleadoDTO, Void> accionesCol; 
 
     // --- Servicios (sin cambios) ---
     private final EmpleadoService empleadoService = new EmpleadoService();
@@ -81,22 +89,17 @@ public class EmployeeManagementController {
         contrasenaField.textProperty().addListener((obs, old, nw) -> validarFormularioYActualizarBoton());
         rolComboBox.valueProperty().addListener((obs, old, nw) -> validarFormularioYActualizarBoton());
 
-        // Validar estado inicial
         validarFormularioYActualizarBoton();
 
-        // Estado inicial del formulario (modo creación)
         prepararFormularioParaCreacion();
     }
 
-    // --- MODIFICADO: Configurar Tabla (añade CellFactory para botones) ---
     private void configurarTablaEmpleados() {
         nombreCol.setCellValueFactory(new PropertyValueFactory<>("nombre"));
         dniCol.setCellValueFactory(new PropertyValueFactory<>("dni"));
         usuarioCol.setCellValueFactory(new PropertyValueFactory<>("usuario"));
         rolCol.setCellValueFactory(new PropertyValueFactory<>("rolNombre"));
         empleadosTableView.setItems(empleadosData);
-
-        // --- Configuración de la Columna de Acciones ---
         Callback<TableColumn<EmpleadoDTO, Void>, TableCell<EmpleadoDTO, Void>> cellFactory = new Callback<>() {
             @Override
             public TableCell<EmpleadoDTO, Void> call(final TableColumn<EmpleadoDTO, Void> param) {
