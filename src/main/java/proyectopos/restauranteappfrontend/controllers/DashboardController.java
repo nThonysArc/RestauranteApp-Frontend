@@ -49,6 +49,8 @@ import proyectopos.restauranteappfrontend.services.PedidoMesaService;
 import proyectopos.restauranteappfrontend.services.ProductoService;
 import proyectopos.restauranteappfrontend.util.SessionManager;
 
+import proyectopos.restauranteappfrontend.services.WebSocketService;
+
 public class DashboardController implements CleanableController {
 
     @FXML private Label infoLabel;
@@ -95,8 +97,6 @@ public class DashboardController implements CleanableController {
     private final ObservableList<CategoriaDTO> categoriasData = FXCollections.observableArrayList();
     private final ObservableList<CategoriaDTO> subCategoriasData = FXCollections.observableArrayList();
     private FilteredList<ProductoDTO> filteredProductos;
-
-    private Timeline refreshTimeline;
     private Map<Long, String> estadoPedidoCache = new HashMap<>();
 
 
@@ -181,13 +181,54 @@ public class DashboardController implements CleanableController {
                     }
                 }
         );
+        // INICIO CAMBIO WEBSOCKET
+    // Suscribirse a los mensajes para actualizar el estado de las mesas
+    WebSocketService.getInstance().subscribe("/topic/pedidos", (mensaje) -> {
+        // "mensaje" será "NUEVO", "LISTO" o "CERRADO"
+        if (mensaje.equals("LISTO") || mensaje.equals("CERRADO") || mensaje.equals("NUEVO")) {
+            Platform.runLater(() -> {
+                System.out.println("WebSocket (Dashboard): Estado de pedido cambió, actualizando mesas...");
+                // Simplemente recargamos las mesas
+                cargarSoloMesasAsync(); 
+            });
+        }
+    });
+    // FIN CAMBIO WEBSOCKET
     }
 
     // --- Métodos de polling (sin cambios) ---
-    private void setupAutoRefreshPedidos() { /* ... */ }
-    private void actualizarEstadosPedidosAsync() { /* ... */ }
-    private void procesarActualizacionEstados(List<PedidoMesaDTO> pedidosActivos) { /* ... */ }
-    private void cargarSoloMesasAsync() { /* ... */ }
+    private void cargarSoloMesasAsync() {
+    new Thread(() -> {
+        List<MesaDTO> mesas = null;
+        List<PedidoMesaDTO> pedidosActivos = null;
+        try {
+            // Volvemos a cargar ambos
+            mesas = mesaService.getAllMesas();
+            List<PedidoMesaDTO> todosLosPedidos = pedidoMesaService.getAllPedidos();
+            pedidosActivos = todosLosPedidos.stream()
+                    .filter(p -> !"CERRADO".equalsIgnoreCase(p.getEstado()) && !"CANCELADO".equalsIgnoreCase(p.getEstado()))
+                    .collect(Collectors.toList());
+
+        } catch (Exception e) {
+            System.err.println("Error en la actualización de mesas vía WebSocket: " + e.getMessage());
+        }
+
+        final List<MesaDTO> finalMesas = mesas;
+        final List<PedidoMesaDTO> finalPedidosActivos = pedidosActivos;
+
+        Platform.runLater(() -> {
+            if (finalMesas != null && finalPedidosActivos != null) {
+                // Procesamos y actualizamos el caché
+                estadoPedidoCache.clear();
+                for (PedidoMesaDTO pedido : finalPedidosActivos) {
+                    estadoPedidoCache.put(pedido.getIdMesa(), pedido.getEstado());
+                }
+                // Mostramos las mesas con el estado actualizado
+                mostrarMesas(finalMesas);
+            }
+        });
+    }).start();
+}
 
     // --- Métodos de configuración UI ---
     private void configurarContenedorMesas() { /* Sin cambios */ }
@@ -317,7 +358,6 @@ public class DashboardController implements CleanableController {
                 HttpClientService.AuthenticationException authException = null;
 
                 if (finalMesas != null) {
-                    procesarActualizacionEstados(finalPedidosActivos != null ? finalPedidosActivos : new ArrayList<>());
                     mostrarMesas(finalMesas);
                 } else {
                     huboErrorGeneral = true;
@@ -350,7 +390,6 @@ public class DashboardController implements CleanableController {
                 } else {
                     infoLabel.setText("Datos cargados. Actualización automática iniciada.");
                     infoLabel.getStyleClass().setAll("lbl-success");
-                    setupAutoRefreshPedidos();
                 }
                 
                 // --- LLAMAR A CONFIGURAR BOTONES ADMIN AQUÍ ---
@@ -894,12 +933,8 @@ public class DashboardController implements CleanableController {
          if (mesasContainer.getChildren().size() <=1 && mesasContainer.getChildren().get(0) instanceof Label) mesasContainer.getChildren().set(0, new Label("Error al cargar."));
         mostrarAlertaError("Error", errorMessage);
     }
-
-    @Override
-    public void cleanup() {
-        if (refreshTimeline != null) {
-            refreshTimeline.stop();
-            System.out.println("Timeline de actualización de pedidos detenido.");
-        }
-    }
+      @Override
+        public void cleanup() {
+        System.out.println("Limpiando DashboardController.");
+}
 }

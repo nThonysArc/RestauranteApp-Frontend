@@ -26,6 +26,10 @@ import proyectopos.restauranteappfrontend.model.dto.PedidoMesaDTO;
 import proyectopos.restauranteappfrontend.services.HttpClientService;
 import proyectopos.restauranteappfrontend.services.PedidoMesaService;
 
+
+import proyectopos.restauranteappfrontend.services.WebSocketService;
+
+
 // --- ¡¡IMPLEMENTAR INTERFAZ!! ---
 public class KitchenController implements CleanableController {
 // --- FIN IMPLEMENTACIÓN ---
@@ -34,32 +38,32 @@ public class KitchenController implements CleanableController {
     @FXML private Label statusLabelKitchen;
 
     private final PedidoMesaService pedidoMesaService = new PedidoMesaService();
-    private Timeline refreshTimeline;
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss");
 
     @FXML
-    public void initialize() {
-        statusLabelKitchen.setText("Cargando pedidos pendientes...");
-        statusLabelKitchen.getStyleClass().setAll("lbl-info");
-        pedidosContainer.getChildren().clear();
+public void initialize() {
+    statusLabelKitchen.setText("Cargando pedidos pendientes...");
+    statusLabelKitchen.getStyleClass().setAll("lbl-info");
+    pedidosContainer.getChildren().clear();
 
-        cargarPedidosPendientes();
-        setupAutoRefresh();
-    }
+    cargarPedidosPendientes();
+    // setupAutoRefresh(); // <-- ELIMINAR ESTA LÍNEA
 
-    private void setupAutoRefresh() {
-        if (refreshTimeline != null) {
-            refreshTimeline.stop();
-        }
-        refreshTimeline = new Timeline(
-            new KeyFrame(Duration.seconds(30), event -> {
-                System.out.println("Actualizando pedidos de cocina...");
+    // ------------------------------------
+    // INICIO CAMBIO WEBSOCKET
+    // Suscribirse a los mensajes del backend
+    WebSocketService.getInstance().subscribe("/topic/pedidos", (mensaje) -> {
+        // "mensaje" será "NUEVO", "LISTO" o "CERRADO"
+        if (mensaje.equals("NUEVO")) {
+            Platform.runLater(() -> {
+                System.out.println("WebSocket (Cocina): Nuevo pedido recibido, actualizando...");
                 cargarPedidosPendientes();
-            })
-        );
-        refreshTimeline.setCycleCount(Timeline.INDEFINITE);
-        refreshTimeline.play();
-    }
+            });
+        }
+    });
+    // FIN CAMBIO WEBSOCKET
+    // ------------------------------------
+}
 
     // --- ¡¡MÉTODO MODIFICADO!! ---
     private void cargarPedidosPendientes() {
@@ -220,11 +224,10 @@ public class KitchenController implements CleanableController {
     /**
      * Método de la interfaz CleanableController. Detiene el Timeline.
      */
-    @Override // <-- AÑADIR @Override
+  @Override 
     public void cleanup() {
-        if (refreshTimeline != null) {
-            refreshTimeline.stop();
-            System.out.println("Timeline de cocina detenido.");
-        }
-    }
+    // Nota: La desconexión principal se maneja en MainController,
+    // pero podríamos cancelar suscripciones aquí si fuera necesario.
+    System.out.println("Limpiando KitchenController.");
+}
 }

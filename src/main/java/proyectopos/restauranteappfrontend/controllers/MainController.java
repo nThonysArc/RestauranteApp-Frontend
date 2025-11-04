@@ -16,6 +16,9 @@ import javafx.stage.Stage;
 import proyectopos.restauranteappfrontend.MainApplication;
 import proyectopos.restauranteappfrontend.util.SessionManager;
 
+import proyectopos.restauranteappfrontend.services.WebSocketService;
+
+
 public class MainController {
 
     @FXML private StackPane mainContentPane;
@@ -68,6 +71,8 @@ public class MainController {
         if (menuItemCaja != null) {
             menuItemCaja.setVisible(esAdmin || esCajero);
         }
+
+        WebSocketService.getInstance().connect();
 
         switch (userRole) {
             case "ROLE_ADMIN":
@@ -143,6 +148,9 @@ public class MainController {
 
     @FXML
     private void handleCerrarSesion() {
+
+        WebSocketService.getInstance().disconnect();
+        
         if (currentController != null && currentController instanceof CleanableController) {
              try {
                   System.out.println("Llamando cleanup() antes de cerrar sesión en: " + currentController.getClass().getSimpleName());

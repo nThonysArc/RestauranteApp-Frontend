@@ -10,35 +10,40 @@ import com.google.gson.Gson;
 
 import proyectopos.restauranteappfrontend.model.LoginRequest;
 import proyectopos.restauranteappfrontend.model.LoginResponse;
+import proyectopos.restauranteappfrontend.util.AppConfig; // <-- CAMBIO: Importar AppConfig
 
 public class AuthService {
 
-    private static final String BASE_URL = "http://localhost:8080";
-    private static final String LOGIN_ENDPOINT = BASE_URL + "/api/auth/login";
-
+    // <-- CAMBIO: Eliminar BASE_URL y LOGIN_ENDPOINT estáticos
+    private final String loginEndpoint; // <-- CAMBIO: Añadir variable de instancia
     private final HttpClient httpClient;
     private final Gson gson;
 
     public AuthService() {
         this.httpClient = HttpClient.newBuilder().version(HttpClient.Version.HTTP_2).build();
         this.gson = new Gson();
+        
+        // <-- CAMBIO: Construir el endpoint usando AppConfig
+        String baseUrl = AppConfig.getInstance().getApiBaseUrl(); 
+        if (baseUrl == null || baseUrl.isBlank()) {
+            System.err.println("FATAL: 'api.baseUrl' no encontrada en config.properties");
+            this.loginEndpoint = null; // O lanzar excepción
+        } else {
+            this.loginEndpoint = baseUrl + "/api/auth/login";
+        }
     }
 
-    /**
-     * Intenta autenticar al usuario contra el backend.
-     * @param username Nombre de usuario.
-     * @param password Contraseña.
-     * @return El objeto LoginResponse completo (token + datos de usuario) o null si falla. // <-- MODIFICADO
-     * @throws IOException Si hay un error de red o I/O.
-     * @throws InterruptedException Si la operación es interrumpida.
-     */
-    // <-- MODIFICADO: El tipo de retorno ahora es LoginResponse
     public LoginResponse authenticate(String username, String password) throws IOException, InterruptedException {
+        // <-- CAMBIO: Validar que el endpoint se haya cargado
+        if (this.loginEndpoint == null) {
+            throw new IOException("La URL de autenticación no está configurada.");
+        }
+        
         LoginRequest loginRequest = new LoginRequest(username, password);
         String jsonPayload = gson.toJson(loginRequest);
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(LOGIN_ENDPOINT))
+                .uri(URI.create(this.loginEndpoint)) // <-- CAMBIO: Usar this.loginEndpoint
                 .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(jsonPayload))
                 .build();
@@ -46,9 +51,7 @@ public class AuthService {
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
         if (response.statusCode() == 200) {
-            // Deserializar la respuesta JSON completa
             LoginResponse loginResponse = gson.fromJson(response.body(), LoginResponse.class);
-            // <-- MODIFICADO: Devolvemos el objeto completo
             return loginResponse;
         } else {
             System.err.println("Error en login - Status: " + response.statusCode() + ", Body: " + response.body());
