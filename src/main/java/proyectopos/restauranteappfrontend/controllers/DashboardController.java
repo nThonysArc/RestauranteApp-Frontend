@@ -8,7 +8,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -47,9 +46,8 @@ import proyectopos.restauranteappfrontend.services.HttpClientService;
 import proyectopos.restauranteappfrontend.services.MesaService;
 import proyectopos.restauranteappfrontend.services.PedidoMesaService;
 import proyectopos.restauranteappfrontend.services.ProductoService;
-import proyectopos.restauranteappfrontend.util.SessionManager;
-
 import proyectopos.restauranteappfrontend.services.WebSocketService;
+import proyectopos.restauranteappfrontend.util.SessionManager;
 
 public class DashboardController implements CleanableController {
 
@@ -413,6 +411,9 @@ public class DashboardController implements CleanableController {
         mesasContainer.getChildren().clear();
         if (mesas != null && !mesas.isEmpty()) {
             for (MesaDTO mesa : mesas) {
+                if ("BLOQUEADA".equals(mesa.getEstado())) {
+                continue; 
+            }
                 Button mesaButton = new Button();
                 mesaButton.setUserData(mesa);
                 mesaButton.getStyleClass().add("mesa-button");

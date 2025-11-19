@@ -14,9 +14,8 @@ import javafx.scene.control.MenuItem; // Import necesario
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import proyectopos.restauranteappfrontend.MainApplication;
-import proyectopos.restauranteappfrontend.util.SessionManager;
-
 import proyectopos.restauranteappfrontend.services.WebSocketService;
+import proyectopos.restauranteappfrontend.util.SessionManager;
 
 
 public class MainController {
@@ -177,4 +176,12 @@ public class MainController {
             new Alert(Alert.AlertType.ERROR, "Error al volver al login.").show();
         }
     }
+    @FXML
+private void handleShowTableManagement() {
+    if ("ROLE_ADMIN".equals(SessionManager.getInstance().getRole())) {
+        loadView("table-management-view.fxml");
+    } else {
+         new Alert(Alert.AlertType.WARNING, "Acceso denegado. Solo administradores.").show();
+    }
+}
 }

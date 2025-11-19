@@ -27,7 +27,9 @@
 
                 <Menu fx:id="adminMenu" text="Administración">
                     <MenuItem text="Gestionar Empleados" onAction="#handleShowEmployeeManagement" />
+                    <MenuItem text="Gestionar Mesas" onAction="#handleShowTableManagement" />
                     </Menu>
+                    
                 <Menu text="Sistema">
                     <MenuItem text="Cerrar Sesión" onAction="#handleCerrarSesion" />
                 </Menu>
