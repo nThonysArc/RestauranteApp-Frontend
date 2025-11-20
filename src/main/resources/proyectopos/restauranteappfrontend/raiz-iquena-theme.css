@@ -1,5 +1,5 @@
 /* --- raiz-iquena-theme.css --- */
-/* Tema Principal: Raíz Iqueña (Beige/Vino) + Estilos Específicos de Login (Dorado/Blanco) */
+/* Tema Unificado: Estilo Warm & Gold (Basado en el Login) */
 
 /* ========================================== */
 /* 1. CARGA DE FUENTES Y CONFIGURACIÓN GLOBAL */
@@ -13,33 +13,31 @@
 }
 
 .root {
-    /* Fondo: Blanco hueso / Beige muy claro */
-    -fx-background: #FDFBF5;
+    /* -- COLORES BASE (Paleta Cálida del Login) -- */
+    -fx-background: #fff9f1; 
+    -fx-base: #ffffff; /* Base para controles */
+    
+    /* Interior de listas y tablas */
+    -fx-control-inner-background: #ffffff;
+    -fx-control-inner-background-alt: #fffaf5;
 
-    /* Base: Color beige medio/cálido para tarjetas del sistema */
-    -fx-base: #EAE0C8;
-
-    /* Interior de controles (listas, tablas) */
-    -fx-control-inner-background: #FFFEF9;
-    -fx-control-inner-background-alt: derive(-fx-control-inner-background, -3%);
-
-    /* Acento Principal: Rojo vino oscuro (Sistema) */
-    -fx-accent: #6D2932; 
+    /* -- ACENTO PRINCIPAL (Naranja Dorado) -- */
+    -fx-accent: #f59e0b; 
     -fx-focus-color: -fx-accent;
-    -fx-faint-focus-color: derive(-fx-accent, 75%);
+    -fx-faint-focus-color: rgba(245, 158, 11, 0.25);
 
-    /* Colores de texto */
-    -fx-text-base-color: #4B3832; /* Marrón oscuro */
-    -fx-text-background-color: derive(-fx-text-base-color, 90%);
+    /* -- TEXTO -- */
+    -fx-text-base-color: #333333; /* Gris oscuro */
+    -fx-text-background-color: #4b5563; /* Gris medio */
     -fx-text-fill: -fx-text-base-color;
-    -fx-prompt-text-fill: #A08C7D;
+    -fx-prompt-text-fill: #9ca3af;
 
-    /* Colores semánticos */
-    -color-success: #556B2F; /* Verde Olivo */
-    -color-danger: #A0522D;  /* Siena */
-    -color-warning: #DAA520; /* Dorado */
-    -color-info: #4682B4;    /* Azul Acero */
-    -color-secondary: #8B7D6B; /* Marrón grisáceo */
+    /* -- COLORES SEMÁNTICOS (Reajustados al tema) -- */
+    -color-success: #65a30d; /* Verde Lima */
+    -color-danger: #dc2626;  /* Rojo */
+    -color-warning: #d97706; /* Dorado Oscuro */
+    -color-info: #0891b2;    /* Cian */
+    -color-secondary: #78716c; /* Piedra */
 
     /* Fuente Global */
     -fx-font-family: 'Montserrat';
@@ -47,65 +45,64 @@
 }
 
 /* ========================================== */
-/* 2. ESTILOS GENERALES DEL SISTEMA (DASHBOARD) */
+/* 2. ESTILOS GENERALES DEL SISTEMA */
 /* ========================================== */
 
-/* Fondo principal del sistema */
-.background {
-    -fx-background-color: -fx-background;
+/* Fondo principal con degradado suave */
+.background, .login-background {
+    -fx-background-color: linear-gradient(to bottom right, #fff9f1, #fff3e0);
 }
 
-/* Estilo de Tarjeta (Sistema) */
-.card {
-    -fx-background-color: -fx-base;
-    -fx-padding: 18px;
-    -fx-background-radius: 6px;
-    -fx-border-radius: 6px;
-    -fx-effect: dropshadow(gaussian, rgba(75, 56, 50, 0.25), 12, 0.3, 0, 4);
+/* Estilo de Tarjeta (Unificado: Blanco, Redondeado, Sombra Suave) */
+.card, .login-card {
+    -fx-background-color: #ffffff;
+    -fx-padding: 20px;
+    -fx-background-radius: 15px;
+    -fx-border-radius: 15px;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.10), 10, 0, 0, 5);
     -fx-border-width: 0px;
 }
 
 /* Encabezados */
-.h1, .h2, .h3 {
+.h1, .h2, .h3, .titulo-app {
     -fx-font-family: 'Playfair Display';
-    -fx-text-fill: -fx-accent;
+    -fx-text-fill: #d97706; /* Dorado Oscuro */
     -fx-font-weight: bold;
 }
-.h1 { -fx-font-size: 26pt; }
-.h2 { -fx-font-size: 20pt; }
+.h1 { -fx-font-size: 28pt; }
+.h2 { -fx-font-size: 22pt; }
 .h3 { -fx-font-size: 16pt; }
+.titulo-app { -fx-font-size: 28px; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 2, 0.1, 0, 1); }
 
-/* Labels de Información Generales */
-.lbl-info { -fx-text-fill: -color-info; }
-.lbl-success { -fx-text-fill: -color-success; -fx-font-weight: bold;}
-.lbl-warning { -fx-text-fill: -color-warning; -fx-font-weight: bold;}
-.lbl-danger { -fx-text-fill: -color-danger; -fx-font-weight: bold;}
+/* Labels de Información */
+.lbl-info, .login-lbl-info { -fx-text-fill: #4b5563; -fx-font-style: italic; }
+.lbl-success { -fx-text-fill: -color-success; -fx-font-weight: bold; }
+.lbl-warning { -fx-text-fill: -color-warning; -fx-font-weight: bold; }
+.lbl-danger  { -fx-text-fill: -color-danger; -fx-font-weight: bold; }
 
-/* Tablas y Listas */
+/* --- Tablas y Listas (Estilo Limpio) --- */
 .table-view, .list-view {
-    -fx-background-color: -fx-control-inner-background;
-    -fx-border-color: derive(-fx-base, -10%);
-    -fx-border-width: 1px;
-    -fx-background-radius: 4px;
-    -fx-border-radius: 4px;
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-border-width: 0px;
 }
 .table-view .column-header-background {
-    -fx-background-color: derive(-fx-base, -5%);
-    -fx-background-radius: 4px 4px 0 0;
-    -fx-border-radius: 4px 4px 0 0;
+    -fx-background-color: #fffaf5;
+    -fx-border-color: transparent transparent #d97706 transparent;
+    -fx-border-width: 2px;
+    -fx-background-radius: 10px 10px 0 0;
 }
-.table-view .column-header {
+.table-view .column-header .label {
     -fx-background-color: transparent;
     -fx-font-family: 'Montserrat';
     -fx-font-weight: bold;
-    -fx-text-fill: derive(-fx-text-base-color, -30%);
+    -fx-text-fill: #d97706;
     -fx-padding: 8px;
 }
 .table-view .cell, .list-view .list-cell {
-    -fx-background-color: transparent;
-    -fx-text-fill: -fx-text-base-color;
-    -fx-border-color: transparent transparent derive(-fx-base, -5%) transparent;
-    -fx-padding: 6px 8px;
+    -fx-text-fill: #333333;
+    -fx-border-color: transparent transparent #f3f4f6 transparent;
+    -fx-padding: 8px 10px;
     -fx-font-family: 'Montserrat';
 }
 .table-view .cell:selected, .list-view .list-cell:selected {
@@ -114,49 +111,56 @@
 }
 .table-view .placeholder .label, .list-view .placeholder .label {
     -fx-text-fill: -fx-prompt-text-fill;
-    -fx-font-family: 'Montserrat';
 }
 
-/* Botones Generales */
-.button {
+/* --- Botones (Estilo Moderno/Login) --- */
+.button, .btn-login {
     -fx-font-family: 'Montserrat';
     -fx-text-fill: white;
     -fx-font-weight: bold;
-    -fx-background-radius: 6px;
-    -fx-border-radius: 6px;
-    -fx-padding: 8px 18px;
+    -fx-background-radius: 10px;
+    -fx-border-radius: 10px;
+    -fx-padding: 10px 20px;
     -fx-cursor: hand;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 4, 0.1, 0, 1);
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 4, 0, 0, 2);
+    -fx-background-color: -color-secondary; /* Default */
 }
-.button:hover {
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.25), 6, 0.2, 0, 2);
+.button:hover, .btn-login:hover {
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 6, 0, 0, 3);
+    -fx-translate-y: -1px;
+}
+.button:pressed, .btn-login:pressed {
+    -fx-translate-y: 1px;
 }
 
-/* Variantes de Botones (BootstrapFX style) */
+/* Variantes de Botones */
 .btn-primary { -fx-background-color: -fx-accent; }
-.btn-primary:hover { -fx-background-color: derive(-fx-accent, -10%); }
+.btn-primary:hover { -fx-background-color: #fbbf24; } /* Amber-400 */
+
+.btn-login { -fx-background-color: #f59e0b; }
+.btn-login:hover { -fx-background-color: #ffb84d; }
 
 .btn-success { -fx-background-color: -color-success; }
-.btn-success:hover { -fx-background-color: derive(-color-success, -10%); }
+.btn-success:hover { -fx-background-color: derive(-color-success, 15%); }
 
 .btn-danger { -fx-background-color: -color-danger; }
-.btn-danger:hover { -fx-background-color: derive(-color-danger, -10%); }
+.btn-danger:hover { -fx-background-color: derive(-color-danger, 15%); }
 
-.btn-warning { -fx-background-color: -color-warning; -fx-text-fill: #4B3832;}
-.btn-warning:hover { -fx-background-color: derive(-color-warning, -10%); }
+.btn-warning { -fx-background-color: -color-warning; -fx-text-fill: white;}
+.btn-warning:hover { -fx-background-color: derive(-color-warning, 15%); }
 
 .btn-info { -fx-background-color: -color-info; }
-.btn-info:hover { -fx-background-color: derive(-color-info, -10%); }
+.btn-info:hover { -fx-background-color: derive(-color-info, 15%); }
 
 .btn-secondary { -fx-background-color: -color-secondary; }
-.btn-secondary:hover { -fx-background-color: derive(-color-secondary, -10%); }
+.btn-secondary:hover { -fx-background-color: derive(-color-secondary, 15%); }
 
 .btn-sm {
-    -fx-padding: 5px 10px;
+    -fx-padding: 5px 12px;
     -fx-font-size: 0.9em;
 }
 
-/* Botones de Mesa (Dashboard) */
+/* --- Botones de Mesa (Dashboard) --- */
 .mesa-button {
     -fx-font-size: 14pt;
     -fx-min-width: 90px;
@@ -165,75 +169,80 @@
     -fx-pref-height: 90px;
     -fx-alignment: center;
     -fx-text-alignment: center;
-    -fx-background-radius: 8px;
-    -fx-border-radius: 8px;
-    -fx-border-color: derive(-fx-accent, -20%);
-    -fx-border-width: 1px;
+    -fx-background-radius: 12px;
+    -fx-border-radius: 12px;
+    -fx-border-width: 0px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 4, 0, 0, 2);
 }
 .mesa-button .text {
      -fx-font-family: 'Montserrat';
      -fx-font-weight: bold;
 }
 .mesa-button .text:first-child { -fx-font-size: 1.6em; }
-.mesa-button .text:last-child {
-    -fx-font-size: 0.8em;
-    -fx-translate-y: 2px;
-}
+.mesa-button .text:last-child { -fx-font-size: 0.8em; -fx-translate-y: 2px; }
+
 .mesa-libre { -fx-background-color: -color-success; }
-.mesa-ocupada { -fx-background-color: -fx-accent; }
-.mesa-pagando { -fx-background-color: -color-warning; }
+.mesa-ocupada { -fx-background-color: -fx-accent; } /* Naranja */
+.mesa-pagando { -fx-background-color: -color-warning; } /* Dorado Oscuro */
 .mesa-reservada { -fx-background-color: -color-secondary; -fx-cursor: default; }
 
-.mesa-libre .text, .mesa-ocupada .text, .mesa-reservada .text { -fx-fill: white; }
-.mesa-pagando .text { -fx-fill: #4B3832; }
+.mesa-libre .text, .mesa-ocupada .text, .mesa-pagando .text, .mesa-reservada .text { 
+    -fx-fill: white; 
+}
 
-/* Menú y Navegación */
+/* --- Menú y Navegación --- */
 .menu-bar {
-    -fx-background-color: -fx-accent;
+    -fx-background-color: #ffffff;
     -fx-border-width: 0 0 1 0;
-    -fx-border-color: derive(-fx-accent, -15%);
+    -fx-border-color: #e5e7eb;
+    -fx-padding: 5px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 5, 0, 0, 2);
 }
 .menu-bar .label {
-    -fx-text-fill: white;
+    -fx-text-fill: #4b5563;
     -fx-font-family: 'Montserrat';
     -fx-font-weight: bold;
     -fx-padding: 6px 12px;
 }
-.menu:hover, .menu:showing { -fx-background-color: derive(-fx-accent, -10%); }
+.menu:hover, .menu:showing { 
+    -fx-background-color: #fff7ed; /* Fondo crema suave */
+    -fx-background-radius: 5px;
+}
 .menu-item .label {
-     -fx-text-fill: -fx-text-base-color;
+     -fx-text-fill: #333333;
      -fx-font-family: 'Montserrat';
      -fx-font-weight: normal;
      -fx-padding: 6px 10px;
 }
-.menu-item:focused { -fx-background-color: derive(-fx-base, -5%); }
+.menu-item:focused { -fx-background-color: #fff7ed; }
 .menu-item:focused .label { -fx-text-fill: -fx-accent; }
+
 .context-menu {
-     -fx-background-color: #FFFEF9;
-     -fx-border-color: derive(-fx-base, -10%);
+     -fx-background-color: #ffffff;
+     -fx-border-color: #e5e7eb;
      -fx-background-insets: 0, 1;
      -fx-padding: 5px;
      -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 8, 0.1, 0, 2);
 }
 
-/* Comandas Cocina */
+/* --- Comandas Cocina --- */
 .kitchen-command-card {
-    -fx-background-color: #FFFFF0;
-    -fx-padding: 12px;
-    -fx-background-radius: 0px;
-    -fx-border-radius: 0px;
-    -fx-border-color: #D3C0A5;
+    -fx-background-color: #fffbeb; /* Amber-50 muy suave */
+    -fx-padding: 15px;
+    -fx-background-radius: 10px;
+    -fx-border-radius: 10px;
+    -fx-border-color: #fcd34d; /* Amber-300 */
     -fx-border-width: 1px;
-    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 6, 0.1, 1, 1);
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 6, 0.1, 1, 1);
 }
 .kitchen-command-card .label {
     -fx-font-family: 'Montserrat';
-    -fx-text-fill: #4B3832;
+    -fx-text-fill: #78350f; /* Amber-900 */
 }
 .kitchen-command-card .label:first-child {
      -fx-font-family: 'Montserrat';
      -fx-font-weight: bold;
-     -fx-font-size: 1.1em;
+     -fx-font-size: 1.2em;
 }
 .kitchen-command-card .list-view {
      -fx-font-family: "Courier New", monospace;
@@ -243,66 +252,64 @@
 }
 .kitchen-command-card .list-view .list-cell {
     -fx-background-color: transparent;
-    -fx-text-fill: #4B3832;
+    -fx-text-fill: #4b5563;
     -fx-border-width: 0;
-    -fx-padding: 1px 0;
+    -fx-padding: 2px 0;
 }
 .kitchen-command-card .button {
-    -fx-font-family: 'Montserrat';
     -fx-background-color: -color-success;
 }
-.kitchen-command-card .button:hover { -fx-background-color: derive(-color-success, -10%); }
 
-/* Inputs Generales */
-.text-field, .password-field, .text-area {
-    -fx-background-color: white;
-    -fx-background-insets: 0;
-    -fx-background-radius: 3px;
-    -fx-prompt-text-fill: -fx-prompt-text-fill;
-    -fx-text-fill: -fx-text-base-color;
-    -fx-border-color: derive(-fx-base, -15%);
-    -fx-border-radius: 3px;
+/* --- Inputs Generales (Estilo Login) --- */
+.text-field, .password-field, .text-area, .login-input {
+    -fx-background-color: #fffaf5;
+    -fx-border-color: #d97706;
     -fx-border-width: 1px;
-    -fx-padding: 6px 10px;
+    -fx-border-radius: 8px;
+    -fx-background-radius: 8px;
+    -fx-padding: 8 12;
     -fx-font-family: 'Montserrat';
+    -fx-text-fill: #333333;
 }
-.text-field:focused, .password-field:focused, .text-area:focused {
+
+.text-field:focused, .password-field:focused, .text-area:focused, .login-input:focused {
     -fx-border-color: -fx-accent;
-    -fx-border-width: 1.5px;
-    -fx-background-color: white;
+    -fx-border-width: 2px;
+    -fx-background-color: #ffffff;
+    -fx-effect: dropshadow(gaussian, rgba(245,158,11,0.2), 8, 0, 0, 0);
 }
+
 .text-area { -fx-wrap-text: true; }
 
 /* ComboBox */
 .combo-box-base {
-    -fx-border-color: derive(-fx-base, -15%);
-    -fx-border-radius: 3px;
-    -fx-background-radius: 3px;
-    -fx-background-color: white;
+    -fx-background-color: #fffaf5;
+    -fx-border-color: #d97706;
+    -fx-border-radius: 8px;
+    -fx-background-radius: 8px;
     -fx-padding: 0;
 }
 .combo-box-base .arrow-button {
-    -fx-background-color: derive(-fx-base, -5%);
-    -fx-background-radius: 0 3px 3px 0;
-    -fx-padding: 6px 8px;
+    -fx-background-color: transparent;
+    -fx-padding: 8px;
 }
-.combo-box-base .arrow { -fx-background-color: -fx-text-base-color; }
-.combo-box-base:hover .arrow-button { -fx-background-color: derive(-fx-base, -10%); }
+.combo-box-base .arrow { -fx-background-color: #d97706; }
+
+.combo-box-base:hover { -fx-background-color: #ffffff; }
 .combo-box-base:focused {
      -fx-border-color: -fx-accent;
-     -fx-border-width: 1.5px;
+     -fx-border-width: 2px;
 }
-.combo-box .list-cell {
-    -fx-background-color: white;
-    -fx-text-fill: -fx-text-base-color;
-    -fx-padding: 6px 10px;
-    -fx-font-family: 'Montserrat';
+
+.combo-box-popup .list-view {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #d97706;
+    -fx-border-width: 1px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 5, 0, 0, 2);
 }
 .combo-box-popup .list-view .list-cell {
-    -fx-background-color: #FFFEF9;
-    -fx-text-fill: -fx-text-base-color;
-    -fx-padding: 6px 10px;
-    -fx-font-family: 'Montserrat';
+    -fx-text-fill: #333333;
+    -fx-padding: 8px 10px;
 }
 .combo-box-popup .list-view .list-cell:filled:selected,
 .combo-box-popup .list-view .list-cell:filled:selected:hover {
@@ -310,101 +317,21 @@
     -fx-text-fill: white;
 }
 .combo-box-popup .list-view .list-cell:filled:hover {
-    -fx-background-color: derive(-fx-base, -5%);
-    -fx-text-fill: -fx-text-base-color;
+    -fx-background-color: #fff7ed;
+    -fx-text-fill: #d97706;
 }
 
-/* ScrollPane */
+/* ScrollPane & Bars */
 .scroll-pane, .scroll-pane .corner { -fx-background-color: transparent; }
-.scroll-bar:horizontal, .scroll-bar:vertical { -fx-background-color:transparent; }
+.scroll-bar:horizontal, .scroll-bar:vertical { -fx-background-color: transparent; }
 .increment-button, .decrement-button {
     -fx-background-color: transparent;
     -fx-border-color: transparent;
 }
 .scroll-bar .thumb {
-    -fx-background-color: derive(-fx-base, -15%);
-    -fx-background-insets: 2, 0, 0;
+    -fx-background-color: #d6d3d1; /* Gris cálido */
+    -fx-background-insets: 2;
     -fx-background-radius: 4px;
 }
-.scroll-bar .thumb:hover { -fx-background-color: derive(-fx-base, -25%); }
+.scroll-bar .thumb:hover { -fx-background-color: #a8a29e; }
 .tile-pane { -fx-padding: 10px; }
-
-
-/* ================================================================= */
-/* 3. ESTILOS ESPECÍFICOS PARA EL LOGIN (Migrados de dark-theme.css) */
-/* ================================================================= */
-/* IMPORTANTE: Para usar estos estilos, en tu login-view.fxml debes cambiar las clases:
-   - styleClass="background" -> styleClass="login-background"
-   - styleClass="card"       -> styleClass="login-card"
-   - styleClass="btn-primary"-> styleClass="btn-login"
-   - (Los TextField)         -> styleClass="login-input"
-   - (Los Labels info)       -> styleClass="login-lbl-info"
-*/
-
-/* Fondo degradado (Naranja/Blanco cálido) */
-.login-background {
-    -fx-background-color: linear-gradient(to bottom right, #fff9f1, #fff3e0);
-}
-
-/* Tarjeta blanca con sombra (Login) */
-.login-card {
-    -fx-background-color: #ffffff;
-    -fx-background-radius: 15px;
-    -fx-border-radius: 15px;
-    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.15), 8, 0, 0, 4);
-}
-
-/* Título especial del Login (Dorado) */
-.titulo-app {
-    -fx-text-fill: #d97706; /* Dorado oscuro */
-    /* Nota: Asegúrate de tener la fuente 'Clicker Script' o cambiará a default */
-    -fx-font-family: 'Clicker Script', 'Playfair Display'; 
-    -fx-font-size: 28px;
-    -fx-font-weight: bold;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.5), 4, 0.2, 0, 1);
-}
-
-/* Icono del Login */
-.icono-app {
-    -fx-font-size: 50px;
-}
-
-/* Mensajes de información en Login */
-.login-lbl-info {
-    -fx-text-fill: #4b5563;
-    -fx-font-size: 14px;
-    -fx-font-style: italic;
-}
-
-/* Inputs específicos del Login (Dorado) */
-.login-input {
-    -fx-background-color: #fffaf5;
-    -fx-border-color: #d97706; /* Dorado oscuro */
-    -fx-border-width: 1.5px;
-    -fx-border-radius: 8px;
-    -fx-background-radius: 8px;
-    -fx-padding: 6 10 6 10;
-    -fx-font-size: 14px;
-    -fx-text-fill: #333333;
-}
-.login-input:focused {
-    -fx-border-color: #f59e0b; /* Naranja al enfocar */
-    -fx-effect: dropshadow(gaussian, rgba(245,158,11,0.25), 6, 0, 0, 0);
-}
-
-/* Botón de Login (Naranja) */
-.btn-login {
-    -fx-background-color: #f59e0b;
-    -fx-text-fill: white;
-    -fx-font-size: 15px;
-    -fx-font-weight: bold;
-    -fx-background-radius: 10px;
-    -fx-cursor: hand;
-    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 4, 0, 0, 2);
-}
-.btn-login:hover {
-    -fx-background-color: #ffb84d;
-}
-.btn-login:pressed {
-    -fx-background-color: #d97706;
-}
