@@ -177,11 +177,19 @@ public class MainController {
         }
     }
     @FXML
-private void handleShowTableManagement() {
-    if ("ROLE_ADMIN".equals(SessionManager.getInstance().getRole())) {
+    private void handleShowTableManagement() {
+     if ("ROLE_ADMIN".equals(SessionManager.getInstance().getRole())) {
         loadView("table-management-view.fxml");
-    } else {
-         new Alert(Alert.AlertType.WARNING, "Acceso denegado. Solo administradores.").show();
+     } else {
+          new Alert(Alert.AlertType.WARNING, "Acceso denegado. Solo administradores.").show();
+     }
     }
-}
+    @FXML
+    private void handleShowSessionLogs() {
+        if ("ROLE_ADMIN".equals(SessionManager.getInstance().getRole())) {
+            loadView("session-logs-view.fxml");
+        } else {
+             new Alert(Alert.AlertType.WARNING, "Acceso denegado. Solo administradores.").show();
+        }
+    }
 }

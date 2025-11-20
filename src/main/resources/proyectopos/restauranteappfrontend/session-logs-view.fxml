@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox spacing="15.0" styleClass="card" xmlns="http://javafx.com/javafx/20.0.1" 
+      xmlns:fx="http://javafx.com/fxml/1" 
+      fx:controller="proyectopos.restauranteappfrontend.controllers.SessionLogsController">
+    
+    <padding>
+        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+    </padding>
+    
+    <children>
+        <Label text="Historial de Accesos (Logs)" styleClass="h2" />
+
+        <HBox spacing="10.0" alignment="CENTER_LEFT">
+            <TextField fx:id="usuarioFilterField" promptText="Buscar por usuario..." />
+            <Label text="Desde:" />
+            <DatePicker fx:id="desdeDatePicker" prefWidth="120" />
+            <Label text="Hasta:" />
+            <DatePicker fx:id="hastaDatePicker" prefWidth="120" />
+            
+            <Button text="Buscar / Filtrar" onAction="#handleBuscar" styleClass="btn-info" />
+            <Button text="Limpiar" onAction="#handleLimpiar" styleClass="btn-secondary" />
+        </HBox>
+
+        <Label fx:id="statusLabel" text="" />
+
+        <TableView fx:id="logsTable" VBox.vgrow="ALWAYS">
+            <columns>
+                <TableColumn fx:id="colId" text="ID" prefWidth="50" />
+                <TableColumn fx:id="colFecha" text="Fecha y Hora" prefWidth="160" />
+                <TableColumn fx:id="colUsuario" text="Usuario" prefWidth="100" />
+                <TableColumn fx:id="colNombre" text="Nombre Empleado" prefWidth="200" />
+                <TableColumn fx:id="colRol" text="Rol" prefWidth="100" />
+                <TableColumn fx:id="colIp" text="Dirección IP" prefWidth="120" />
+            </columns>
+            <columnResizePolicy><TableView fx:constant="CONSTRAINED_RESIZE_POLICY" /></columnResizePolicy>
+            <placeholder>
+                <Label text="No hay registros para mostrar."/>
+            </placeholder>
+        </TableView>
+    </children>
+</VBox>
