@@ -6,27 +6,22 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import javafx.animation.KeyFrame;
-import javafx.animation.Timeline;
-import javafx.application.Platform; // Importado en paso anterior
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.fxml.FXML; // Importado en paso anterior
-import javafx.geometry.Insets; // Importado en paso anterior
-import javafx.scene.Node;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label; // Importado en paso anterior
+import javafx.collections.ObservableList; // Importado en paso anterior
+import javafx.fxml.FXML;
+import javafx.geometry.Insets;
+import javafx.scene.Node; // Importado en paso anterior
+import javafx.scene.control.Button; // Importado en paso anterior
+import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
-import javafx.scene.control.SelectionMode;
+import javafx.scene.control.SelectionMode; // Importado en paso anterior
 import javafx.scene.layout.TilePane;
 import javafx.scene.layout.VBox;
-import javafx.util.Duration;
 import proyectopos.restauranteappfrontend.model.dto.DetallePedidoMesaDTO;
 import proyectopos.restauranteappfrontend.model.dto.PedidoMesaDTO;
 import proyectopos.restauranteappfrontend.services.HttpClientService;
 import proyectopos.restauranteappfrontend.services.PedidoMesaService;
-
-
 import proyectopos.restauranteappfrontend.services.WebSocketService;
 
 
@@ -137,8 +132,6 @@ public void initialize() {
         ListView<String> productosList = new ListView<>();
         ObservableList<String> items = FXCollections.observableArrayList();
         
-        // --- ¡¡MODIFICACIÓN CLAVE!! ---
-        // Mostramos SOLAMENTE los items que están PENDIENTES
         if (pedido.getDetalles() != null) { 
             List<DetallePedidoMesaDTO> detallesPendientes = pedido.getDetalles().stream()
                     .filter(d -> "PENDIENTE".equalsIgnoreCase(d.getEstadoDetalle()))
@@ -148,7 +141,7 @@ public void initialize() {
                 items.add(detalle.getCantidad() + " x " + detalle.getNombreProducto());
             }
         }
-        // --- FIN MODIFICACIÓN ---
+
         
         productosList.setItems(items);
         productosList.setPrefHeight(100);
@@ -166,40 +159,28 @@ public void initialize() {
         return tarjeta;
     }
 
-    // --- ¡¡MÉTODO MODIFICADO!! ---
     private void handleMarcarListo(PedidoMesaDTO pedido, Node tarjetaNode) {
         tarjetaNode.setOpacity(0.5);
         tarjetaNode.setDisable(true);
         statusLabelKitchen.setText("Marcando comanda Mesa " + pedido.getNumeroMesa() + " como lista...");
         statusLabelKitchen.getStyleClass().setAll("lbl-warning");
 
-        // Ya no usamos NUEVO_ESTADO, llamamos al endpoint específico
-        // final String NUEVO_ESTADO = "LISTO_PARA_ENTREGAR"; 
-
         new Thread(() -> {
             try {
-                // --- ¡¡MODIFICACIÓN CLAVE!! ---
-                // Llamamos al nuevo endpoint que marca solo los PENDIENTES como LISTO
                 PedidoMesaDTO pedidoActualizado = pedidoMesaService.marcarPendientesComoListos(pedido.getIdPedidoMesa());
-                // --- FIN MODIFICACIÓN ---
-
                 Platform.runLater(() -> {
-                    // La lógica de respuesta sigue siendo válida:
-                    // El backend pondrá el pedido como LISTO_PARA_ENTREGAR si marcó items.
                     if (pedidoActualizado != null && "LISTO_PARA_ENTREGAR".equalsIgnoreCase(pedidoActualizado.getEstado())) {
                         statusLabelKitchen.setText("Comanda Mesa " + pedido.getNumeroMesa() + " marcada como lista.");
                         statusLabelKitchen.getStyleClass().setAll("lbl-success");
-                        pedidosContainer.getChildren().remove(tarjetaNode); // Quitamos la tarjeta
+                        pedidosContainer.getChildren().remove(tarjetaNode);
                         if (pedidosContainer.getChildren().isEmpty()) {
                             pedidosContainer.getChildren().add(new Label("No hay pedidos pendientes."));
                         }
                     } else {
-                        // Esto podría pasar si hubo un error o si el mesero añadió
-                        // más items justo ahora, volviendo el pedido a ABIERTO.
                         handleError("Error: El estado del pedido no se actualizó (quizás fue modificado).", null);
                         tarjetaNode.setOpacity(1.0);
                         tarjetaNode.setDisable(false);
-                        cargarPedidosPendientes(); // Recargar por si acaso
+                        cargarPedidosPendientes(); 
                     }
                 });
 

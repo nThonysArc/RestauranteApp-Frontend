@@ -27,8 +27,6 @@ import proyectopos.restauranteappfrontend.model.dto.PedidoMesaDTO;
 import proyectopos.restauranteappfrontend.services.HttpClientService;
 import proyectopos.restauranteappfrontend.services.PedidoMesaService;
 
-// Asumiendo que no necesita cleanup por ahora
-// public class CashierController implements CleanableController {
 public class CashierController {
 
     // --- Tabla Izquierda (Pedidos Listos) ---
@@ -77,9 +75,6 @@ public class CashierController {
         );
     }
 
-    /**
-     * Configura las CellValueFactory y CellFactory para ambas tablas.
-     */
     private void configurarTablas() {
         // Tabla Izquierda (Pedidos Listos)
         mesaCol.setCellValueFactory(new PropertyValueFactory<>("numeroMesa"));
@@ -119,8 +114,6 @@ public class CashierController {
         detallePrecioCol.setCellValueFactory(new PropertyValueFactory<>("precioUnitario"));
         detalleSubtotalCol.setCellValueFactory(new PropertyValueFactory<>("subtotal"));
 
-        // --- APLICAR CELL FACTORY DIRECTAMENTE ---
-        // Para columna Precio Unitario
         detallePrecioCol.setCellFactory(col -> new TableCell<DetallePedidoMesaDTO, Double>() {
             @Override
             protected void updateItem(Double price, boolean empty) {
@@ -130,7 +123,6 @@ public class CashierController {
                 } else {
                     setText(CURRENCY_FORMATTER.format(price));
                 }
-                // Opcional: Alinear a la derecha
                 setStyle("-fx-alignment: CENTER-RIGHT;");
             }
         });
