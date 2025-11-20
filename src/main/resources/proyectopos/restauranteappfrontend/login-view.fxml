@@ -9,23 +9,17 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<!-- CLAVE 1: VINCULACIÓN DEL CONTROLADOR -->
 <BorderPane
         xmlns="http://javafx.com/javafx/20.0.1"
         xmlns:fx="http://javafx.com/fxml/1"
         fx:controller="proyectopos.restauranteappfrontend.controllers.LoginController"
         prefHeight="600.0" prefWidth="800.0"
-        styleClass="background"> <!-- Clase CSS para un fondo claro -->
-
-  <!-- Contenedor central para centrar el formulario de login -->
-  <center>
-    <VBox alignment="CENTER" spacing="20.0" maxWidth="350.0" styleClass="card"> <!-- Clase CSS de tarjeta Bootstrap -->
-      <padding>
+        styleClass="login-background"> <center>
+    <VBox alignment="CENTER" spacing="20.0" maxWidth="350.0" styleClass="login-card"> <padding>
         <Insets bottom="40.0" left="40.0" right="40.0" top="40.0" />
       </padding>
 
-      <!-- Título de la Aplicación -->
-      <Label text="Restaurante POS">
+      <Label text="Restaurante POS" styleClass="titulo-app">
         <font>
           <Font name="System Bold" size="24.0" />
         </font>
@@ -34,34 +28,20 @@
         </VBox.margin>
       </Label>
 
-      <!-- Mensaje de Bienvenida o Error -->
-      <!-- CLAVE 2: fx:id para mostrar mensajes del controlador -->
-      <Label fx:id="messageLabel" text="Por favor, inicie sesión" styleClass="lbl-info" />
-
-      <!-- Campo de Usuario -->
-      <TextField
+      <Label fx:id="messageLabel" text="Por favor, inicie sesión" styleClass="login-lbl-info" /> <TextField
               fx:id="usernameField"
               promptText="Nombre de Usuario"
               prefHeight="40.0"
-              styleClass="text-input" />
-
-      <!-- Campo de Contraseña -->
-      <PasswordField
+              styleClass="login-input" /> <PasswordField
               fx:id="passwordField"
               promptText="Contraseña"
               prefHeight="40.0"
-              styleClass="text-input" />
-
-      <!-- Botón de Iniciar Sesión -->
-      <!-- CLAVE 3: Añadimos la clase btn-primary para el color principal -->
-      <Button
+              styleClass="login-input" /> <Button
               fx:id="loginButton"
               onAction="#onLoginButtonClick"
               text="Iniciar Sesión"
               prefHeight="40.0"
               prefWidth="350.0"
-              styleClass="btn-primary" />
-
-    </VBox>
+              styleClass="btn-login" /> </VBox>
   </center>
 </BorderPane>

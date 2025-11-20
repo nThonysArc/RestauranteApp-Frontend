@@ -165,9 +165,15 @@ public class MainController {
             Stage stage = (Stage) mainContentPane.getScene().getWindow();
             FXMLLoader fxmlLoader = new FXMLLoader(MainApplication.class.getResource("/proyectopos/restauranteappfrontend/login-view.fxml"));
             Scene scene = new Scene(fxmlLoader.load(), 800, 600);
+            
+            // Cargar BootstrapFX
             scene.getStylesheets().add(org.kordamp.bootstrapfx.BootstrapFX.bootstrapFXStylesheet());
-            scene.getStylesheets().add(MainApplication.class.getResource("/proyectopos/restauranteappfrontend/dark-theme.css").toExternalForm());
-            stage.setTitle("Restaurante POS - Iniciar Sesión");
+            
+            // --- CORRECCIÓN: Cargar el tema correcto ---
+            scene.getStylesheets().add(MainApplication.class.getResource("/proyectopos/restauranteappfrontend/raiz-iquena-theme.css").toExternalForm());
+            // -------------------------------------------
+
+            stage.setTitle("Restaurante POS Raíz Iqueña - Iniciar Sesión");
             stage.setScene(scene);
             stage.setResizable(false);
             stage.centerOnScreen();
