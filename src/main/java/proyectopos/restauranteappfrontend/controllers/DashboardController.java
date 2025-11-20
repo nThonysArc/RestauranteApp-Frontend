@@ -8,6 +8,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.google.gson.Gson; // Importar Gson
+
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -41,6 +43,7 @@ import proyectopos.restauranteappfrontend.model.dto.DetallePedidoMesaDTO;
 import proyectopos.restauranteappfrontend.model.dto.MesaDTO;
 import proyectopos.restauranteappfrontend.model.dto.PedidoMesaDTO;
 import proyectopos.restauranteappfrontend.model.dto.ProductoDTO;
+import proyectopos.restauranteappfrontend.model.dto.WebSocketMessageDTO; // Importar DTO de WS
 import proyectopos.restauranteappfrontend.services.CategoriaService;
 import proyectopos.restauranteappfrontend.services.HttpClientService;
 import proyectopos.restauranteappfrontend.services.MesaService;
@@ -78,6 +81,7 @@ public class DashboardController implements CleanableController {
     private final CategoriaService categoriaService = new CategoriaService();
     private final ProductoService productoService = new ProductoService();
     private final PedidoMesaService pedidoMesaService = new PedidoMesaService();
+    private final Gson gson = new Gson(); // Instancia para procesar JSON
 
     private MesaDTO mesaSeleccionada = null;
     private PedidoMesaDTO pedidoActual = null;
@@ -172,14 +176,139 @@ public class DashboardController implements CleanableController {
                     }
                 }
         );
-        WebSocketService.getInstance().subscribe("/topic/pedidos", (mensaje) -> {
-            if (mensaje.equals("LISTO") || mensaje.equals("CERRADO") || mensaje.equals("NUEVO")) {
-                Platform.runLater(() -> {
-                    System.out.println("WebSocket (Dashboard): Estado de pedido cambió, actualizando mesas...");
-                    cargarSoloMesasAsync(); 
-                });
-            }
+        
+        // --- SUSCRIPCIÓN WEBSOCKET MEJORADA ---
+        WebSocketService.getInstance().subscribe("/topic/pedidos", (jsonMessage) -> {
+            Platform.runLater(() -> procesarMensajeWebSocket(jsonMessage));
         });
+    }
+
+    /**
+     * Procesa el mensaje JSON del WebSocket para realizar actualizaciones parciales (Delta Updates)
+     * en lugar de recargar toda la lista de mesas.
+     */
+    private void procesarMensajeWebSocket(String jsonMessage) {
+        try {
+            // Intentar parsear como objeto estructurado
+            WebSocketMessageDTO msg = gson.fromJson(jsonMessage, WebSocketMessageDTO.class);
+            
+            // Si el mensaje no tiene estructura (es antiguo: "NUEVO", "LISTO"), fallback a recarga completa
+            if (msg == null || msg.getType() == null) {
+                if ("LISTO".equals(jsonMessage) || "CERRADO".equals(jsonMessage) || "NUEVO".equals(jsonMessage)) {
+                    System.out.println("WS Legacy msg: " + jsonMessage + ". Recargando todo.");
+                    cargarSoloMesasAsync();
+                }
+                return;
+            }
+
+            // Procesar según el tipo de evento con el payload (PedidoMesaDTO)
+            PedidoMesaDTO pedido = gson.fromJson(msg.getPayload(), PedidoMesaDTO.class);
+            
+            if (pedido != null && pedido.getIdMesa() != null) {
+                actualizarEstadoMesaEspecifica(msg.getType(), pedido);
+                
+                // Si estamos viendo el pedido de esa mesa, actualizar también el panel de detalle
+                if (mesaSeleccionada != null && mesaSeleccionada.getIdMesa().equals(pedido.getIdMesa())) {
+                    actualizarPanelDetalleSiCorresponde(msg.getType(), pedido);
+                }
+            }
+
+        } catch (Exception e) {
+            System.err.println("Error procesando mensaje WS en Dashboard: " + e.getMessage());
+            // Fallback seguro
+            cargarSoloMesasAsync();
+        }
+    }
+
+    private void actualizarEstadoMesaEspecifica(String tipoEvento, PedidoMesaDTO pedido) {
+        // Buscar el botón correspondiente a la mesa en el TilePane
+        for (Node node : mesasContainer.getChildren()) {
+            if (node instanceof Button) {
+                Button btn = (Button) node;
+                MesaDTO mesaBtn = (MesaDTO) btn.getUserData();
+                
+                if (mesaBtn != null && mesaBtn.getIdMesa().equals(pedido.getIdMesa())) {
+                    // Encontrado: Actualizar estilo y datos
+                    actualizarEstiloBotonMesa(btn, tipoEvento, mesaBtn);
+                    
+                    // Actualizar caché de estados para futuras referencias
+                    if ("PEDIDO_CERRADO".equals(tipoEvento) || "PEDIDO_CANCELADO".equals(tipoEvento)) {
+                        estadoPedidoCache.remove(mesaBtn.getIdMesa());
+                    } else {
+                        estadoPedidoCache.put(mesaBtn.getIdMesa(), pedido.getEstado());
+                    }
+                    break; // Terminar búsqueda
+                }
+            }
+        }
+    }
+
+    private void actualizarEstiloBotonMesa(Button mesaButton, String tipoEvento, MesaDTO mesaDTO) {
+        // Limpiar estilos anteriores de estado
+        mesaButton.getStyleClass().removeAll("mesa-libre", "mesa-ocupada", "mesa-pagando", "mesa-reservada", "btn-secondary");
+        
+        // Obtener componentes de texto dentro del botón
+        VBox buttonContent = (VBox) mesaButton.getGraphic();
+        Text numeroMesaText = (Text) buttonContent.getChildren().get(0);
+        Text estadoMesaText = (Text) buttonContent.getChildren().get(1);
+
+        switch (tipoEvento) {
+            case "PEDIDO_CREADO":
+            case "PEDIDO_ACTUALIZADO":
+                mesaDTO.setEstado("OCUPADA");
+                mesaButton.getStyleClass().add("mesa-ocupada"); // Rojo
+                estadoMesaText.setText("Ocupada");
+                setButtonTextColor(numeroMesaText, estadoMesaText, "white");
+                break;
+
+            case "PEDIDO_LISTO":
+                mesaDTO.setEstado("OCUPADA"); 
+                mesaButton.getStyleClass().add("mesa-pagando"); // Amarillo
+                estadoMesaText.setText("¡LISTO!");
+                setButtonTextColor(numeroMesaText, estadoMesaText, "#111827"); // Texto oscuro
+                break;
+
+            case "PEDIDO_CERRADO":
+            case "PEDIDO_CANCELADO":
+                mesaDTO.setEstado("DISPONIBLE");
+                mesaButton.getStyleClass().add("mesa-libre"); // Verde
+                estadoMesaText.setText("Libre");
+                setButtonTextColor(numeroMesaText, estadoMesaText, "white");
+                break;
+                
+            default:
+                // Mantener estado actual si el evento es desconocido
+                if ("DISPONIBLE".equals(mesaDTO.getEstado())) mesaButton.getStyleClass().add("mesa-libre");
+                else if ("OCUPADA".equals(mesaDTO.getEstado())) mesaButton.getStyleClass().add("mesa-ocupada");
+                break;
+        }
+        // Actualizar el objeto userData para que la próxima interacción tenga el estado correcto
+        mesaButton.setUserData(mesaDTO);
+    }
+
+    private void setButtonTextColor(Text t1, Text t2, String color) {
+        // Helper para cambiar color del texto manteniendo tamaño/fuente
+        String style1 = t1.getStyle().replaceAll("-fx-fill: [^;]+;", "") + "-fx-fill: " + color + ";";
+        String style2 = t2.getStyle().replaceAll("-fx-fill: [^;]+;", "") + "-fx-fill: " + color + ";";
+        t1.setStyle(style1);
+        t2.setStyle(style2);
+    }
+
+    private void actualizarPanelDetalleSiCorresponde(String tipoEvento, PedidoMesaDTO pedidoActualizado) {
+        // Si se cerró el pedido que estábamos viendo, limpiar el panel
+        if ("PEDIDO_CERRADO".equals(tipoEvento) || "PEDIDO_CANCELADO".equals(tipoEvento)) {
+            resetearPanelPedido();
+            infoLabel.setText("El pedido de la Mesa " + pedidoActualizado.getNumeroMesa() + " ha sido cerrado.");
+        } else {
+             // Si se actualizó (por ejemplo, desde otro terminal), refrescar datos
+             this.pedidoActual = pedidoActualizado;
+             itemsEnviadosData.clear();
+             if (pedidoActualizado.getDetalles() != null) {
+                 itemsEnviadosData.addAll(pedidoActualizado.getDetalles());
+             }
+             actualizarListaCompletaYTotal();
+             infoLabel.setText("Pedido actualizado remotamente.");
+        }
     }
 
     private void cargarSoloMesasAsync() {
