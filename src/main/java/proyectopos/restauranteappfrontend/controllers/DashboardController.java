@@ -48,6 +48,7 @@ import proyectopos.restauranteappfrontend.services.PedidoMesaService;
 import proyectopos.restauranteappfrontend.services.ProductoService;
 import proyectopos.restauranteappfrontend.services.WebSocketService;
 import proyectopos.restauranteappfrontend.util.SessionManager;
+import proyectopos.restauranteappfrontend.util.ThreadManager;
 
 public class DashboardController implements CleanableController {
 
@@ -71,7 +72,6 @@ public class DashboardController implements CleanableController {
     @FXML private Label totalPedidoLabel;
     @FXML private Button crearPedidoButton;
 
-    // --- Contenedor HBox para botones admin (para añadirlo explícitamente) ---
     private HBox adminButtonContainer = null;
 
     private final MesaService mesaService = new MesaService();
@@ -83,14 +83,9 @@ public class DashboardController implements CleanableController {
     private PedidoMesaDTO pedidoActual = null;
     private final ObservableList<ProductoDTO> productosData = FXCollections.observableArrayList();
     
-    // --- ¡¡LÓGICA DE LISTAS MODIFICADA!! ---
-    // Mantiene el estado de todos los items (viejos + nuevos) para mostrar en la UI
     private final ObservableList<DetallePedidoMesaDTO> itemsCompletosData = FXCollections.observableArrayList();
-    // Mantiene solo los items que ya estaban en el pedido (cargados del backend)
     private final ObservableList<DetallePedidoMesaDTO> itemsEnviadosData = FXCollections.observableArrayList();
-    // Mantiene solo los items NUEVOS que el mesero añade en esta tanda
     private final ObservableList<DetallePedidoMesaDTO> itemsNuevosData = FXCollections.observableArrayList();
-    // --- FIN MODIFICACIÓN ---
 
     private final ObservableList<CategoriaDTO> categoriasData = FXCollections.observableArrayList();
     private final ObservableList<CategoriaDTO> subCategoriasData = FXCollections.observableArrayList();
@@ -114,14 +109,12 @@ public class DashboardController implements CleanableController {
 
         configurarTablaProductos();
         configurarContenedorMesas();
-        configurarTablaPedidoActual(); // <-- ¡¡MODIFICADO!!
+        configurarTablaPedidoActual(); 
         configurarSeleccionProducto();
-        // --- NO LLAMAR configurarBotonesAdmin aquí ---
-        cargarDatosIniciales(); // Ahora cargarDatosIniciales llamará a configurarBotonesAdmin al final
+        cargarDatosIniciales(); 
 
         crearPedidoButton.setDisable(true);
 
-        // --- Lógica de Listas de Categorías (Revisada y Simplificada) ---
         subCategoriasListView.setItems(subCategoriasData);
 
         categoriasListView.getSelectionModel().selectedItemProperty().addListener(
@@ -179,54 +172,46 @@ public class DashboardController implements CleanableController {
                     }
                 }
         );
-        // INICIO CAMBIO WEBSOCKET
-    // Suscribirse a los mensajes para actualizar el estado de las mesas
-    WebSocketService.getInstance().subscribe("/topic/pedidos", (mensaje) -> {
-        // "mensaje" será "NUEVO", "LISTO" o "CERRADO"
-        if (mensaje.equals("LISTO") || mensaje.equals("CERRADO") || mensaje.equals("NUEVO")) {
-            Platform.runLater(() -> {
-                System.out.println("WebSocket (Dashboard): Estado de pedido cambió, actualizando mesas...");
-                // Simplemente recargamos las mesas
-                cargarSoloMesasAsync(); 
-            });
-        }
-    });
-    // FIN CAMBIO WEBSOCKET
-    }
-
-    // --- Métodos de polling (sin cambios) ---
-    private void cargarSoloMesasAsync() {
-    new Thread(() -> {
-        List<MesaDTO> mesas = null;
-        List<PedidoMesaDTO> pedidosActivos = null;
-        try {
-            // Volvemos a cargar ambos
-            mesas = mesaService.getAllMesas();
-            List<PedidoMesaDTO> todosLosPedidos = pedidoMesaService.getAllPedidos();
-            pedidosActivos = todosLosPedidos.stream()
-                    .filter(p -> !"CERRADO".equalsIgnoreCase(p.getEstado()) && !"CANCELADO".equalsIgnoreCase(p.getEstado()))
-                    .collect(Collectors.toList());
-
-        } catch (Exception e) {
-            System.err.println("Error en la actualización de mesas vía WebSocket: " + e.getMessage());
-        }
-
-        final List<MesaDTO> finalMesas = mesas;
-        final List<PedidoMesaDTO> finalPedidosActivos = pedidosActivos;
-
-        Platform.runLater(() -> {
-            if (finalMesas != null && finalPedidosActivos != null) {
-                // Procesamos y actualizamos el caché
-                estadoPedidoCache.clear();
-                for (PedidoMesaDTO pedido : finalPedidosActivos) {
-                    estadoPedidoCache.put(pedido.getIdMesa(), pedido.getEstado());
-                }
-                // Mostramos las mesas con el estado actualizado
-                mostrarMesas(finalMesas);
+        WebSocketService.getInstance().subscribe("/topic/pedidos", (mensaje) -> {
+            if (mensaje.equals("LISTO") || mensaje.equals("CERRADO") || mensaje.equals("NUEVO")) {
+                Platform.runLater(() -> {
+                    System.out.println("WebSocket (Dashboard): Estado de pedido cambió, actualizando mesas...");
+                    cargarSoloMesasAsync(); 
+                });
             }
         });
-    }).start();
-}
+    }
+
+    private void cargarSoloMesasAsync() {
+        // MODIFICADO: Uso de ThreadManager
+        ThreadManager.getInstance().execute(() -> {
+            List<MesaDTO> mesas = null;
+            List<PedidoMesaDTO> pedidosActivos = null;
+            try {
+                mesas = mesaService.getAllMesas();
+                List<PedidoMesaDTO> todosLosPedidos = pedidoMesaService.getAllPedidos();
+                pedidosActivos = todosLosPedidos.stream()
+                        .filter(p -> !"CERRADO".equalsIgnoreCase(p.getEstado()) && !"CANCELADO".equalsIgnoreCase(p.getEstado()))
+                        .collect(Collectors.toList());
+
+            } catch (Exception e) {
+                System.err.println("Error en la actualización de mesas vía WebSocket: " + e.getMessage());
+            }
+
+            final List<MesaDTO> finalMesas = mesas;
+            final List<PedidoMesaDTO> finalPedidosActivos = pedidosActivos;
+
+            Platform.runLater(() -> {
+                if (finalMesas != null && finalPedidosActivos != null) {
+                    estadoPedidoCache.clear();
+                    for (PedidoMesaDTO pedido : finalPedidosActivos) {
+                        estadoPedidoCache.put(pedido.getIdMesa(), pedido.getEstado());
+                    }
+                    mostrarMesas(finalMesas);
+                }
+            });
+        });
+    }
 
     // --- Métodos de configuración UI ---
     private void configurarContenedorMesas() { /* Sin cambios */ }
@@ -238,19 +223,16 @@ public class DashboardController implements CleanableController {
         productosTableView.setItems(filteredProductos);
      }
 
-    // --- ¡¡MÉTODO MODIFICADO!! ---
     private void configurarTablaPedidoActual() {
         pedidoNombreCol.setCellValueFactory(new PropertyValueFactory<>("nombreProducto"));
         pedidoCantidadCol.setCellValueFactory(new PropertyValueFactory<>("cantidad"));
         pedidoPrecioCol.setCellValueFactory(new PropertyValueFactory<>("precioUnitario"));
         pedidoSubtotalCol.setCellValueFactory(new PropertyValueFactory<>("subtotal"));
         
-        // La tabla ahora muestra la lista combinada
         pedidoActualTableView.setItems(itemsCompletosData); 
         
         pedidoActualTableView.setPlaceholder(new Label("Añada productos (doble clic)"));
     }
-    // --- FIN MODIFICACIÓN ---
 
     private void configurarSeleccionProducto() {
          productosTableView.setOnMouseClicked(event -> {
@@ -263,10 +245,8 @@ public class DashboardController implements CleanableController {
          });
      }
 
-    // --- MÉTODO CORREGIDO PARA AÑADIR BOTONES ADMIN ---
     private void configurarBotonesAdmin() {
         String userRole = SessionManager.getInstance().getRole();
-        // Limpiar contenedor previo si existe
         if (adminButtonContainer != null && adminButtonContainer.getParent() != null) {
              ((VBox)adminButtonContainer.getParent()).getChildren().remove(adminButtonContainer);
         }
@@ -292,21 +272,18 @@ public class DashboardController implements CleanableController {
         adminButtonContainer.setAlignment(Pos.CENTER_LEFT);
         adminButtonContainer.setPadding(new Insets(0, 0, 5, 0));
 
-        // Intentar añadir el contenedor al VBox padre de la tabla de productos
         try {
-            // Asumiendo que el FXML tiene: VBox -> Label ("Productos") -> TableView
             Node parent = productosTableView.getParent();
             if (parent instanceof VBox) {
                 VBox parentVBox = (VBox) parent;
-                // Buscar el índice de la tabla para insertar antes
+              
                 int tableViewIndex = parentVBox.getChildren().indexOf(productosTableView);
-                if (tableViewIndex > 0) { // Insertar antes de la tabla si se encuentra
-                    // Insertar solo si no existe ya
+                if (tableViewIndex > 0) { 
                     if (parentVBox.getChildren().stream().noneMatch(node -> node == adminButtonContainer)) {
-                       parentVBox.getChildren().add(tableViewIndex -1, adminButtonContainer); // Insertar justo antes de la tabla, después del label
+                       parentVBox.getChildren().add(tableViewIndex -1, adminButtonContainer); 
                        System.out.println("Botones de admin añadidos correctamente.");
                     }
-                } else { // Si no se encuentra la tabla o está al principio, añadir al final (fallback)
+                } else { 
                      if (parentVBox.getChildren().stream().noneMatch(node -> node == adminButtonContainer)) {
                         parentVBox.getChildren().add(adminButtonContainer);
                         System.out.println("Botones de admin añadidos (fallback al final).");
@@ -321,13 +298,13 @@ public class DashboardController implements CleanableController {
         }
     }
 
-    // --- cargarDatosIniciales (Llama a configurarBotonesAdmin al final) ---
     private void cargarDatosIniciales() {
         infoLabel.setText("Cargando datos iniciales...");
         infoLabel.getStyleClass().setAll("lbl-warning");
         setUIDisabledDuringLoad(true);
 
-        new Thread(() -> {
+        // MODIFICADO: Uso de ThreadManager
+        ThreadManager.getInstance().execute(() -> {
             List<MesaDTO> mesas = null;
             List<CategoriaDTO> categorias = null;
             List<ProductoDTO> productos = null;
@@ -356,6 +333,12 @@ public class DashboardController implements CleanableController {
                 HttpClientService.AuthenticationException authException = null;
 
                 if (finalMesas != null) {
+                     if (finalPedidosActivos != null) {
+                        estadoPedidoCache.clear();
+                        for (PedidoMesaDTO pedido : finalPedidosActivos) {
+                            estadoPedidoCache.put(pedido.getIdMesa(), pedido.getEstado());
+                        }
+                    }
                     mostrarMesas(finalMesas);
                 } else {
                     huboErrorGeneral = true;
@@ -390,13 +373,11 @@ public class DashboardController implements CleanableController {
                     infoLabel.getStyleClass().setAll("lbl-success");
                 }
                 
-                // --- LLAMAR A CONFIGURAR BOTONES ADMIN AQUÍ ---
                 configurarBotonesAdmin(); 
-                // --- FIN LLAMADA ---
                 
-                setUIDisabledDuringLoad(false); // Habilitar UI
+                setUIDisabledDuringLoad(false); 
             });
-        }).start();
+        });
     }
 
     private void setUIDisabledDuringLoad(boolean disabled) {
@@ -467,17 +448,15 @@ public class DashboardController implements CleanableController {
         }
     }
 
-    // --- ¡¡MÉTODO MODIFICADO!! ---
     private void handleSeleccionarMesa(MesaDTO mesa) {
         this.mesaSeleccionada = mesa;
-        this.pedidoActual = null; // Limpiar pedido anterior
+        this.pedidoActual = null; 
         
-        // Limpiar las 3 listas de items
         itemsEnviadosData.clear();
         itemsNuevosData.clear();
-        itemsCompletosData.clear(); // Se limpia aquí, se rellena en actualizarListaCompletaYTotal
+        itemsCompletosData.clear(); 
         
-        actualizarListaCompletaYTotal(); // Actualiza la tabla (que quedará vacía) y los totales
+        actualizarListaCompletaYTotal(); 
         
         categoriasListView.getSelectionModel().clearSelection();
         subCategoriasListView.getSelectionModel().clearSelection();
@@ -499,18 +478,17 @@ public class DashboardController implements CleanableController {
             infoLabel.getStyleClass().setAll("lbl-warning");
             pedidoActualTableView.setPlaceholder(new Label("Cargando items..."));
 
-            new Thread(() -> {
+            // MODIFICADO: Uso de ThreadManager
+            ThreadManager.getInstance().execute(() -> {
                 try {
                     PedidoMesaDTO pedidoCargado = pedidoMesaService.getPedidoActivoPorMesa(mesa.getIdMesa());
                     Platform.runLater(() -> {
                         if (pedidoCargado != null) {
                             this.pedidoActual = pedidoCargado;
                             if (pedidoCargado.getDetalles() != null) {
-                                // ¡¡IMPORTANTE!! Los items cargados van a itemsEnviadosData
                                 itemsEnviadosData.addAll(pedidoCargado.getDetalles());
                             }
                         } else {
-                            // No hay pedido activo (raro si está OCUPADA, pero posible)
                             this.pedidoActual = null;
                              infoLabel.setText("Mesa ocupada, pero sin pedido activo. Iniciando nueva orden.");
                         }
@@ -523,7 +501,6 @@ public class DashboardController implements CleanableController {
                     });
                 } catch (Exception e) {
                     Platform.runLater(() -> {
-                        // El servicio ahora devuelve null si es 404, no una excepción
                         if (e.getMessage() != null && e.getMessage().contains("404")) {
                              this.pedidoActual = null;
                              mesaSeleccionadaLabel.setText("Mesa: " + mesa.getNumeroMesa() + " (Nueva Orden)");
@@ -542,7 +519,7 @@ public class DashboardController implements CleanableController {
                         }
                     });
                 }
-            }).start();
+            });
         } else {
             this.mesaSeleccionada = null;
             this.pedidoActual = null;
@@ -553,9 +530,7 @@ public class DashboardController implements CleanableController {
             gestionPedidoPane.setManaged(false);
         }
      }
-    // --- FIN MODIFICACIÓN ---
 
-    // --- ¡¡MÉTODO MODIFICADO!! ---
     private void handleSeleccionarProducto(ProductoDTO producto) {
         if (mesaSeleccionada == null) {
             mostrarAlerta("Acción no permitida", "Seleccione una mesa LIBRE u OCUPADA para añadir productos.");
@@ -570,31 +545,26 @@ public class DashboardController implements CleanableController {
             try {
                 int cantidad = Integer.parseInt(cantidadStr);
                 if (cantidad > 0) {
-                    // --- ¡¡MODIFICADO!!: La lógica ahora opera sobre itemsNuevosData ---
                     Optional<DetallePedidoMesaDTO> existente = itemsNuevosData.stream()
                         .filter(d -> d.getIdProducto().equals(producto.getIdProducto()))
                         .findFirst();
                     
                     if (existente.isPresent()) {
-                        // Si ya está en la lista de NUEVOS, solo suma cantidad
                         DetallePedidoMesaDTO detalle = existente.get();
                         detalle.setCantidad(detalle.getCantidad() + cantidad);
                     } else {
-                        // Si no está en la lista de NUEVOS, lo añade
                         DetallePedidoMesaDTO detalle = new DetallePedidoMesaDTO();
                         detalle.setIdProducto(producto.getIdProducto());
                         detalle.setNombreProducto(producto.getNombre());
                         detalle.setCantidad(cantidad);
                         detalle.setPrecioUnitario(producto.getPrecio());
-                        detalle.setEstadoDetalle("PENDIENTE"); // Marcar como PENDIENTE
-                        // subtotal se calcula automáticamente en el DTO
+                        detalle.setEstadoDetalle("PENDIENTE"); 
                         itemsNuevosData.add(detalle);
                     }
                     
-                    actualizarListaCompletaYTotal(); // Actualiza UI
+                    actualizarListaCompletaYTotal(); 
                     actualizarEstadoCrearPedidoButton();
                     
-                    // Refrescar la tabla para mostrar el cambio de cantidad
                     pedidoActualTableView.refresh(); 
 
                 } else {
@@ -605,7 +575,6 @@ public class DashboardController implements CleanableController {
             }
         });
     }
-    // --- FIN MODIFICACIÓN ---
 
 
     @FXML
@@ -651,7 +620,8 @@ public class DashboardController implements CleanableController {
     private void llamarCrearCategoriaApi(CategoriaDTO categoriaACrear) {
         infoLabel.setText("Creando categoría '" + categoriaACrear.getNombre() + "'...");
         infoLabel.getStyleClass().setAll("lbl-warning");
-        new Thread(() -> {
+        // MODIFICADO: Uso de ThreadManager
+        ThreadManager.getInstance().execute(() -> {
             try {
                 CategoriaDTO categoriaCreada = categoriaService.crearCategoria(categoriaACrear);
                 Platform.runLater(() -> {
@@ -662,7 +632,7 @@ public class DashboardController implements CleanableController {
             } catch (Exception e) {
                 Platform.runLater(() -> handleGenericError("Error al crear la categoría", e));
             }
-        }).start();
+        });
     }
 
     @FXML
@@ -734,7 +704,8 @@ public class DashboardController implements CleanableController {
             if (productoACrear == null) return;
             infoLabel.setText("Creando producto '" + productoACrear.getNombre() + "'...");
             infoLabel.getStyleClass().setAll("lbl-warning");
-            new Thread(() -> {
+            // MODIFICADO: Uso de ThreadManager
+            ThreadManager.getInstance().execute(() -> {
                 try {
                     ProductoDTO productoCreado = productoService.crearProducto(productoACrear);
                     Platform.runLater(() -> {
@@ -743,29 +714,17 @@ public class DashboardController implements CleanableController {
                         cargarDatosIniciales(); // Recargar para ver el nuevo producto
                     });
                 } catch (Exception e) { Platform.runLater(() -> handleGenericError("Error al crear el producto", e)); }
-            }).start();
+            });
         });
     }
     
-    // --- ¡¡NUEVO MÉTODO!! ---
-    /**
-     * Combina las listas de items enviados y nuevos en la lista completa
-     * y luego actualiza los totales.
-     */
     private void actualizarListaCompletaYTotal() {
         itemsCompletosData.clear();
         itemsCompletosData.addAll(itemsEnviadosData);
         itemsCompletosData.addAll(itemsNuevosData);
         actualizarTotalPedido(); // Actualizar los labels de S/
     }
-    // --- FIN NUEVO MÉTODO ---
 
-
-    // --- ¡¡MÉTODO MODIFICADO!! ---
-    /**
-     * Actualiza los labels de Subtotal, IGV y Total basándose
-     * en la lista de itemsCompletosData.
-     */
     private void actualizarTotalPedido() {
         double subtotal = 0.0;
         // Ahora iteramos sobre la lista combinada
@@ -780,9 +739,7 @@ public class DashboardController implements CleanableController {
         igvPedidoLabel.setText(String.format("S/ %.2f", igv));
         totalPedidoLabel.setText(String.format("S/ %.2f", total));
      }
-     // --- FIN MODIFICACIÓN ---
 
-    // --- ¡¡MÉTODO MODIFICADO!! ---
     private void actualizarEstadoCrearPedidoButton() {
         // Se habilita si hay una mesa Y hay items NUEVOS para enviar
         boolean deshabilitar = (mesaSeleccionada == null || itemsNuevosData.isEmpty());
@@ -794,10 +751,8 @@ public class DashboardController implements CleanableController {
             crearPedidoButton.setText("Añadir Items al Pedido"); // Texto más claro
         }
     }
-    // --- FIN MODIFICACIÓN ---
 
 
-    // --- ¡¡MÉTODO MODIFICADO!! ---
     @FXML
     private void handleEnviarPedido() {
         // Validamos que haya items NUEVOS
@@ -816,7 +771,8 @@ public class DashboardController implements CleanableController {
 
 
         if (this.pedidoActual == null) {
-            new Thread(() -> {
+            // MODIFICADO: Uso de ThreadManager
+            ThreadManager.getInstance().execute(() -> {
                 try {
                     PedidoMesaDTO pedidoCreado = pedidoMesaService.crearPedido(pedidoDTO);
                     Platform.runLater(() -> {
@@ -832,10 +788,11 @@ public class DashboardController implements CleanableController {
                         crearPedidoButton.setDisable(false);
                     });
                 }
-            }).start();
+            });
         } else {
             Long idPedidoAActualizar = this.pedidoActual.getIdPedidoMesa();
-            new Thread(() -> {
+            // MODIFICADO: Uso de ThreadManager
+            ThreadManager.getInstance().execute(() -> {
                 try {
                     // La DTO solo lleva los items nuevos, el backend los añadirá
                     PedidoMesaDTO pedidoActualizado = pedidoMesaService.actualizarPedido(idPedidoAActualizar, pedidoDTO);
@@ -852,7 +809,7 @@ public class DashboardController implements CleanableController {
                         crearPedidoButton.setDisable(false);
                     });
                 }
-            }).start();
+            });
         }
     }
     private void resetearPanelPedido() {

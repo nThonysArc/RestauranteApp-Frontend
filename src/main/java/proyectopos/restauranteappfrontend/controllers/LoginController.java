@@ -17,6 +17,7 @@ import proyectopos.restauranteappfrontend.MainApplication;
 import proyectopos.restauranteappfrontend.model.LoginResponse;
 import proyectopos.restauranteappfrontend.services.AuthService;
 import proyectopos.restauranteappfrontend.util.SessionManager;
+import proyectopos.restauranteappfrontend.util.ThreadManager;
 
 public class LoginController {
 
@@ -26,9 +27,7 @@ public class LoginController {
     @FXML private Label messageLabel;
     private final AuthService authService = new AuthService();
 
-    // --- RUTA CSS MODIFICADA ---
     private static final String RAIZ_IQUENA_THEME_CSS = "/proyectopos/restauranteappfrontend/raiz-iquena-theme.css";
-    // --- FIN RUTA ---
 
 
     @FXML
@@ -50,11 +49,9 @@ public class LoginController {
         setControlsDisabled(true);
         messageLabel.setText("Verificando credenciales...");
         messageLabel.getStyleClass().setAll("lbl-warning");
-
-        new Thread(() -> {
+        ThreadManager.getInstance().execute(() -> {
             try {
                 LoginResponse response = authService.authenticate(username, password);
-
                 Platform.runLater(() -> {
                     if (response != null) {
                         messageLabel.setText("¡Inicio de sesión exitoso!");
@@ -79,7 +76,7 @@ public class LoginController {
             } catch (Exception e) {
                 Platform.runLater(() -> handleUIError("Error inesperado durante el login.", e));
             }
-        }).start();
+        }); 
     }
 
     private void navigateToMainView() throws IOException {
@@ -88,19 +85,17 @@ public class LoginController {
         Parent root = loader.load();
         Scene scene = new Scene(root, 1280, 720);
 
-        // --- APLICAR ESTILOS MODIFICADOS ---
         scene.getStylesheets().add(org.kordamp.bootstrapfx.BootstrapFX.bootstrapFXStylesheet());
 
         // Cargar el tema Raíz Iqueña
-        URL cssUrl = MainApplication.class.getResource(RAIZ_IQUENA_THEME_CSS); // Usa la constante
+        URL cssUrl = MainApplication.class.getResource(RAIZ_IQUENA_THEME_CSS); 
         if (cssUrl != null) {
             scene.getStylesheets().add(cssUrl.toExternalForm());
         } else {
             System.err.println("Error: No se pudo cargar raiz-iquena-theme.css en LoginController");
         }
-        // --- FIN ESTILOS MODIFICADOS ---
 
-        currentStage.setTitle("Restaurante POS Raíz Iqueña"); // Título actualizado
+        currentStage.setTitle("Restaurante POS Raíz Iqueña"); 
         currentStage.setScene(scene);
         currentStage.setResizable(true);
         currentStage.centerOnScreen();
