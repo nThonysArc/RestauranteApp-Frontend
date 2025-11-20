@@ -17,6 +17,7 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
 import proyectopos.restauranteappfrontend.model.dto.MesaDTO;
 import proyectopos.restauranteappfrontend.services.MesaService;
+import proyectopos.restauranteappfrontend.util.ThreadManager;
 
 public class TableManagementController {
 
@@ -53,7 +54,8 @@ public class TableManagementController {
     }
 
     private void cargarMesas() {
-        new Thread(() -> {
+        // MODIFICADO: Uso de ThreadManager
+        ThreadManager.getInstance().execute(() -> {
             try {
                 List<MesaDTO> mesas = mesaService.getAllMesas();
                 Platform.runLater(() -> {
@@ -63,7 +65,7 @@ public class TableManagementController {
             } catch (Exception e) {
                 Platform.runLater(() -> statusLabel.setText("Error al cargar mesas: " + e.getMessage()));
             }
-        }).start();
+        });
     }
 
     @FXML
@@ -78,7 +80,8 @@ public class TableManagementController {
             mesaDTO.setCapacidad(capacidad);
             mesaDTO.setEstado(estado);
 
-            new Thread(() -> {
+            // MODIFICADO: Uso de ThreadManager
+            ThreadManager.getInstance().execute(() -> {
                 try {
                     if (mesaEnEdicion == null) {
                         // Crear nueva
@@ -100,7 +103,7 @@ public class TableManagementController {
                 } catch (Exception e) {
                     Platform.runLater(() -> statusLabel.setText("Error: " + e.getMessage()));
                 }
-            }).start();
+            });
 
         } catch (NumberFormatException e) {
             statusLabel.setText("Por favor ingrese números válidos.");
@@ -144,13 +147,14 @@ public class TableManagementController {
                     // Alternar estado
                     String nuevoEstado = "BLOQUEADA".equals(mesa.getEstado()) ? "DISPONIBLE" : "BLOQUEADA";
                     mesa.setEstado(nuevoEstado);
-                    // Actualizar inmediatamente
-                    new Thread(() -> {
+                    
+                    // MODIFICADO: Uso de ThreadManager
+                    ThreadManager.getInstance().execute(() -> {
                         try {
                             mesaService.actualizarMesa(mesa.getIdMesa(), mesa);
                             Platform.runLater(() -> cargarMesas());
                         } catch (Exception e) { e.printStackTrace(); }
-                    }).start();
+                    });
                 });
             }
 

@@ -8,14 +8,14 @@ import java.util.stream.Collectors;
 
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList; // Importado en paso anterior
+import javafx.collections.ObservableList; 
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
-import javafx.scene.Node; // Importado en paso anterior
-import javafx.scene.control.Button; // Importado en paso anterior
+import javafx.scene.Node;
+import javafx.scene.control.Button; 
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
-import javafx.scene.control.SelectionMode; // Importado en paso anterior
+import javafx.scene.control.SelectionMode; 
 import javafx.scene.layout.TilePane;
 import javafx.scene.layout.VBox;
 import proyectopos.restauranteappfrontend.model.dto.DetallePedidoMesaDTO;
@@ -23,11 +23,10 @@ import proyectopos.restauranteappfrontend.model.dto.PedidoMesaDTO;
 import proyectopos.restauranteappfrontend.services.HttpClientService;
 import proyectopos.restauranteappfrontend.services.PedidoMesaService;
 import proyectopos.restauranteappfrontend.services.WebSocketService;
+import proyectopos.restauranteappfrontend.util.ThreadManager;
 
 
-// --- ¡¡IMPLEMENTAR INTERFAZ!! ---
 public class KitchenController implements CleanableController {
-// --- FIN IMPLEMENTACIÓN ---
 
     @FXML private TilePane pedidosContainer;
     @FXML private Label statusLabelKitchen;
@@ -36,49 +35,33 @@ public class KitchenController implements CleanableController {
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss");
 
     @FXML
-public void initialize() {
-    statusLabelKitchen.setText("Cargando pedidos pendientes...");
-    statusLabelKitchen.getStyleClass().setAll("lbl-info");
-    pedidosContainer.getChildren().clear();
+    public void initialize() {
+        statusLabelKitchen.setText("Cargando pedidos pendientes...");
+        statusLabelKitchen.getStyleClass().setAll("lbl-info");
+        pedidosContainer.getChildren().clear();
 
-    cargarPedidosPendientes();
-    // setupAutoRefresh(); // <-- ELIMINAR ESTA LÍNEA
+        cargarPedidosPendientes();
+        WebSocketService.getInstance().subscribe("/topic/pedidos", (mensaje) -> {
+            if (mensaje.equals("NUEVO")) {
+                Platform.runLater(() -> {
+                    System.out.println("WebSocket (Cocina): Nuevo pedido recibido, actualizando...");
+                    cargarPedidosPendientes();
+                });
+            }
+        });
+    }
 
-    // ------------------------------------
-    // INICIO CAMBIO WEBSOCKET
-    // Suscribirse a los mensajes del backend
-    WebSocketService.getInstance().subscribe("/topic/pedidos", (mensaje) -> {
-        // "mensaje" será "NUEVO", "LISTO" o "CERRADO"
-        if (mensaje.equals("NUEVO")) {
-            Platform.runLater(() -> {
-                System.out.println("WebSocket (Cocina): Nuevo pedido recibido, actualizando...");
-                cargarPedidosPendientes();
-            });
-        }
-    });
-    // FIN CAMBIO WEBSOCKET
-    // ------------------------------------
-}
-
-    // --- ¡¡MÉTODO MODIFICADO!! ---
     private void cargarPedidosPendientes() {
         statusLabelKitchen.setText("Actualizando...");
         statusLabelKitchen.getStyleClass().setAll("lbl-warning");
-
-        new Thread(() -> {
+        ThreadManager.getInstance().execute(() -> {
             try {
-                // Idealmente filtrar en backend: ?estado=ABIERTO
                 List<PedidoMesaDTO> todosLosPedidos = pedidoMesaService.getAllPedidos();
-                
-                // --- ¡¡MODIFICACIÓN CLAVE!! ---
-                // Filtramos pedidos ABIERTOS (enviados por mesero)
-                // Y que además tengan AL MENOS UN item en estado "PENDIENTE"
                 List<PedidoMesaDTO> pedidosPendientes = todosLosPedidos.stream()
                         .filter(p -> "ABIERTO".equalsIgnoreCase(p.getEstado()))
                         .filter(p -> p.getDetalles() != null && p.getDetalles().stream()
                                 .anyMatch(d -> "PENDIENTE".equalsIgnoreCase(d.getEstadoDetalle())))
                         .collect(Collectors.toList());
-                // --- FIN MODIFICACIÓN ---
 
                 Platform.runLater(() -> {
                     mostrarPedidosEnUI(pedidosPendientes);
@@ -93,7 +76,7 @@ public void initialize() {
             } catch (Exception e) {
                  Platform.runLater(() -> handleError("Error inesperado al cargar pedidos.", e));
             }
-        }).start();
+        });
     }
 
     private void mostrarPedidosEnUI(List<PedidoMesaDTO> pedidos) {
@@ -110,7 +93,6 @@ public void initialize() {
         }
     }
 
-    // --- ¡¡MÉTODO MODIFICADO!! ---
     private VBox crearTarjetaPedido(PedidoMesaDTO pedido) {
         VBox tarjeta = new VBox(10);
         tarjeta.setPadding(new Insets(10));
@@ -164,8 +146,7 @@ public void initialize() {
         tarjetaNode.setDisable(true);
         statusLabelKitchen.setText("Marcando comanda Mesa " + pedido.getNumeroMesa() + " como lista...");
         statusLabelKitchen.getStyleClass().setAll("lbl-warning");
-
-        new Thread(() -> {
+        ThreadManager.getInstance().execute(() -> {
             try {
                 PedidoMesaDTO pedidoActualizado = pedidoMesaService.marcarPendientesComoListos(pedido.getIdPedidoMesa());
                 Platform.runLater(() -> {
@@ -191,7 +172,7 @@ public void initialize() {
             } catch (Exception e) {
                  Platform.runLater(() -> { handleError("Error al marcar pedido: " + e.getMessage(), e); tarjetaNode.setOpacity(1.0); tarjetaNode.setDisable(false); });
             }
-        }).start();
+        });
     }
 
 
@@ -205,10 +186,10 @@ public void initialize() {
     /**
      * Método de la interfaz CleanableController. Detiene el Timeline.
      */
-  @Override 
+    @Override 
     public void cleanup() {
-    // Nota: La desconexión principal se maneja en MainController,
-    // pero podríamos cancelar suscripciones aquí si fuera necesario.
-    System.out.println("Limpiando KitchenController.");
-}
+        // Nota: La desconexión principal se maneja en MainController,
+        // pero podríamos cancelar suscripciones aquí si fuera necesario.
+        System.out.println("Limpiando KitchenController.");
+    }
 }

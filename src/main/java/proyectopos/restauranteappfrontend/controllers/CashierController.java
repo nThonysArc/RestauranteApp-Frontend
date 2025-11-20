@@ -26,6 +26,7 @@ import proyectopos.restauranteappfrontend.model.dto.DetallePedidoMesaDTO;
 import proyectopos.restauranteappfrontend.model.dto.PedidoMesaDTO;
 import proyectopos.restauranteappfrontend.services.HttpClientService;
 import proyectopos.restauranteappfrontend.services.PedidoMesaService;
+import proyectopos.restauranteappfrontend.util.ThreadManager;
 
 public class CashierController {
 
@@ -146,28 +147,20 @@ public class CashierController {
         detallePedidoTable.setItems(detallePedidoData);
     }
 
-     // El método helper formatCurrencyCell() ya no es necesario y se puede eliminar
-     /*
-     private <T> Callback<TableColumn<T, Double>, TableCell<T, Double>> formatCurrencyCell() {
-         // ... (código anterior)
-     }
-     */
-
     private void cargarPedidosListos() {
         pedidosListosTable.setPlaceholder(new Label("Cargando pedidos..."));
         statusLabelCashier.setText("Actualizando lista de pedidos...");
         statusLabelCashier.getStyleClass().setAll("lbl-warning");
 
-        new Thread(() -> {
+        // MODIFICADO: Uso de ThreadManager
+        ThreadManager.getInstance().execute(() -> {
             try {
                 List<PedidoMesaDTO> todosLosPedidos = pedidoMesaService.getAllPedidos();
                 
-                // --- ¡¡MODIFICACIÓN CLAVE!! ---
                 // El cajero SOLO debe ver los pedidos listos para cobrar.
                 List<PedidoMesaDTO> pedidosParaCaja = todosLosPedidos.stream()
                         .filter(p -> "LISTO_PARA_ENTREGAR".equalsIgnoreCase(p.getEstado()))
                         .collect(Collectors.toList());
-                // --- FIN DE MODIFICACIÓN ---
 
                 Platform.runLater(() -> {
                     pedidosListData.clear();
@@ -178,10 +171,14 @@ public class CashierController {
                     limpiarDetalle();
                 });
 
-            } catch (HttpClientService.AuthenticationException e) { Platform.runLater(() -> handleError("Error de autenticación.", e));
-            } catch (IOException | InterruptedException e) { Platform.runLater(() -> handleError("Error de red.", e));
-            } catch (Exception e) { Platform.runLater(() -> handleError("Error inesperado.", e)); }
-        }).start();
+            } catch (HttpClientService.AuthenticationException e) { 
+                Platform.runLater(() -> handleError("Error de autenticación.", e));
+            } catch (IOException | InterruptedException e) { 
+                Platform.runLater(() -> handleError("Error de red.", e));
+            } catch (Exception e) { 
+                Platform.runLater(() -> handleError("Error inesperado.", e)); 
+            }
+        });
     }
 
     private void mostrarDetallePedido(PedidoMesaDTO pedido) {
@@ -200,11 +197,10 @@ public class CashierController {
                 // Usamos el total del backend y recalculamos el subtotal base
                 subtotal = pedido.getTotal() / 1.18; 
             }
-            // --- MODIFICACIÓN: Si el total es 0 o nulo, calcularlo desde los detalles ---
+            // Si el total es 0 o nulo, calcularlo desde los detalles
             if (subtotal == 0) {
                  subtotal = detallePedidoData.stream().mapToDouble(DetallePedidoMesaDTO::getSubtotal).sum();
             }
-            // --- FIN MODIFICACIÓN ---
             
             double igv = subtotal * 0.18;
             double total = subtotal + igv;
@@ -249,9 +245,10 @@ public class CashierController {
             cerrarPedidoButton.setDisable(true);
             Long pedidoIdParaCerrar = pedidoSeleccionado.getIdPedidoMesa();
 
-            new Thread(() -> {
+            // MODIFICADO: Uso de ThreadManager
+            ThreadManager.getInstance().execute(() -> {
                 try {
-                    pedidoMesaService.cerrarPedido(pedidoIdParaCerrar); // Método añadido en paso anterior
+                    pedidoMesaService.cerrarPedido(pedidoIdParaCerrar);
                     Platform.runLater(() -> {
                         statusLabelCashier.setText("Pedido Mesa " + pedidoSeleccionado.getNumeroMesa() + " cerrado.");
                         statusLabelCashier.getStyleClass().setAll("lbl-success");
@@ -259,9 +256,12 @@ public class CashierController {
                         cargarPedidosListos();
                     });
                 } catch (Exception e) {
-                    Platform.runLater(() -> { handleError("Error al cerrar pedido: " + e.getMessage(), e); cerrarPedidoButton.setDisable(false); });
+                    Platform.runLater(() -> { 
+                        handleError("Error al cerrar pedido: " + e.getMessage(), e); 
+                        cerrarPedidoButton.setDisable(false); 
+                    });
                 }
-            }).start();
+            });
         }
     }
 

@@ -29,6 +29,7 @@ import proyectopos.restauranteappfrontend.model.dto.RolDTO;
 import proyectopos.restauranteappfrontend.services.EmpleadoService;
 import proyectopos.restauranteappfrontend.services.HttpClientService;
 import proyectopos.restauranteappfrontend.services.RolService;
+import proyectopos.restauranteappfrontend.util.ThreadManager;
 
 public class EmployeeManagementController {
 
@@ -143,10 +144,12 @@ public class EmployeeManagementController {
         // --- Fin Configuración Columna Acciones ---
     }
 
-    // --- Método cargarEmpleados (sin cambios) ---
+    // --- Método cargarEmpleados ---
     private void cargarEmpleados() {
         empleadosTableView.setPlaceholder(new Label("Cargando empleados..."));
-        new Thread(() -> {
+        
+        // MODIFICADO: Uso de ThreadManager
+        ThreadManager.getInstance().execute(() -> {
             try {
                 List<EmpleadoDTO> empleados = empleadoService.getAllEmpleados();
                 Platform.runLater(() -> {
@@ -160,7 +163,7 @@ public class EmployeeManagementController {
                     empleadosTableView.setPlaceholder(new Label("Error al cargar empleados."));
                  });
             }
-        }).start();
+        });
     }
 
     // --- Método validarFormularioYActualizarBoton (sin cambios) ---
@@ -189,11 +192,13 @@ public class EmployeeManagementController {
         return null; // Todo válido
     }
 
-    // --- Método cargarRoles (sin cambios) ---
+    // --- Método cargarRoles ---
     private void cargarRoles() {
         statusLabel.setText("Cargando roles...");
         statusLabel.getStyleClass().setAll("lbl-info");
-        new Thread(() -> {
+        
+        // MODIFICADO: Uso de ThreadManager
+        ThreadManager.getInstance().execute(() -> {
             try {
                 List<RolDTO> roles = rolService.getAllRoles();
                 this.rolesDisponibles = roles;
@@ -205,7 +210,7 @@ public class EmployeeManagementController {
                     } else { /* ... manejo de error ... */ }
                 });
             } catch (Exception e) { /* ... manejo de error ... */ }
-        }).start();
+        });
     }
 
     // --- MODIFICADO: Renombrado y ahora maneja CREAR y ACTUALIZAR ---
@@ -236,7 +241,8 @@ public class EmployeeManagementController {
             setFormDisabled(true);
             Long idParaActualizar = empleadoEnEdicion.getIdEmpleado(); // Guardar ID
 
-            new Thread(() -> {
+            // MODIFICADO: Uso de ThreadManager
+            ThreadManager.getInstance().execute(() -> {
                 try {
                     EmpleadoDTO empleadoActualizado = empleadoService.actualizarEmpleado(idParaActualizar, empleadoDto);
                     Platform.runLater(() -> {
@@ -252,7 +258,7 @@ public class EmployeeManagementController {
                         setFormDisabled(false); // Habilitar formulario de nuevo
                     });
                 }
-            }).start();
+            });
 
         } else {
             // --- Lógica de CREACIÓN (como antes) ---
@@ -260,7 +266,8 @@ public class EmployeeManagementController {
             statusLabel.getStyleClass().setAll("lbl-warning");
             setFormDisabled(true);
 
-            new Thread(() -> {
+            // MODIFICADO: Uso de ThreadManager
+            ThreadManager.getInstance().execute(() -> {
                 try {
                     EmpleadoDTO empleadoCreado = empleadoService.crearEmpleado(empleadoDto);
                     Platform.runLater(() -> {
@@ -284,7 +291,7 @@ public class EmployeeManagementController {
                         setFormDisabled(false);
                      });
                 }
-            }).start();
+            });
         }
     }
     // --- FIN MÉTODO MODIFICADO ---
@@ -303,7 +310,8 @@ public class EmployeeManagementController {
             statusLabel.setText("Eliminando empleado...");
             statusLabel.getStyleClass().setAll("lbl-warning");
 
-            new Thread(() -> {
+            // MODIFICADO: Uso de ThreadManager
+            ThreadManager.getInstance().execute(() -> {
                 try {
                     empleadoService.eliminarEmpleado(empleado.getIdEmpleado());
                     Platform.runLater(() -> {
@@ -322,7 +330,7 @@ public class EmployeeManagementController {
                 } catch (Exception e) {
                      Platform.runLater(() -> handleError("Error al eliminar empleado", e));
                 }
-            }).start();
+            });
         }
     }
     // --- FIN NUEVO MÉTODO ---

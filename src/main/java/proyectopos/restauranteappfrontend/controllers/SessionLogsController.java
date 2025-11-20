@@ -16,6 +16,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import proyectopos.restauranteappfrontend.model.dto.RegistroSesionDTO;
 import proyectopos.restauranteappfrontend.services.RegistroSesionService;
+import proyectopos.restauranteappfrontend.util.ThreadManager;
 
 public class SessionLogsController {
 
@@ -67,7 +68,8 @@ public class SessionLogsController {
         statusLabel.setText("Cargando registros...");
         statusLabel.getStyleClass().setAll("lbl-info");
 
-        new Thread(() -> {
+        // MODIFICADO: Uso de ThreadManager
+        ThreadManager.getInstance().execute(() -> {
             try {
                 List<RegistroSesionDTO> resultados = service.buscarSesiones(
                         usuarioFilterField.getText().trim(),
@@ -89,7 +91,7 @@ public class SessionLogsController {
                     e.printStackTrace();
                 });
             }
-        }).start();
+        });
     }
 
     @FXML
