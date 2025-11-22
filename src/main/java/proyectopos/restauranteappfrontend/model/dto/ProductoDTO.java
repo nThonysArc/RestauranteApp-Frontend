@@ -7,6 +7,7 @@ public class ProductoDTO {
     private Double precio;
     private String categoriaNombre;
     private Long idCategoria;
+    private String imagenUrl;
 
     // Constructor vacío
     public ProductoDTO() {}
@@ -24,6 +25,8 @@ public class ProductoDTO {
     public void setCategoriaNombre(String categoriaNombre) { this.categoriaNombre = categoriaNombre; }
     public Long getIdCategoria() { return idCategoria; }
     public void setIdCategoria(Long idCategoria) { this.idCategoria = idCategoria; }
+    public String getImagenUrl() { return imagenUrl; }
+    public void setImagenUrl(String imagenUrl) { this.imagenUrl = imagenUrl; }
 
     // (Opcional) toString para depuración
     @Override

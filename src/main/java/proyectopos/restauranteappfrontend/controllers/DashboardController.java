@@ -8,7 +8,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.google.gson.Gson; // Importar Gson
+import com.google.gson.Gson; 
 
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -32,6 +32,8 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView; 
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
@@ -43,7 +45,7 @@ import proyectopos.restauranteappfrontend.model.dto.DetallePedidoMesaDTO;
 import proyectopos.restauranteappfrontend.model.dto.MesaDTO;
 import proyectopos.restauranteappfrontend.model.dto.PedidoMesaDTO;
 import proyectopos.restauranteappfrontend.model.dto.ProductoDTO;
-import proyectopos.restauranteappfrontend.model.dto.WebSocketMessageDTO; // Importar DTO de WS
+import proyectopos.restauranteappfrontend.model.dto.WebSocketMessageDTO;
 import proyectopos.restauranteappfrontend.services.CategoriaService;
 import proyectopos.restauranteappfrontend.services.HttpClientService;
 import proyectopos.restauranteappfrontend.services.MesaService;
@@ -60,10 +62,17 @@ public class DashboardController implements CleanableController {
     @FXML private VBox gestionPedidoPane;
     @FXML private ListView<CategoriaDTO> categoriasListView;
     @FXML private ListView<CategoriaDTO> subCategoriasListView;
+    
+    // TableView por TilePane para las tarjetas ---
+    @FXML private TilePane productosContainer; 
+    
+    /* Elementos de tabla antiguos comentados
     @FXML private TableView<ProductoDTO> productosTableView;
     @FXML private TableColumn<ProductoDTO, String> nombreProductoCol;
     @FXML private TableColumn<ProductoDTO, Double> precioProductoCol;
     @FXML private TableColumn<ProductoDTO, String> categoriaProductoCol;
+    */
+
     @FXML private Label mesaSeleccionadaLabel;
     @FXML private TableView<DetallePedidoMesaDTO> pedidoActualTableView;
     @FXML private TableColumn<DetallePedidoMesaDTO, String> pedidoNombreCol;
@@ -81,7 +90,7 @@ public class DashboardController implements CleanableController {
     private final CategoriaService categoriaService = new CategoriaService();
     private final ProductoService productoService = new ProductoService();
     private final PedidoMesaService pedidoMesaService = new PedidoMesaService();
-    private final Gson gson = new Gson(); // Instancia para procesar JSON
+    private final Gson gson = new Gson();
 
     private MesaDTO mesaSeleccionada = null;
     private PedidoMesaDTO pedidoActual = null;
@@ -107,20 +116,27 @@ public class DashboardController implements CleanableController {
 
         categoriasListView.setPlaceholder(new Label("Cargando categorías..."));
         subCategoriasListView.setPlaceholder(new Label("Seleccione categoría"));
-        productosTableView.setPlaceholder(new Label("Cargando productos..."));
+        
+        // Inicializar contenedor de productos
+        if(productosContainer != null) {
+            productosContainer.getChildren().clear();
+            productosContainer.getChildren().add(new Label("Cargando productos..."));
+        }
+        
         mesasContainer.getChildren().clear();
         mesasContainer.getChildren().add(new Label("Cargando mesas..."));
 
-        configurarTablaProductos();
+        // configurarTablaProductos(); // YA NO SE USA LA TABLA
         configurarContenedorMesas();
         configurarTablaPedidoActual(); 
-        configurarSeleccionProducto();
+        // configurarSeleccionProducto(); // La selección ahora se maneja en cada tarjeta
         cargarDatosIniciales(); 
 
         crearPedidoButton.setDisable(true);
 
         subCategoriasListView.setItems(subCategoriasData);
 
+        // Listener Categorías
         categoriasListView.getSelectionModel().selectedItemProperty().addListener(
                 (observable, oldValue, categoriaSeleccionada) -> {
                     subCategoriasData.clear();
@@ -149,9 +165,12 @@ public class DashboardController implements CleanableController {
                         }
                          infoLabel.setText("Seleccione una categoría");
                     }
+                    // --- MODIFICACIÓN: Actualizar la vista de tarjetas ---
+                    renderizarProductos();
                 }
         );
 
+        // Listener SubCategorías
         subCategoriasListView.getSelectionModel().selectedItemProperty().addListener(
                 (observable, oldValue, subCategoriaSeleccionada) -> {
                     if (filteredProductos == null) return;
@@ -174,40 +193,116 @@ public class DashboardController implements CleanableController {
                             infoLabel.setText("Seleccione una categoría");
                         }
                     }
+                    // --- MODIFICACIÓN: Actualizar la vista de tarjetas ---
+                    renderizarProductos();
                 }
         );
         
-        // --- SUSCRIPCIÓN WEBSOCKET MEJORADA ---
+        // --- SUSCRIPCIÓN WEBSOCKET ---
         WebSocketService.getInstance().subscribe("/topic/pedidos", (jsonMessage) -> {
             Platform.runLater(() -> procesarMensajeWebSocket(jsonMessage));
         });
     }
 
+    // --- MÉTODO NUEVO: Renderizar productos como Tarjetas ---
+    private void renderizarProductos() {
+        if (productosContainer == null) return;
+        
+        productosContainer.getChildren().clear();
+
+        if (filteredProductos != null && !filteredProductos.isEmpty()) {
+            for (ProductoDTO p : filteredProductos) {
+                productosContainer.getChildren().add(crearTarjetaProducto(p));
+            }
+        } else {
+            Label emptyLabel = new Label("No hay productos en esta categoría.");
+            emptyLabel.setStyle("-fx-text-fill: #6b7280; -fx-padding: 20;");
+            productosContainer.getChildren().add(emptyLabel);
+        }
+    }
+
+    // --- MÉTODO NUEVO: Crear el nodo visual de la tarjeta ---
+    private Node crearTarjetaProducto(ProductoDTO producto) {
+        // 1. Contenedor Principal (Tarjeta)
+        VBox card = new VBox(5);
+        card.setAlignment(Pos.CENTER);
+        card.setPadding(new Insets(10));
+        card.setPrefSize(160, 210);
+        card.getStyleClass().add("card"); 
+        // Estilo inline para asegurar apariencia si el CSS no carga o para hover simple
+        card.setStyle("-fx-cursor: hand; -fx-background-color: white; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 5, 0, 0, 2);");
+
+        // 2. Imagen
+        ImageView imageView = new ImageView();
+        imageView.setFitHeight(100);
+        imageView.setFitWidth(140);
+        imageView.setPreserveRatio(true);
+        
+        try {
+            // NOTA: Asegúrate de que tu ProductoDTO tenga getImagenUrl(). 
+            // Si no lo tiene aún en el backend, usa un placeholder.
+            String urlImagen = null;
+            try {
+                // Reflexión simple o acceso directo si actualizaste el DTO
+                 urlImagen = producto.getImagenUrl(); 
+            } catch (Exception e) { /* Ignorar si el método no existe aun */ }
+
+            String url = (urlImagen != null && !urlImagen.isBlank()) 
+                         ? urlImagen 
+                         : "https://via.placeholder.com/150?text=" + producto.getNombre().replace(" ", "+"); 
+            
+            // Cargar en background para no congelar UI
+            imageView.setImage(new Image(url, true)); 
+        } catch (Exception e) {
+            System.err.println("No se pudo cargar imagen para: " + producto.getNombre());
+        }
+
+        // 3. Nombre y Precio
+        Label lblNombre = new Label(producto.getNombre());
+        lblNombre.setWrapText(true);
+        lblNombre.setAlignment(Pos.CENTER);
+        lblNombre.setStyle("-fx-font-weight: bold; -fx-font-size: 13px; -fx-text-alignment: center;");
+        // Limitar altura del texto
+        lblNombre.setMaxHeight(40); 
+
+        Label lblPrecio = new Label(String.format("S/ %.2f", producto.getPrecio()));
+        lblPrecio.setStyle("-fx-text-fill: #d97706; -fx-font-size: 13px; -fx-font-weight: bold;");
+
+        // 4. Evento de Clic (Añadir al pedido)
+        card.setOnMouseClicked(event -> {
+            if (event.getButton().equals(MouseButton.PRIMARY)) {
+                handleSeleccionarProducto(producto);
+                // Efecto visual de "click" rápido
+                card.setOpacity(0.5);
+                new java.util.Timer().schedule(new java.util.TimerTask() {
+                    @Override public void run() { Platform.runLater(() -> card.setOpacity(1.0)); }
+                }, 100);
+            }
+        });
+
+        card.getChildren().addAll(imageView, lblNombre, lblPrecio);
+        return card;
+    }
+
     /**
-     * Procesa el mensaje JSON del WebSocket para realizar actualizaciones parciales (Delta Updates)
-     * en lugar de recargar toda la lista de mesas.
+     * Procesa el mensaje JSON del WebSocket para realizar actualizaciones parciales.
      */
     private void procesarMensajeWebSocket(String jsonMessage) {
         try {
-            // Intentar parsear como objeto estructurado
             WebSocketMessageDTO msg = gson.fromJson(jsonMessage, WebSocketMessageDTO.class);
             
-            // Si el mensaje no tiene estructura (es antiguo: "NUEVO", "LISTO"), fallback a recarga completa
             if (msg == null || msg.getType() == null) {
                 if ("LISTO".equals(jsonMessage) || "CERRADO".equals(jsonMessage) || "NUEVO".equals(jsonMessage)) {
-                    System.out.println("WS Legacy msg: " + jsonMessage + ". Recargando todo.");
                     cargarSoloMesasAsync();
                 }
                 return;
             }
 
-            // Procesar según el tipo de evento con el payload (PedidoMesaDTO)
             PedidoMesaDTO pedido = gson.fromJson(msg.getPayload(), PedidoMesaDTO.class);
             
             if (pedido != null && pedido.getIdMesa() != null) {
                 actualizarEstadoMesaEspecifica(msg.getType(), pedido);
                 
-                // Si estamos viendo el pedido de esa mesa, actualizar también el panel de detalle
                 if (mesaSeleccionada != null && mesaSeleccionada.getIdMesa().equals(pedido.getIdMesa())) {
                     actualizarPanelDetalleSiCorresponde(msg.getType(), pedido);
                 }
@@ -215,39 +310,31 @@ public class DashboardController implements CleanableController {
 
         } catch (Exception e) {
             System.err.println("Error procesando mensaje WS en Dashboard: " + e.getMessage());
-            // Fallback seguro
             cargarSoloMesasAsync();
         }
     }
 
     private void actualizarEstadoMesaEspecifica(String tipoEvento, PedidoMesaDTO pedido) {
-        // Buscar el botón correspondiente a la mesa en el TilePane
         for (Node node : mesasContainer.getChildren()) {
             if (node instanceof Button) {
                 Button btn = (Button) node;
                 MesaDTO mesaBtn = (MesaDTO) btn.getUserData();
                 
                 if (mesaBtn != null && mesaBtn.getIdMesa().equals(pedido.getIdMesa())) {
-                    // Encontrado: Actualizar estilo y datos
                     actualizarEstiloBotonMesa(btn, tipoEvento, mesaBtn);
-                    
-                    // Actualizar caché de estados para futuras referencias
                     if ("PEDIDO_CERRADO".equals(tipoEvento) || "PEDIDO_CANCELADO".equals(tipoEvento)) {
                         estadoPedidoCache.remove(mesaBtn.getIdMesa());
                     } else {
                         estadoPedidoCache.put(mesaBtn.getIdMesa(), pedido.getEstado());
                     }
-                    break; // Terminar búsqueda
+                    break;
                 }
             }
         }
     }
 
     private void actualizarEstiloBotonMesa(Button mesaButton, String tipoEvento, MesaDTO mesaDTO) {
-        // Limpiar estilos anteriores de estado
         mesaButton.getStyleClass().removeAll("mesa-libre", "mesa-ocupada", "mesa-pagando", "mesa-reservada", "btn-secondary");
-        
-        // Obtener componentes de texto dentro del botón
         VBox buttonContent = (VBox) mesaButton.getGraphic();
         Text numeroMesaText = (Text) buttonContent.getChildren().get(0);
         Text estadoMesaText = (Text) buttonContent.getChildren().get(1);
@@ -256,38 +343,35 @@ public class DashboardController implements CleanableController {
             case "PEDIDO_CREADO":
             case "PEDIDO_ACTUALIZADO":
                 mesaDTO.setEstado("OCUPADA");
-                mesaButton.getStyleClass().add("mesa-ocupada"); // Rojo
+                mesaButton.getStyleClass().add("mesa-ocupada");
                 estadoMesaText.setText("Ocupada");
                 setButtonTextColor(numeroMesaText, estadoMesaText, "white");
                 break;
 
             case "PEDIDO_LISTO":
                 mesaDTO.setEstado("OCUPADA"); 
-                mesaButton.getStyleClass().add("mesa-pagando"); // Amarillo
+                mesaButton.getStyleClass().add("mesa-pagando");
                 estadoMesaText.setText("¡LISTO!");
-                setButtonTextColor(numeroMesaText, estadoMesaText, "#111827"); // Texto oscuro
+                setButtonTextColor(numeroMesaText, estadoMesaText, "#111827");
                 break;
 
             case "PEDIDO_CERRADO":
             case "PEDIDO_CANCELADO":
                 mesaDTO.setEstado("DISPONIBLE");
-                mesaButton.getStyleClass().add("mesa-libre"); // Verde
+                mesaButton.getStyleClass().add("mesa-libre");
                 estadoMesaText.setText("Libre");
                 setButtonTextColor(numeroMesaText, estadoMesaText, "white");
                 break;
                 
             default:
-                // Mantener estado actual si el evento es desconocido
                 if ("DISPONIBLE".equals(mesaDTO.getEstado())) mesaButton.getStyleClass().add("mesa-libre");
                 else if ("OCUPADA".equals(mesaDTO.getEstado())) mesaButton.getStyleClass().add("mesa-ocupada");
                 break;
         }
-        // Actualizar el objeto userData para que la próxima interacción tenga el estado correcto
         mesaButton.setUserData(mesaDTO);
     }
 
     private void setButtonTextColor(Text t1, Text t2, String color) {
-        // Helper para cambiar color del texto manteniendo tamaño/fuente
         String style1 = t1.getStyle().replaceAll("-fx-fill: [^;]+;", "") + "-fx-fill: " + color + ";";
         String style2 = t2.getStyle().replaceAll("-fx-fill: [^;]+;", "") + "-fx-fill: " + color + ";";
         t1.setStyle(style1);
@@ -295,12 +379,10 @@ public class DashboardController implements CleanableController {
     }
 
     private void actualizarPanelDetalleSiCorresponde(String tipoEvento, PedidoMesaDTO pedidoActualizado) {
-        // Si se cerró el pedido que estábamos viendo, limpiar el panel
         if ("PEDIDO_CERRADO".equals(tipoEvento) || "PEDIDO_CANCELADO".equals(tipoEvento)) {
             resetearPanelPedido();
             infoLabel.setText("El pedido de la Mesa " + pedidoActualizado.getNumeroMesa() + " ha sido cerrado.");
         } else {
-             // Si se actualizó (por ejemplo, desde otro terminal), refrescar datos
              this.pedidoActual = pedidoActualizado;
              itemsEnviadosData.clear();
              if (pedidoActualizado.getDetalles() != null) {
@@ -312,7 +394,6 @@ public class DashboardController implements CleanableController {
     }
 
     private void cargarSoloMesasAsync() {
-        // MODIFICADO: Uso de ThreadManager
         ThreadManager.getInstance().execute(() -> {
             List<MesaDTO> mesas = null;
             List<PedidoMesaDTO> pedidosActivos = null;
@@ -344,13 +425,8 @@ public class DashboardController implements CleanableController {
 
     // --- Métodos de configuración UI ---
     private void configurarContenedorMesas() { /* Sin cambios */ }
-    private void configurarTablaProductos() {
-        nombreProductoCol.setCellValueFactory(new PropertyValueFactory<>("nombre"));
-        precioProductoCol.setCellValueFactory(new PropertyValueFactory<>("precio"));
-        categoriaProductoCol.setCellValueFactory(new PropertyValueFactory<>("categoriaNombre"));
-        filteredProductos = new FilteredList<>(productosData, p -> true);
-        productosTableView.setItems(filteredProductos);
-     }
+    
+    // Ya no usamos configurarTablaProductos, se reemplaza por renderizarProductos()
 
     private void configurarTablaPedidoActual() {
         pedidoNombreCol.setCellValueFactory(new PropertyValueFactory<>("nombreProducto"));
@@ -360,33 +436,24 @@ public class DashboardController implements CleanableController {
         
         pedidoActualTableView.setItems(itemsCompletosData); 
         
-        pedidoActualTableView.setPlaceholder(new Label("Añada productos (doble clic)"));
+        pedidoActualTableView.setPlaceholder(new Label("Añada productos (seleccione de la derecha)"));
     }
 
-    private void configurarSeleccionProducto() {
-         productosTableView.setOnMouseClicked(event -> {
-             if (event.getButton().equals(MouseButton.PRIMARY) && event.getClickCount() == 2) {
-                 ProductoDTO productoSeleccionado = productosTableView.getSelectionModel().getSelectedItem();
-                 if (productoSeleccionado != null) {
-                     handleSeleccionarProducto(productoSeleccionado);
-                 }
-             }
-         });
-     }
+    // configurarSeleccionProducto se ha movido a la lógica de creación de la tarjeta
 
     private void configurarBotonesAdmin() {
         String userRole = SessionManager.getInstance().getRole();
+        
+        // Limpiar contenedor anterior si existía
         if (adminButtonContainer != null && adminButtonContainer.getParent() != null) {
              ((VBox)adminButtonContainer.getParent()).getChildren().remove(adminButtonContainer);
         }
-        adminButtonContainer = null; // Resetear
+        adminButtonContainer = null;
 
         if (userRole == null || !userRole.equals("ROLE_ADMIN")) {
-            System.out.println("Ocultando botones de admin. Rol de usuario: " + userRole);
             return;
         }
 
-        System.out.println("Intentando configurar botones de admin...");
         Button crearProductoBtn = new Button("Crear Producto");
         crearProductoBtn.getStyleClass().addAll("btn", "btn-info");
         crearProductoBtn.setOnAction(e -> handleCrearProducto());
@@ -402,28 +469,25 @@ public class DashboardController implements CleanableController {
         adminButtonContainer.setPadding(new Insets(0, 0, 5, 0));
 
         try {
-            Node parent = productosTableView.getParent();
+            // MODIFICADO: Ahora buscamos el contenedor padre de la TilePane (o su ScrollPane)
+            Node contenedorProductos = productosContainer;
+            // Subir hasta encontrar el VBox que contiene la lista de productos
+            // Estructura esperada: VBox -> HBox (header/botones) + ScrollPane -> TilePane
+            // O directamente VBox -> ScrollPane -> TilePane
+            Node parent = contenedorProductos.getParent(); 
+            while (parent != null && !(parent instanceof VBox)) {
+                parent = parent.getParent();
+            }
+            
             if (parent instanceof VBox) {
                 VBox parentVBox = (VBox) parent;
-              
-                int tableViewIndex = parentVBox.getChildren().indexOf(productosTableView);
-                if (tableViewIndex > 0) { 
-                    if (parentVBox.getChildren().stream().noneMatch(node -> node == adminButtonContainer)) {
-                       parentVBox.getChildren().add(tableViewIndex -1, adminButtonContainer); 
-                       System.out.println("Botones de admin añadidos correctamente.");
-                    }
-                } else { 
-                     if (parentVBox.getChildren().stream().noneMatch(node -> node == adminButtonContainer)) {
-                        parentVBox.getChildren().add(adminButtonContainer);
-                        System.out.println("Botones de admin añadidos (fallback al final).");
-                     }
+                // Insertar al principio o antes del ScrollPane
+                if (!parentVBox.getChildren().contains(adminButtonContainer)) {
+                     parentVBox.getChildren().add(0, adminButtonContainer); // Añadir arriba
                 }
-            } else {
-                System.err.println("Advertencia: No se pudo encontrar el VBox padre esperado para la tabla de productos. Parent: " + (parent != null ? parent.getClass().getName() : "null"));
             }
         } catch (Exception e) {
-            System.err.println("Error crítico al intentar añadir botones de admin: " + e.getMessage());
-            e.printStackTrace();
+            System.err.println("Error al intentar añadir botones de admin: " + e.getMessage());
         }
     }
 
@@ -432,7 +496,6 @@ public class DashboardController implements CleanableController {
         infoLabel.getStyleClass().setAll("lbl-warning");
         setUIDisabledDuringLoad(true);
 
-        // MODIFICADO: Uso de ThreadManager
         ThreadManager.getInstance().execute(() -> {
             List<MesaDTO> mesas = null;
             List<CategoriaDTO> categorias = null;
@@ -458,7 +521,6 @@ public class DashboardController implements CleanableController {
 
             Platform.runLater(() -> {
                 boolean huboErrorGeneral = false;
-                StringBuilder errorMessages = new StringBuilder();
                 HttpClientService.AuthenticationException authException = null;
 
                 if (finalMesas != null) {
@@ -473,7 +535,7 @@ public class DashboardController implements CleanableController {
                     huboErrorGeneral = true;
                     mesasContainer.getChildren().clear();
                     mesasContainer.getChildren().add(new Label("Error al cargar mesas."));
-                    if (finalErrorMesas != null) { errorMessages.append("Mesas: ").append(finalErrorMesas.getMessage()).append("\n"); if (finalErrorMesas instanceof HttpClientService.AuthenticationException && authException == null) authException = (HttpClientService.AuthenticationException) finalErrorMesas; }
+                    if (finalErrorMesas instanceof HttpClientService.AuthenticationException) authException = (HttpClientService.AuthenticationException) finalErrorMesas;
                 }
                 if (finalCategorias != null) {
                     mostrarCategorias(finalCategorias);
@@ -481,21 +543,28 @@ public class DashboardController implements CleanableController {
                     huboErrorGeneral = true;
                     categoriasListView.setPlaceholder(new Label("Error al cargar categorías."));
                     subCategoriasListView.setPlaceholder(new Label("Error"));
-                    if (finalErrorCategorias != null) { errorMessages.append("Categorías: ").append(finalErrorCategorias.getMessage()).append("\n"); if (finalErrorCategorias instanceof HttpClientService.AuthenticationException && authException == null) authException = (HttpClientService.AuthenticationException) finalErrorCategorias; }
+                     if (finalErrorCategorias instanceof HttpClientService.AuthenticationException) authException = (HttpClientService.AuthenticationException) finalErrorCategorias;
                 }
+                
+                // --- MODIFICACIÓN: Cargar productos y renderizar ---
                 if (finalProductos != null) {
-                    mostrarProductos(finalProductos);
+                    productosData.clear();
+                    productosData.addAll(finalProductos);
+                    // Inicializar el filtro
+                    filteredProductos = new FilteredList<>(productosData, p -> true);
+                    // Renderizar tarjetas
+                    renderizarProductos();
                 } else {
                     huboErrorGeneral = true;
-                    productosTableView.setPlaceholder(new Label("Error al cargar productos."));
-                    if (finalErrorProductos != null) { errorMessages.append("Productos: ").append(finalErrorProductos.getMessage()).append("\n"); if (finalErrorProductos instanceof HttpClientService.AuthenticationException && authException == null) authException = (HttpClientService.AuthenticationException) finalErrorProductos; }
+                    productosContainer.getChildren().add(new Label("Error al cargar productos."));
+                    if (finalErrorProductos instanceof HttpClientService.AuthenticationException) authException = (HttpClientService.AuthenticationException) finalErrorProductos;
                 }
-                if (finalErrorPedidos != null) { errorMessages.append("Pedidos iniciales: ").append(finalErrorPedidos.getMessage()).append("\n"); if (finalErrorPedidos instanceof HttpClientService.AuthenticationException && authException == null) authException = (HttpClientService.AuthenticationException) finalErrorPedidos; }
+                
+                if (finalErrorPedidos instanceof HttpClientService.AuthenticationException) authException = (HttpClientService.AuthenticationException) finalErrorPedidos;
 
                 if (huboErrorGeneral) {
                     infoLabel.setText("Error al cargar algunos datos iniciales.");
                     infoLabel.getStyleClass().setAll("lbl-danger");
-                    System.err.println("Errores durante la carga inicial:\n" + errorMessages.toString());
                     if (authException != null) { handleAuthenticationError(authException); }
                 } else {
                     infoLabel.setText("Datos cargados. Actualización automática iniciada.");
@@ -513,7 +582,7 @@ public class DashboardController implements CleanableController {
          if (mesasContainer != null) mesasContainer.setDisable(disabled);
          if (categoriasListView != null) categoriasListView.setDisable(disabled);
          if (subCategoriasListView != null) subCategoriasListView.setDisable(disabled);
-         if (productosTableView != null) productosTableView.setDisable(disabled);
+         if (productosContainer != null) productosContainer.setDisable(disabled); // Cambiado
          if (gestionPedidoPane != null) gestionPedidoPane.setDisable(disabled);
     }
 
@@ -589,7 +658,10 @@ public class DashboardController implements CleanableController {
         
         categoriasListView.getSelectionModel().clearSelection();
         subCategoriasListView.getSelectionModel().clearSelection();
-        if (filteredProductos != null) filteredProductos.setPredicate(p -> true);
+        if (filteredProductos != null) {
+            filteredProductos.setPredicate(p -> true);
+            renderizarProductos(); // Resetear filtro visual
+        }
 
         gestionPedidoPane.setVisible(true);
         gestionPedidoPane.setManaged(true);
@@ -600,14 +672,13 @@ public class DashboardController implements CleanableController {
             infoLabel.setText("Mesa " + mesa.getNumeroMesa() + " seleccionada. Añada productos al pedido.");
             infoLabel.getStyleClass().setAll("lbl-info");
             actualizarEstadoCrearPedidoButton();
-            pedidoActualTableView.setPlaceholder(new Label("Añada productos (doble clic)"));
+            pedidoActualTableView.setPlaceholder(new Label("Añada productos (click en tarjeta)"));
         } else if ("OCUPADA".equals(mesa.getEstado())) {
             mesaSeleccionadaLabel.setText("Mesa: " + mesa.getNumeroMesa() + " (Orden Activa)");
             infoLabel.setText("Cargando pedido activo de Mesa " + mesa.getNumeroMesa() + "...");
             infoLabel.getStyleClass().setAll("lbl-warning");
             pedidoActualTableView.setPlaceholder(new Label("Cargando items..."));
 
-            // MODIFICADO: Uso de ThreadManager
             ThreadManager.getInstance().execute(() -> {
                 try {
                     PedidoMesaDTO pedidoCargado = pedidoMesaService.getPedidoActivoPorMesa(mesa.getIdMesa());
@@ -622,8 +693,8 @@ public class DashboardController implements CleanableController {
                              infoLabel.setText("Mesa ocupada, pero sin pedido activo. Iniciando nueva orden.");
                         }
                         
-                        pedidoActualTableView.setPlaceholder(new Label("Añada nuevos productos (doble clic)"));
-                        actualizarListaCompletaYTotal(); // Combina listas y actualiza total
+                        pedidoActualTableView.setPlaceholder(new Label("Añada nuevos productos"));
+                        actualizarListaCompletaYTotal(); 
                         actualizarEstadoCrearPedidoButton();
                         infoLabel.setText("Pedido de Mesa " + mesa.getNumeroMesa() + " cargado. Puede añadir más productos.");
                         infoLabel.getStyleClass().setAll("lbl-info");
@@ -635,7 +706,7 @@ public class DashboardController implements CleanableController {
                              mesaSeleccionadaLabel.setText("Mesa: " + mesa.getNumeroMesa() + " (Nueva Orden)");
                              infoLabel.setText("Mesa " + mesa.getNumeroMesa() + " seleccionada (Sin pedido activo). Añada productos.");
                              infoLabel.getStyleClass().setAll("lbl-info");
-                             pedidoActualTableView.setPlaceholder(new Label("Añada productos (doble clic)"));
+                             pedidoActualTableView.setPlaceholder(new Label("Añada productos"));
                              actualizarListaCompletaYTotal();
                              actualizarEstadoCrearPedidoButton();
                         } else {
@@ -749,7 +820,6 @@ public class DashboardController implements CleanableController {
     private void llamarCrearCategoriaApi(CategoriaDTO categoriaACrear) {
         infoLabel.setText("Creando categoría '" + categoriaACrear.getNombre() + "'...");
         infoLabel.getStyleClass().setAll("lbl-warning");
-        // MODIFICADO: Uso de ThreadManager
         ThreadManager.getInstance().execute(() -> {
             try {
                 CategoriaDTO categoriaCreada = categoriaService.crearCategoria(categoriaACrear);
@@ -781,6 +851,10 @@ public class DashboardController implements CleanableController {
         TextArea descripcionField = new TextArea(); descripcionField.setPromptText("Descripción (opcional)");
         descripcionField.setWrapText(true); descripcionField.setPrefRowCount(3);
         TextField precioField = new TextField(); precioField.setPromptText("Precio (ej. 15.50)");
+        
+        // Campo de URL de imagen
+        TextField imagenUrlField = new TextField(); imagenUrlField.setPromptText("URL de imagen (opcional)");
+
         ComboBox<CategoriaDTO> comboCategoriaPadre = new ComboBox<>();
         ObservableList<CategoriaDTO> categoriasPadre = categoriasData.stream()
                 .filter(c -> c.getIdCategoriaPadre() == null)
@@ -801,11 +875,14 @@ public class DashboardController implements CleanableController {
                 } else { comboSubcategoria.setPromptText("No hay subcategorías"); comboSubcategoria.setDisable(true); }
             } else { comboSubcategoria.setDisable(true); }
         });
+        
         grid.add(new Label("Nombre:"), 0, 0); grid.add(nombreField, 1, 0);
         grid.add(new Label("Descripción:"), 0, 1); grid.add(descripcionField, 1, 1);
         grid.add(new Label("Precio:"), 0, 2); grid.add(precioField, 1, 2);
-        grid.add(new Label("Categoría:"), 0, 3); grid.add(comboCategoriaPadre, 1, 3);
-        grid.add(new Label("Subcategoría:"), 0, 4); grid.add(comboSubcategoria, 1, 4);
+        grid.add(new Label("Imagen (URL):"), 0, 3); grid.add(imagenUrlField, 1, 3);
+        grid.add(new Label("Categoría:"), 0, 4); grid.add(comboCategoriaPadre, 1, 4);
+        grid.add(new Label("Subcategoría:"), 0, 5); grid.add(comboSubcategoria, 1, 5);
+        
         dialog.getDialogPane().setContent(grid);
         Node crearButton = dialog.getDialogPane().lookupButton(crearButtonType);
         crearButton.setDisable(true);
@@ -816,24 +893,28 @@ public class DashboardController implements CleanableController {
         nombreField.textProperty().addListener((o, ov, nv) -> validador.run());
         precioField.textProperty().addListener((o, ov, nv) -> validador.run());
         comboSubcategoria.valueProperty().addListener((o, ov, nv) -> validador.run());
+        
         dialog.setResultConverter(dialogButton -> {
             if (dialogButton == crearButtonType) {
                 try {
-                    ProductoDTO np = new ProductoDTO(); np.setNombre(nombreField.getText().trim());
+                    ProductoDTO np = new ProductoDTO(); 
+                    np.setNombre(nombreField.getText().trim());
                     np.setDescripcion(descripcionField.getText().trim());
                     double precio = Double.parseDouble(precioField.getText().trim());
                     if (precio <= 0) throw new NumberFormatException("Precio debe ser positivo");
-                    np.setPrecio(precio); np.setIdCategoria(comboSubcategoria.getValue().getIdCategoria());
+                    np.setPrecio(precio); 
+                    np.setImagenUrl(imagenUrlField.getText().trim()); // Setear imagen
+                    np.setIdCategoria(comboSubcategoria.getValue().getIdCategoria());
                     return np;
                 } catch (NumberFormatException e) { mostrarAlerta("Datos Inválidos", "El precio debe ser un número positivo."); return null; }
             } return null;
         });
+        
         Optional<ProductoDTO> result = dialog.showAndWait();
         result.ifPresent(productoACrear -> {
             if (productoACrear == null) return;
             infoLabel.setText("Creando producto '" + productoACrear.getNombre() + "'...");
             infoLabel.getStyleClass().setAll("lbl-warning");
-            // MODIFICADO: Uso de ThreadManager
             ThreadManager.getInstance().execute(() -> {
                 try {
                     ProductoDTO productoCreado = productoService.crearProducto(productoACrear);
@@ -851,14 +932,12 @@ public class DashboardController implements CleanableController {
         itemsCompletosData.clear();
         itemsCompletosData.addAll(itemsEnviadosData);
         itemsCompletosData.addAll(itemsNuevosData);
-        actualizarTotalPedido(); // Actualizar los labels de S/
+        actualizarTotalPedido(); 
     }
 
     private void actualizarTotalPedido() {
         double subtotal = 0.0;
-        // Ahora iteramos sobre la lista combinada
         for (DetallePedidoMesaDTO detalle : itemsCompletosData) { 
-            // Asegurar recálculo
             detalle.setSubtotal(detalle.getCantidad() * detalle.getPrecioUnitario());
             subtotal += detalle.getSubtotal();
         }
@@ -870,37 +949,34 @@ public class DashboardController implements CleanableController {
      }
 
     private void actualizarEstadoCrearPedidoButton() {
-        // Se habilita si hay una mesa Y hay items NUEVOS para enviar
         boolean deshabilitar = (mesaSeleccionada == null || itemsNuevosData.isEmpty());
         crearPedidoButton.setDisable(deshabilitar);
         
         if (pedidoActual == null) {
             crearPedidoButton.setText("Enviar Pedido a Cocina");
         } else {
-            crearPedidoButton.setText("Añadir Items al Pedido"); // Texto más claro
+            crearPedidoButton.setText("Añadir Items al Pedido"); 
         }
     }
 
 
     @FXML
     private void handleEnviarPedido() {
-        // Validamos que haya items NUEVOS
         if (mesaSeleccionada == null || itemsNuevosData.isEmpty()) {
             mostrarAlerta("Pedido incompleto", "Debe seleccionar una mesa y añadir al menos un producto nuevo.");
             return;
         }
         infoLabel.setText("Enviando pedido...");
         infoLabel.getStyleClass().setAll("lbl-warning");
-        crearPedidoButton.setDisable(true); // Deshabilitar mientras se envía
+        crearPedidoButton.setDisable(true);
 
         PedidoMesaDTO pedidoDTO = new PedidoMesaDTO();
         pedidoDTO.setIdMesa(mesaSeleccionada.getIdMesa());
-        pedidoDTO.setEstado("ABIERTO"); // Siempre se marca como ABIERTO para que cocina lo vea
+        pedidoDTO.setEstado("ABIERTO");
         pedidoDTO.setDetalles(new ArrayList<>(itemsNuevosData));
 
 
         if (this.pedidoActual == null) {
-            // MODIFICADO: Uso de ThreadManager
             ThreadManager.getInstance().execute(() -> {
                 try {
                     PedidoMesaDTO pedidoCreado = pedidoMesaService.crearPedido(pedidoDTO);
@@ -908,22 +984,19 @@ public class DashboardController implements CleanableController {
                         infoLabel.setText("Pedido #" + pedidoCreado.getIdPedidoMesa() + " creado para Mesa " + mesaSeleccionada.getNumeroMesa());
                         infoLabel.getStyleClass().setAll("lbl-success");
                         resetearPanelPedido();
-                        cargarDatosIniciales(); // Recarga todo, incluyendo estado de mesas
+                        cargarDatosIniciales(); // Recarga todo
                     });
                 } catch (Exception e) {
                     Platform.runLater(() -> {
                         handleGenericError("Error al crear el pedido", e);
-                        // Rehabilitar botón en caso de error
                         crearPedidoButton.setDisable(false);
                     });
                 }
             });
         } else {
             Long idPedidoAActualizar = this.pedidoActual.getIdPedidoMesa();
-            // MODIFICADO: Uso de ThreadManager
             ThreadManager.getInstance().execute(() -> {
                 try {
-                    // La DTO solo lleva los items nuevos, el backend los añadirá
                     PedidoMesaDTO pedidoActualizado = pedidoMesaService.actualizarPedido(idPedidoAActualizar, pedidoDTO);
                     Platform.runLater(() -> {
                         infoLabel.setText("Items añadidos al Pedido #" + pedidoActualizado.getIdPedidoMesa() + " (Mesa " + mesaSeleccionada.getNumeroMesa() + ").");
@@ -934,7 +1007,6 @@ public class DashboardController implements CleanableController {
                 } catch (Exception e) {
                     Platform.runLater(() -> {
                         handleGenericError("Error al actualizar el pedido", e);
-                         // Rehabilitar botón en caso de error
                         crearPedidoButton.setDisable(false);
                     });
                 }
@@ -949,14 +1021,17 @@ public class DashboardController implements CleanableController {
         itemsEnviadosData.clear();
         itemsNuevosData.clear();
         
-        actualizarTotalPedido(); // Resetea totales a S/ 0.00
-        actualizarEstadoCrearPedidoButton(); // Deshabilita el botón
+        actualizarTotalPedido(); 
+        actualizarEstadoCrearPedidoButton();
         
         mesaSeleccionadaLabel.setText("Mesa: (Ninguna)");
         gestionPedidoPane.setVisible(false);
         gestionPedidoPane.setManaged(false);
         categoriasListView.getSelectionModel().clearSelection();
         subCategoriasListView.getSelectionModel().clearSelection();
+        
+        // Limpiar vista de productos al salir
+        if (productosContainer != null) productosContainer.getChildren().clear();
     }
 
     private void mostrarAlerta(String titulo, String contenido) {
@@ -984,18 +1059,17 @@ public class DashboardController implements CleanableController {
             categoriasListView.setPlaceholder(new Label(categorias == null ? "Error al cargar categorías." : "No se encontraron categorías."));
         }
      }
+     
     private void mostrarProductos(List<ProductoDTO> productos) {
+        // Método antiguo para Tabla, ahora delega al renderizador de tarjetas
         productosData.clear();
         if (productos != null && !productos.isEmpty()) {
             productosData.addAll(productos);
-             productosTableView.setPlaceholder(null);
-        } else {
-             productosTableView.setPlaceholder(new Label(productos == null ? "Error al cargar productos." : "No se encontraron productos."));
         }
         if (filteredProductos != null) {
             filteredProductos.setPredicate(p -> true);
         }
-        productosTableView.refresh(); // Forzar refresco
+        renderizarProductos();
     }
 
 
@@ -1004,7 +1078,7 @@ public class DashboardController implements CleanableController {
         infoLabel.getStyleClass().setAll("lbl-danger");
         System.err.println("Error de autenticación, se debería redirigir al login.");
         categoriasListView.setPlaceholder(new Label("Error de autenticación."));
-        productosTableView.setPlaceholder(new Label("Error de autenticación."));
+        if (productosContainer != null) productosContainer.getChildren().add(new Label("Error de autenticación."));
         mesasContainer.getChildren().clear();
         mesasContainer.getChildren().add(new Label("Error de autenticación."));
         mostrarAlerta("Sesión Expirada", "Su sesión ha expirado o no es válida. Por favor, vuelva a iniciar sesión.");
@@ -1016,12 +1090,12 @@ public class DashboardController implements CleanableController {
         infoLabel.setText(errorMessage);
         infoLabel.getStyleClass().setAll("lbl-danger");
         if (categoriasListView.getItems().isEmpty()) categoriasListView.setPlaceholder(new Label("Error al cargar."));
-        if (productosTableView.getItems().isEmpty()) productosTableView.setPlaceholder(new Label("Error al cargar."));
+        if (productosContainer != null && productosContainer.getChildren().isEmpty()) productosContainer.getChildren().add(new Label("Error al cargar."));
          if (mesasContainer.getChildren().size() <=1 && mesasContainer.getChildren().get(0) instanceof Label) mesasContainer.getChildren().set(0, new Label("Error al cargar."));
         mostrarAlertaError("Error", errorMessage);
     }
       @Override
         public void cleanup() {
         System.out.println("Limpiando DashboardController.");
-}
+    }
 }
