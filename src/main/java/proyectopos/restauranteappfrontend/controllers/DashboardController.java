@@ -1,5 +1,6 @@
 package proyectopos.restauranteappfrontend.controllers;
 
+import java.io.File; // Nuevo import
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -40,6 +41,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.TilePane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
+import javafx.stage.FileChooser; // Nuevo import
 import proyectopos.restauranteappfrontend.model.dto.CategoriaDTO;
 import proyectopos.restauranteappfrontend.model.dto.DetallePedidoMesaDTO;
 import proyectopos.restauranteappfrontend.model.dto.MesaDTO;
@@ -66,13 +68,6 @@ public class DashboardController implements CleanableController {
     // TableView por TilePane para las tarjetas ---
     @FXML private TilePane productosContainer; 
     
-    /* Elementos de tabla antiguos comentados
-    @FXML private TableView<ProductoDTO> productosTableView;
-    @FXML private TableColumn<ProductoDTO, String> nombreProductoCol;
-    @FXML private TableColumn<ProductoDTO, Double> precioProductoCol;
-    @FXML private TableColumn<ProductoDTO, String> categoriaProductoCol;
-    */
-
     @FXML private Label mesaSeleccionadaLabel;
     @FXML private TableView<DetallePedidoMesaDTO> pedidoActualTableView;
     @FXML private TableColumn<DetallePedidoMesaDTO, String> pedidoNombreCol;
@@ -126,10 +121,8 @@ public class DashboardController implements CleanableController {
         mesasContainer.getChildren().clear();
         mesasContainer.getChildren().add(new Label("Cargando mesas..."));
 
-        // configurarTablaProductos(); // YA NO SE USA LA TABLA
         configurarContenedorMesas();
         configurarTablaPedidoActual(); 
-        // configurarSeleccionProducto(); // La selección ahora se maneja en cada tarjeta
         cargarDatosIniciales(); 
 
         crearPedidoButton.setDisable(true);
@@ -163,9 +156,9 @@ public class DashboardController implements CleanableController {
                         if (filteredProductos != null) {
                             filteredProductos.setPredicate(p -> true);
                         }
-                         infoLabel.setText("Seleccione una categoría");
+                        infoLabel.setText("Seleccione una categoría");
                     }
-                    // --- MODIFICACIÓN: Actualizar la vista de tarjetas ---
+                    // Actualizar la vista de tarjetas
                     renderizarProductos();
                 }
         );
@@ -193,7 +186,7 @@ public class DashboardController implements CleanableController {
                             infoLabel.setText("Seleccione una categoría");
                         }
                     }
-                    // --- MODIFICACIÓN: Actualizar la vista de tarjetas ---
+                    // Actualizar la vista de tarjetas
                     renderizarProductos();
                 }
         );
@@ -204,7 +197,7 @@ public class DashboardController implements CleanableController {
         });
     }
 
-    // --- MÉTODO NUEVO: Renderizar productos como Tarjetas ---
+    // --- Renderizar productos como Tarjetas ---
     private void renderizarProductos() {
         if (productosContainer == null) return;
         
@@ -221,7 +214,7 @@ public class DashboardController implements CleanableController {
         }
     }
 
-    // --- MÉTODO NUEVO: Crear el nodo visual de la tarjeta ---
+    // --- Crear el nodo visual de la tarjeta ---
     private Node crearTarjetaProducto(ProductoDTO producto) {
         // 1. Contenedor Principal (Tarjeta)
         VBox card = new VBox(5);
@@ -229,7 +222,6 @@ public class DashboardController implements CleanableController {
         card.setPadding(new Insets(10));
         card.setPrefSize(160, 210);
         card.getStyleClass().add("card"); 
-        // Estilo inline para asegurar apariencia si el CSS no carga o para hover simple
         card.setStyle("-fx-cursor: hand; -fx-background-color: white; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 5, 0, 0, 2);");
 
         // 2. Imagen
@@ -239,13 +231,10 @@ public class DashboardController implements CleanableController {
         imageView.setPreserveRatio(true);
         
         try {
-            // NOTA: Asegúrate de que tu ProductoDTO tenga getImagenUrl(). 
-            // Si no lo tiene aún en el backend, usa un placeholder.
             String urlImagen = null;
             try {
-                // Reflexión simple o acceso directo si actualizaste el DTO
                  urlImagen = producto.getImagenUrl(); 
-            } catch (Exception e) { /* Ignorar si el método no existe aun */ }
+            } catch (Exception e) { /* Ignorar */ }
 
             String url = (urlImagen != null && !urlImagen.isBlank()) 
                          ? urlImagen 
@@ -262,7 +251,6 @@ public class DashboardController implements CleanableController {
         lblNombre.setWrapText(true);
         lblNombre.setAlignment(Pos.CENTER);
         lblNombre.setStyle("-fx-font-weight: bold; -fx-font-size: 13px; -fx-text-alignment: center;");
-        // Limitar altura del texto
         lblNombre.setMaxHeight(40); 
 
         Label lblPrecio = new Label(String.format("S/ %.2f", producto.getPrecio()));
@@ -272,7 +260,6 @@ public class DashboardController implements CleanableController {
         card.setOnMouseClicked(event -> {
             if (event.getButton().equals(MouseButton.PRIMARY)) {
                 handleSeleccionarProducto(producto);
-                // Efecto visual de "click" rápido
                 card.setOpacity(0.5);
                 new java.util.Timer().schedule(new java.util.TimerTask() {
                     @Override public void run() { Platform.runLater(() -> card.setOpacity(1.0)); }
@@ -425,8 +412,6 @@ public class DashboardController implements CleanableController {
 
     // --- Métodos de configuración UI ---
     private void configurarContenedorMesas() { /* Sin cambios */ }
-    
-    // Ya no usamos configurarTablaProductos, se reemplaza por renderizarProductos()
 
     private void configurarTablaPedidoActual() {
         pedidoNombreCol.setCellValueFactory(new PropertyValueFactory<>("nombreProducto"));
@@ -438,8 +423,6 @@ public class DashboardController implements CleanableController {
         
         pedidoActualTableView.setPlaceholder(new Label("Añada productos (seleccione de la derecha)"));
     }
-
-    // configurarSeleccionProducto se ha movido a la lógica de creación de la tarjeta
 
     private void configurarBotonesAdmin() {
         String userRole = SessionManager.getInstance().getRole();
@@ -469,11 +452,7 @@ public class DashboardController implements CleanableController {
         adminButtonContainer.setPadding(new Insets(0, 0, 5, 0));
 
         try {
-            // MODIFICADO: Ahora buscamos el contenedor padre de la TilePane (o su ScrollPane)
             Node contenedorProductos = productosContainer;
-            // Subir hasta encontrar el VBox que contiene la lista de productos
-            // Estructura esperada: VBox -> HBox (header/botones) + ScrollPane -> TilePane
-            // O directamente VBox -> ScrollPane -> TilePane
             Node parent = contenedorProductos.getParent(); 
             while (parent != null && !(parent instanceof VBox)) {
                 parent = parent.getParent();
@@ -481,9 +460,8 @@ public class DashboardController implements CleanableController {
             
             if (parent instanceof VBox) {
                 VBox parentVBox = (VBox) parent;
-                // Insertar al principio o antes del ScrollPane
                 if (!parentVBox.getChildren().contains(adminButtonContainer)) {
-                     parentVBox.getChildren().add(0, adminButtonContainer); // Añadir arriba
+                     parentVBox.getChildren().add(0, adminButtonContainer); 
                 }
             }
         } catch (Exception e) {
@@ -546,13 +524,10 @@ public class DashboardController implements CleanableController {
                      if (finalErrorCategorias instanceof HttpClientService.AuthenticationException) authException = (HttpClientService.AuthenticationException) finalErrorCategorias;
                 }
                 
-                // --- MODIFICACIÓN: Cargar productos y renderizar ---
                 if (finalProductos != null) {
                     productosData.clear();
                     productosData.addAll(finalProductos);
-                    // Inicializar el filtro
                     filteredProductos = new FilteredList<>(productosData, p -> true);
-                    // Renderizar tarjetas
                     renderizarProductos();
                 } else {
                     huboErrorGeneral = true;
@@ -582,7 +557,7 @@ public class DashboardController implements CleanableController {
          if (mesasContainer != null) mesasContainer.setDisable(disabled);
          if (categoriasListView != null) categoriasListView.setDisable(disabled);
          if (subCategoriasListView != null) subCategoriasListView.setDisable(disabled);
-         if (productosContainer != null) productosContainer.setDisable(disabled); // Cambiado
+         if (productosContainer != null) productosContainer.setDisable(disabled);
          if (gestionPedidoPane != null) gestionPedidoPane.setDisable(disabled);
     }
 
@@ -660,7 +635,7 @@ public class DashboardController implements CleanableController {
         subCategoriasListView.getSelectionModel().clearSelection();
         if (filteredProductos != null) {
             filteredProductos.setPredicate(p -> true);
-            renderizarProductos(); // Resetear filtro visual
+            renderizarProductos(); 
         }
 
         gestionPedidoPane.setVisible(true);
@@ -826,7 +801,7 @@ public class DashboardController implements CleanableController {
                 Platform.runLater(() -> {
                     infoLabel.setText("Categoría '" + categoriaCreada.getNombre() + "' creada.");
                     infoLabel.getStyleClass().setAll("lbl-success");
-                    cargarDatosIniciales(); // Recargar todo para ver cambios
+                    cargarDatosIniciales(); 
                 });
             } catch (Exception e) {
                 Platform.runLater(() -> handleGenericError("Error al crear la categoría", e));
@@ -852,8 +827,37 @@ public class DashboardController implements CleanableController {
         descripcionField.setWrapText(true); descripcionField.setPrefRowCount(3);
         TextField precioField = new TextField(); precioField.setPromptText("Precio (ej. 15.50)");
         
-        // Campo de URL de imagen
-        TextField imagenUrlField = new TextField(); imagenUrlField.setPromptText("URL de imagen (opcional)");
+        // --- MODIFICACIÓN PARA IMÁGENES CON FILECHOOSER ---
+        Label lblImagen = new Label("Imagen:");
+        Button btnSeleccionarImagen = new Button("Seleccionar archivo...");
+        btnSeleccionarImagen.getStyleClass().add("btn-secondary");
+        ImageView imgPreview = new ImageView();
+        imgPreview.setFitWidth(100);
+        imgPreview.setFitHeight(100);
+        imgPreview.setPreserveRatio(true);
+        Label lblRutaImagen = new Label("Sin imagen");
+        lblRutaImagen.setStyle("-fx-font-size: 10px; -fx-text-fill: #6b7280;");
+        
+        // Variable para guardar la URL (wrapper para usar en lambda)
+        final String[] selectedImageUrl = {null}; 
+        
+        btnSeleccionarImagen.setOnAction(event -> {
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Seleccionar Imagen del Producto");
+            fileChooser.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter("Imágenes", "*.png", "*.jpg", "*.jpeg", "*.gif")
+            );
+            File file = fileChooser.showOpenDialog(btnSeleccionarImagen.getScene().getWindow());
+            if (file != null) {
+                String localUrl = file.toURI().toString();
+                imgPreview.setImage(new Image(localUrl));
+                lblRutaImagen.setText(file.getName());
+                selectedImageUrl[0] = localUrl; 
+                // NOTA: Aquí se debería implementar la lógica para subir 'file' al servidor 
+                // y actualizar 'selectedImageUrl[0]' con la URL remota.
+                // Por ahora, usamos la ruta local para visualización en este equipo.
+            }
+        });
 
         ComboBox<CategoriaDTO> comboCategoriaPadre = new ComboBox<>();
         ObservableList<CategoriaDTO> categoriasPadre = categoriasData.stream()
@@ -879,7 +883,12 @@ public class DashboardController implements CleanableController {
         grid.add(new Label("Nombre:"), 0, 0); grid.add(nombreField, 1, 0);
         grid.add(new Label("Descripción:"), 0, 1); grid.add(descripcionField, 1, 1);
         grid.add(new Label("Precio:"), 0, 2); grid.add(precioField, 1, 2);
-        grid.add(new Label("Imagen (URL):"), 0, 3); grid.add(imagenUrlField, 1, 3);
+        
+        // Agregamos los controles de imagen modificados
+        grid.add(lblImagen, 0, 3); 
+        VBox imagenBox = new VBox(5, btnSeleccionarImagen, lblRutaImagen, imgPreview);
+        grid.add(imagenBox, 1, 3);
+        
         grid.add(new Label("Categoría:"), 0, 4); grid.add(comboCategoriaPadre, 1, 4);
         grid.add(new Label("Subcategoría:"), 0, 5); grid.add(comboSubcategoria, 1, 5);
         
@@ -903,7 +912,10 @@ public class DashboardController implements CleanableController {
                     double precio = Double.parseDouble(precioField.getText().trim());
                     if (precio <= 0) throw new NumberFormatException("Precio debe ser positivo");
                     np.setPrecio(precio); 
-                    np.setImagenUrl(imagenUrlField.getText().trim()); // Setear imagen
+                    // Usamos la URL seleccionada mediante el FileChooser
+                    if (selectedImageUrl[0] != null) {
+                        np.setImagenUrl(selectedImageUrl[0]);
+                    }
                     np.setIdCategoria(comboSubcategoria.getValue().getIdCategoria());
                     return np;
                 } catch (NumberFormatException e) { mostrarAlerta("Datos Inválidos", "El precio debe ser un número positivo."); return null; }
