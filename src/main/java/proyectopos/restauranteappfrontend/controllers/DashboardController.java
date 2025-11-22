@@ -19,7 +19,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.google.gson.Gson; 
+import com.google.gson.Gson;
 
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -44,7 +44,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
-import javafx.scene.image.ImageView; 
+import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
@@ -64,7 +64,7 @@ import proyectopos.restauranteappfrontend.services.MesaService;
 import proyectopos.restauranteappfrontend.services.PedidoMesaService;
 import proyectopos.restauranteappfrontend.services.ProductoService;
 import proyectopos.restauranteappfrontend.services.WebSocketService;
-import proyectopos.restauranteappfrontend.util.AppConfig; // Import necesario para la URL
+import proyectopos.restauranteappfrontend.util.AppConfig;
 import proyectopos.restauranteappfrontend.util.SessionManager;
 import proyectopos.restauranteappfrontend.util.ThreadManager;
 
@@ -75,9 +75,9 @@ public class DashboardController implements CleanableController {
     @FXML private VBox gestionPedidoPane;
     @FXML private ListView<CategoriaDTO> categoriasListView;
     @FXML private ListView<CategoriaDTO> subCategoriasListView;
-    
-    @FXML private TilePane productosContainer; 
-    
+
+    @FXML private TilePane productosContainer;
+
     @FXML private Label mesaSeleccionadaLabel;
     @FXML private TableView<DetallePedidoMesaDTO> pedidoActualTableView;
     @FXML private TableColumn<DetallePedidoMesaDTO, String> pedidoNombreCol;
@@ -100,7 +100,7 @@ public class DashboardController implements CleanableController {
     private MesaDTO mesaSeleccionada = null;
     private PedidoMesaDTO pedidoActual = null;
     private final ObservableList<ProductoDTO> productosData = FXCollections.observableArrayList();
-    
+
     private final ObservableList<DetallePedidoMesaDTO> itemsCompletosData = FXCollections.observableArrayList();
     private final ObservableList<DetallePedidoMesaDTO> itemsEnviadosData = FXCollections.observableArrayList();
     private final ObservableList<DetallePedidoMesaDTO> itemsNuevosData = FXCollections.observableArrayList();
@@ -121,18 +121,18 @@ public class DashboardController implements CleanableController {
 
         categoriasListView.setPlaceholder(new Label("Cargando categorías..."));
         subCategoriasListView.setPlaceholder(new Label("Seleccione categoría"));
-        
+
         if(productosContainer != null) {
             productosContainer.getChildren().clear();
             productosContainer.getChildren().add(new Label("Cargando productos..."));
         }
-        
+
         mesasContainer.getChildren().clear();
         mesasContainer.getChildren().add(new Label("Cargando mesas..."));
 
         configurarContenedorMesas();
-        configurarTablaPedidoActual(); 
-        cargarDatosIniciales(); 
+        configurarTablaPedidoActual();
+        cargarDatosIniciales();
 
         crearPedidoButton.setDisable(true);
 
@@ -197,7 +197,7 @@ public class DashboardController implements CleanableController {
                     renderizarProductos();
                 }
         );
-        
+
         WebSocketService.getInstance().subscribe("/topic/pedidos", (jsonMessage) -> {
             Platform.runLater(() -> procesarMensajeWebSocket(jsonMessage));
         });
@@ -205,7 +205,7 @@ public class DashboardController implements CleanableController {
 
     private void renderizarProductos() {
         if (productosContainer == null) return;
-        
+
         productosContainer.getChildren().clear();
 
         if (filteredProductos != null && !filteredProductos.isEmpty()) {
@@ -224,25 +224,38 @@ public class DashboardController implements CleanableController {
         card.setAlignment(Pos.CENTER);
         card.setPadding(new Insets(10));
         card.setPrefSize(160, 210);
-        card.getStyleClass().add("card"); 
+        card.getStyleClass().add("card");
         card.setStyle("-fx-cursor: hand; -fx-background-color: white; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 5, 0, 0, 2);");
 
         ImageView imageView = new ImageView();
         imageView.setFitHeight(100);
         imageView.setFitWidth(140);
         imageView.setPreserveRatio(true);
-        
-        try {
-            String urlImagen = null;
-            try {
-                 urlImagen = producto.getImagenUrl(); 
-            } catch (Exception e) { /* Ignorar */ }
 
-            String url = (urlImagen != null && !urlImagen.isBlank()) 
-                         ? urlImagen 
-                         : "https://via.placeholder.com/150?text=" + producto.getNombre().replace(" ", "+"); 
-            
-            imageView.setImage(new Image(url, true)); 
+        try {
+            String urlImagen = producto.getImagenUrl();
+            String urlFinal = null;
+
+            // Lógica para resolver la URL de la imagen
+            if (urlImagen != null && !urlImagen.isBlank()) {
+                if (urlImagen.startsWith("http") || urlImagen.startsWith("file:")) {
+                    // Es una URL absoluta (ej. Cloudinary o archivo local antiguo)
+                    urlFinal = urlImagen;
+                } else {
+                    // Es una ruta relativa del Backend (ej. /api/media/5)
+                    // Concatenamos el dominio base del AppConfig
+                    urlFinal = AppConfig.getInstance().getApiBaseUrl() + urlImagen;
+                }
+            } else {
+                // Placeholder si no hay imagen
+                urlFinal = "https://via.placeholder.com/150?text=" + producto.getNombre().replace(" ", "+");
+            }
+
+            // Cargar en background
+            if (urlFinal != null) {
+                imageView.setImage(new Image(urlFinal, true));
+            }
+
         } catch (Exception e) {
             System.err.println("No se pudo cargar imagen para: " + producto.getNombre());
         }
@@ -251,7 +264,7 @@ public class DashboardController implements CleanableController {
         lblNombre.setWrapText(true);
         lblNombre.setAlignment(Pos.CENTER);
         lblNombre.setStyle("-fx-font-weight: bold; -fx-font-size: 13px; -fx-text-alignment: center;");
-        lblNombre.setMaxHeight(40); 
+        lblNombre.setMaxHeight(40);
 
         Label lblPrecio = new Label(String.format("S/ %.2f", producto.getPrecio()));
         lblPrecio.setStyle("-fx-text-fill: #d97706; -fx-font-size: 13px; -fx-font-weight: bold;");
@@ -273,7 +286,7 @@ public class DashboardController implements CleanableController {
     private void procesarMensajeWebSocket(String jsonMessage) {
         try {
             WebSocketMessageDTO msg = gson.fromJson(jsonMessage, WebSocketMessageDTO.class);
-            
+
             if (msg == null || msg.getType() == null) {
                 if ("LISTO".equals(jsonMessage) || "CERRADO".equals(jsonMessage) || "NUEVO".equals(jsonMessage)) {
                     cargarSoloMesasAsync();
@@ -282,10 +295,10 @@ public class DashboardController implements CleanableController {
             }
 
             PedidoMesaDTO pedido = gson.fromJson(msg.getPayload(), PedidoMesaDTO.class);
-            
+
             if (pedido != null && pedido.getIdMesa() != null) {
                 actualizarEstadoMesaEspecifica(msg.getType(), pedido);
-                
+
                 if (mesaSeleccionada != null && mesaSeleccionada.getIdMesa().equals(pedido.getIdMesa())) {
                     actualizarPanelDetalleSiCorresponde(msg.getType(), pedido);
                 }
@@ -302,7 +315,7 @@ public class DashboardController implements CleanableController {
             if (node instanceof Button) {
                 Button btn = (Button) node;
                 MesaDTO mesaBtn = (MesaDTO) btn.getUserData();
-                
+
                 if (mesaBtn != null && mesaBtn.getIdMesa().equals(pedido.getIdMesa())) {
                     actualizarEstiloBotonMesa(btn, tipoEvento, mesaBtn);
                     if ("PEDIDO_CERRADO".equals(tipoEvento) || "PEDIDO_CANCELADO".equals(tipoEvento)) {
@@ -332,7 +345,7 @@ public class DashboardController implements CleanableController {
                 break;
 
             case "PEDIDO_LISTO":
-                mesaDTO.setEstado("OCUPADA"); 
+                mesaDTO.setEstado("OCUPADA");
                 mesaButton.getStyleClass().add("mesa-pagando");
                 estadoMesaText.setText("¡LISTO!");
                 setButtonTextColor(numeroMesaText, estadoMesaText, "#111827");
@@ -345,7 +358,7 @@ public class DashboardController implements CleanableController {
                 estadoMesaText.setText("Libre");
                 setButtonTextColor(numeroMesaText, estadoMesaText, "white");
                 break;
-                
+
             default:
                 if ("DISPONIBLE".equals(mesaDTO.getEstado())) mesaButton.getStyleClass().add("mesa-libre");
                 else if ("OCUPADA".equals(mesaDTO.getEstado())) mesaButton.getStyleClass().add("mesa-ocupada");
@@ -413,15 +426,15 @@ public class DashboardController implements CleanableController {
         pedidoCantidadCol.setCellValueFactory(new PropertyValueFactory<>("cantidad"));
         pedidoPrecioCol.setCellValueFactory(new PropertyValueFactory<>("precioUnitario"));
         pedidoSubtotalCol.setCellValueFactory(new PropertyValueFactory<>("subtotal"));
-        
-        pedidoActualTableView.setItems(itemsCompletosData); 
-        
+
+        pedidoActualTableView.setItems(itemsCompletosData);
+
         pedidoActualTableView.setPlaceholder(new Label("Añada productos (seleccione de la derecha)"));
     }
 
     private void configurarBotonesAdmin() {
         String userRole = SessionManager.getInstance().getRole();
-        
+
         if (adminButtonContainer != null && adminButtonContainer.getParent() != null) {
              ((VBox)adminButtonContainer.getParent()).getChildren().remove(adminButtonContainer);
         }
@@ -447,15 +460,15 @@ public class DashboardController implements CleanableController {
 
         try {
             Node contenedorProductos = productosContainer;
-            Node parent = contenedorProductos.getParent(); 
+            Node parent = contenedorProductos.getParent();
             while (parent != null && !(parent instanceof VBox)) {
                 parent = parent.getParent();
             }
-            
+
             if (parent instanceof VBox) {
                 VBox parentVBox = (VBox) parent;
                 if (!parentVBox.getChildren().contains(adminButtonContainer)) {
-                     parentVBox.getChildren().add(0, adminButtonContainer); 
+                     parentVBox.getChildren().add(0, adminButtonContainer);
                 }
             }
         } catch (Exception e) {
@@ -517,7 +530,7 @@ public class DashboardController implements CleanableController {
                     subCategoriasListView.setPlaceholder(new Label("Error"));
                      if (finalErrorCategorias instanceof HttpClientService.AuthenticationException) authException = (HttpClientService.AuthenticationException) finalErrorCategorias;
                 }
-                
+
                 if (finalProductos != null) {
                     productosData.clear();
                     productosData.addAll(finalProductos);
@@ -528,7 +541,7 @@ public class DashboardController implements CleanableController {
                     productosContainer.getChildren().add(new Label("Error al cargar productos."));
                     if (finalErrorProductos instanceof HttpClientService.AuthenticationException) authException = (HttpClientService.AuthenticationException) finalErrorProductos;
                 }
-                
+
                 if (finalErrorPedidos instanceof HttpClientService.AuthenticationException) authException = (HttpClientService.AuthenticationException) finalErrorPedidos;
 
                 if (huboErrorGeneral) {
@@ -539,10 +552,10 @@ public class DashboardController implements CleanableController {
                     infoLabel.setText("Datos cargados. Actualización automática iniciada.");
                     infoLabel.getStyleClass().setAll("lbl-success");
                 }
-                
-                configurarBotonesAdmin(); 
-                
-                setUIDisabledDuringLoad(false); 
+
+                configurarBotonesAdmin();
+
+                setUIDisabledDuringLoad(false);
             });
         });
     }
@@ -560,7 +573,7 @@ public class DashboardController implements CleanableController {
         if (mesas != null && !mesas.isEmpty()) {
             for (MesaDTO mesa : mesas) {
                 if ("BLOQUEADA".equals(mesa.getEstado())) {
-                continue; 
+                continue;
             }
                 Button mesaButton = new Button();
                 mesaButton.setUserData(mesa);
@@ -617,19 +630,19 @@ public class DashboardController implements CleanableController {
 
     private void handleSeleccionarMesa(MesaDTO mesa) {
         this.mesaSeleccionada = mesa;
-        this.pedidoActual = null; 
-        
+        this.pedidoActual = null;
+
         itemsEnviadosData.clear();
         itemsNuevosData.clear();
-        itemsCompletosData.clear(); 
-        
-        actualizarListaCompletaYTotal(); 
-        
+        itemsCompletosData.clear();
+
+        actualizarListaCompletaYTotal();
+
         categoriasListView.getSelectionModel().clearSelection();
         subCategoriasListView.getSelectionModel().clearSelection();
         if (filteredProductos != null) {
             filteredProductos.setPredicate(p -> true);
-            renderizarProductos(); 
+            renderizarProductos();
         }
 
         gestionPedidoPane.setVisible(true);
@@ -661,9 +674,9 @@ public class DashboardController implements CleanableController {
                             this.pedidoActual = null;
                              infoLabel.setText("Mesa ocupada, pero sin pedido activo. Iniciando nueva orden.");
                         }
-                        
+
                         pedidoActualTableView.setPlaceholder(new Label("Añada nuevos productos"));
-                        actualizarListaCompletaYTotal(); 
+                        actualizarListaCompletaYTotal();
                         actualizarEstadoCrearPedidoButton();
                         infoLabel.setText("Pedido de Mesa " + mesa.getNumeroMesa() + " cargado. Puede añadir más productos.");
                         infoLabel.getStyleClass().setAll("lbl-info");
@@ -717,7 +730,7 @@ public class DashboardController implements CleanableController {
                     Optional<DetallePedidoMesaDTO> existente = itemsNuevosData.stream()
                         .filter(d -> d.getIdProducto().equals(producto.getIdProducto()))
                         .findFirst();
-                    
+
                     if (existente.isPresent()) {
                         DetallePedidoMesaDTO detalle = existente.get();
                         detalle.setCantidad(detalle.getCantidad() + cantidad);
@@ -727,14 +740,14 @@ public class DashboardController implements CleanableController {
                         detalle.setNombreProducto(producto.getNombre());
                         detalle.setCantidad(cantidad);
                         detalle.setPrecioUnitario(producto.getPrecio());
-                        detalle.setEstadoDetalle("PENDIENTE"); 
+                        detalle.setEstadoDetalle("PENDIENTE");
                         itemsNuevosData.add(detalle);
                     }
-                    
-                    actualizarListaCompletaYTotal(); 
+
+                    actualizarListaCompletaYTotal();
                     actualizarEstadoCrearPedidoButton();
-                    
-                    pedidoActualTableView.refresh(); 
+
+                    pedidoActualTableView.refresh();
 
                 } else {
                     mostrarAlerta("Cantidad inválida", "La cantidad debe ser un número positivo.");
@@ -795,7 +808,7 @@ public class DashboardController implements CleanableController {
                 Platform.runLater(() -> {
                     infoLabel.setText("Categoría '" + categoriaCreada.getNombre() + "' creada.");
                     infoLabel.getStyleClass().setAll("lbl-success");
-                    cargarDatosIniciales(); 
+                    cargarDatosIniciales();
                 });
             } catch (Exception e) {
                 Platform.runLater(() -> handleGenericError("Error al crear la categoría", e));
@@ -820,7 +833,7 @@ public class DashboardController implements CleanableController {
         TextArea descripcionField = new TextArea(); descripcionField.setPromptText("Descripción (opcional)");
         descripcionField.setWrapText(true); descripcionField.setPrefRowCount(3);
         TextField precioField = new TextField(); precioField.setPromptText("Precio (ej. 15.50)");
-        
+
         Label lblImagen = new Label("Imagen:");
         Button btnSeleccionarImagen = new Button("Seleccionar archivo...");
         btnSeleccionarImagen.getStyleClass().add("btn-secondary");
@@ -830,9 +843,9 @@ public class DashboardController implements CleanableController {
         imgPreview.setPreserveRatio(true);
         Label lblRutaImagen = new Label("Sin imagen");
         lblRutaImagen.setStyle("-fx-font-size: 10px; -fx-text-fill: #6b7280;");
-        
-        final String[] selectedImageUrl = {null}; 
-        
+
+        final String[] selectedImageUrl = {null};
+
         btnSeleccionarImagen.setOnAction(event -> {
             FileChooser fileChooser = new FileChooser();
             fileChooser.setTitle("Seleccionar Imagen del Producto");
@@ -849,13 +862,13 @@ public class DashboardController implements CleanableController {
                     try {
                         // 1. Subir imagen y obtener URL remota
                         String uploadedUrl = subirImagenAlServidor(file);
-                        
+
                         Platform.runLater(() -> {
                             lblRutaImagen.setText(file.getName() + " (Subida)");
                             lblRutaImagen.setStyle("-fx-text-fill: green; -fx-font-size: 10px;");
                             // Mostrar la imagen localmente para rapidez, o usar la remota
-                            imgPreview.setImage(new Image(file.toURI().toString())); 
-                            
+                            imgPreview.setImage(new Image(file.toURI().toString()));
+
                             // 2. Guardar la URL remota en la variable que usará el producto
                             selectedImageUrl[0] = uploadedUrl;
                             btnSeleccionarImagen.setDisable(false);
@@ -893,18 +906,18 @@ public class DashboardController implements CleanableController {
                 } else { comboSubcategoria.setPromptText("No hay subcategorías"); comboSubcategoria.setDisable(true); }
             } else { comboSubcategoria.setDisable(true); }
         });
-        
+
         grid.add(new Label("Nombre:"), 0, 0); grid.add(nombreField, 1, 0);
         grid.add(new Label("Descripción:"), 0, 1); grid.add(descripcionField, 1, 1);
         grid.add(new Label("Precio:"), 0, 2); grid.add(precioField, 1, 2);
-        
-        grid.add(lblImagen, 0, 3); 
+
+        grid.add(lblImagen, 0, 3);
         VBox imagenBox = new VBox(5, btnSeleccionarImagen, lblRutaImagen, imgPreview);
         grid.add(imagenBox, 1, 3);
-        
+
         grid.add(new Label("Categoría:"), 0, 4); grid.add(comboCategoriaPadre, 1, 4);
         grid.add(new Label("Subcategoría:"), 0, 5); grid.add(comboSubcategoria, 1, 5);
-        
+
         dialog.getDialogPane().setContent(grid);
         Node crearButton = dialog.getDialogPane().lookupButton(crearButtonType);
         crearButton.setDisable(true);
@@ -915,17 +928,17 @@ public class DashboardController implements CleanableController {
         nombreField.textProperty().addListener((o, ov, nv) -> validador.run());
         precioField.textProperty().addListener((o, ov, nv) -> validador.run());
         comboSubcategoria.valueProperty().addListener((o, ov, nv) -> validador.run());
-        
+
         dialog.setResultConverter(dialogButton -> {
             if (dialogButton == crearButtonType) {
                 try {
-                    ProductoDTO np = new ProductoDTO(); 
+                    ProductoDTO np = new ProductoDTO();
                     np.setNombre(nombreField.getText().trim());
                     np.setDescripcion(descripcionField.getText().trim());
                     double precio = Double.parseDouble(precioField.getText().trim());
                     if (precio <= 0) throw new NumberFormatException("Precio debe ser positivo");
-                    np.setPrecio(precio); 
-                    
+                    np.setPrecio(precio);
+
                     if (selectedImageUrl[0] != null) {
                         np.setImagenUrl(selectedImageUrl[0]); // Guardamos la URL del servidor
                     }
@@ -934,7 +947,7 @@ public class DashboardController implements CleanableController {
                 } catch (NumberFormatException e) { mostrarAlerta("Datos Inválidos", "El precio debe ser un número positivo."); return null; }
             } return null;
         });
-        
+
         Optional<ProductoDTO> result = dialog.showAndWait();
         result.ifPresent(productoACrear -> {
             if (productoACrear == null) return;
@@ -952,7 +965,7 @@ public class DashboardController implements CleanableController {
             });
         });
     }
-    
+
     /**
      * Método privado para subir la imagen al backend usando Multipart.
      */
@@ -1007,17 +1020,17 @@ public class DashboardController implements CleanableController {
         byteArrays.add(("--" + boundary + "--").getBytes(StandardCharsets.UTF_8));
         return HttpRequest.BodyPublishers.ofByteArrays(byteArrays);
     }
-    
+
     private void actualizarListaCompletaYTotal() {
         itemsCompletosData.clear();
         itemsCompletosData.addAll(itemsEnviadosData);
         itemsCompletosData.addAll(itemsNuevosData);
-        actualizarTotalPedido(); 
+        actualizarTotalPedido();
     }
 
     private void actualizarTotalPedido() {
         double subtotal = 0.0;
-        for (DetallePedidoMesaDTO detalle : itemsCompletosData) { 
+        for (DetallePedidoMesaDTO detalle : itemsCompletosData) {
             detalle.setSubtotal(detalle.getCantidad() * detalle.getPrecioUnitario());
             subtotal += detalle.getSubtotal();
         }
@@ -1031,11 +1044,11 @@ public class DashboardController implements CleanableController {
     private void actualizarEstadoCrearPedidoButton() {
         boolean deshabilitar = (mesaSeleccionada == null || itemsNuevosData.isEmpty());
         crearPedidoButton.setDisable(deshabilitar);
-        
+
         if (pedidoActual == null) {
             crearPedidoButton.setText("Enviar Pedido a Cocina");
         } else {
-            crearPedidoButton.setText("Añadir Items al Pedido"); 
+            crearPedidoButton.setText("Añadir Items al Pedido");
         }
     }
 
@@ -1096,20 +1109,20 @@ public class DashboardController implements CleanableController {
     private void resetearPanelPedido() {
         this.mesaSeleccionada = null;
         this.pedidoActual = null;
-        
+
         itemsCompletosData.clear();
         itemsEnviadosData.clear();
         itemsNuevosData.clear();
-        
-        actualizarTotalPedido(); 
+
+        actualizarTotalPedido();
         actualizarEstadoCrearPedidoButton();
-        
+
         mesaSeleccionadaLabel.setText("Mesa: (Ninguna)");
         gestionPedidoPane.setVisible(false);
         gestionPedidoPane.setManaged(false);
         categoriasListView.getSelectionModel().clearSelection();
         subCategoriasListView.getSelectionModel().clearSelection();
-        
+
         // Limpiar vista de productos al salir
         if (productosContainer != null) productosContainer.getChildren().clear();
     }
@@ -1139,7 +1152,7 @@ public class DashboardController implements CleanableController {
             categoriasListView.setPlaceholder(new Label(categorias == null ? "Error al cargar categorías." : "No se encontraron categorías."));
         }
      }
-     
+
     private void mostrarProductos(List<ProductoDTO> productos) {
         // Método antiguo para Tabla, ahora delega al renderizador de tarjetas
         productosData.clear();
