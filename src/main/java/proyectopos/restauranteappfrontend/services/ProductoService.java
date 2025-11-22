@@ -1,11 +1,12 @@
 package proyectopos.restauranteappfrontend.services;
 
-import com.google.gson.reflect.TypeToken;
-import proyectopos.restauranteappfrontend.model.dto.ProductoDTO;
-
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.List;
+
+import com.google.gson.reflect.TypeToken;
+
+import proyectopos.restauranteappfrontend.model.dto.ProductoDTO;
 
 public class ProductoService {
 
@@ -47,12 +48,28 @@ public class ProductoService {
         return httpClientService.post(PRODUCTOS_ENDPOINT, nuevoProducto, ProductoDTO.class);
     }
 
-    // Podrías añadir un método para obtener productos por categoría si tu backend lo soporta
+    //  Se podria agregar un metodo para obtener prodctos por categoria si el backend llega a soportarlo
     /*
     public List<ProductoDTO> getProductosByCategoria(Long idCategoria) throws IOException, InterruptedException, HttpClientService.AuthenticationException {
         Type listType = new TypeToken<List<ProductoDTO>>() {}.getType();
         return httpClientService.get(PRODUCTOS_ENDPOINT + "?categoriaId=" + idCategoria, listType); // Asumiendo que el backend soporta este filtro
     }
     */
+
+    /**
+     * Actualiza un producto existente. (Solo ADMIN)
+     */
+    public ProductoDTO actualizarProducto(Long id, ProductoDTO productoActualizado) throws IOException, InterruptedException, HttpClientService.AuthenticationException {
+        // El endpoint es PUT /api/productos/{id}
+        return httpClientService.put(PRODUCTOS_ENDPOINT + "/" + id, productoActualizado, ProductoDTO.class);
+    }
+
+    /**
+     * Elimina un producto. (Solo ADMIN)
+     */
+    public void eliminarProducto(Long id) throws IOException, InterruptedException, HttpClientService.AuthenticationException {
+        // El endpoint es DELETE /api/productos/{id}
+        httpClientService.delete(PRODUCTOS_ENDPOINT + "/" + id, Void.class);
+    }
 }
 

@@ -34,9 +34,11 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.ContextMenu; // Importado
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
+import javafx.scene.control.MenuItem; // Importado
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
@@ -269,6 +271,7 @@ public class DashboardController implements CleanableController {
         Label lblPrecio = new Label(String.format("S/ %.2f", producto.getPrecio()));
         lblPrecio.setStyle("-fx-text-fill: #d97706; -fx-font-size: 13px; -fx-font-weight: bold;");
 
+        // --- Lógica de Clic Principal (Añadir al pedido) ---
         card.setOnMouseClicked(event -> {
             if (event.getButton().equals(MouseButton.PRIMARY)) {
                 handleSeleccionarProducto(producto);
@@ -279,8 +282,158 @@ public class DashboardController implements CleanableController {
             }
         });
 
+        // --- Lógica para el Menú Contextual (ADMIN) ---
+        String userRole = SessionManager.getInstance().getRole();
+        if ("ROLE_ADMIN".equals(userRole)) {
+            ContextMenu contextMenu = new ContextMenu();
+
+            MenuItem itemEditar = new MenuItem("Editar Producto");
+            itemEditar.setOnAction(e -> handleEditarProducto(producto));
+
+            MenuItem itemEliminar = new MenuItem("Eliminar Producto");
+            itemEliminar.setStyle("-fx-text-fill: red;");
+            itemEliminar.setOnAction(e -> handleEliminarProducto(producto));
+
+            contextMenu.getItems().addAll(itemEditar, itemEliminar);
+
+            // Asignar el menú al evento de solicitud de menú contextual (clic derecho)
+            card.setOnContextMenuRequested(e -> 
+                contextMenu.show(card, e.getScreenX(), e.getScreenY())
+            );
+        }
+
         card.getChildren().addAll(imageView, lblNombre, lblPrecio);
         return card;
+    }
+
+    // --- NUEVO: Manejador para Editar Producto ---
+    private void handleEditarProducto(ProductoDTO producto) {
+        Dialog<ProductoDTO> dialog = new Dialog<>();
+        dialog.setTitle("Editar Producto");
+        dialog.setHeaderText("Modificar producto: " + producto.getNombre());
+
+        ButtonType guardarButtonType = new ButtonType("Guardar Cambios", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(guardarButtonType, ButtonType.CANCEL);
+
+        GridPane grid = new GridPane();
+        grid.setHgap(10); grid.setVgap(10); grid.setPadding(new Insets(20, 150, 10, 10));
+
+        TextField nombreField = new TextField(producto.getNombre());
+        TextArea descripcionField = new TextArea(producto.getDescripcion());
+        descripcionField.setWrapText(true); descripcionField.setPrefRowCount(3);
+        TextField precioField = new TextField(String.valueOf(producto.getPrecio()));
+
+        // --- Manejo de Imagen en Edición ---
+        Label lblImagen = new Label("Imagen:");
+        Button btnSeleccionarImagen = new Button("Cambiar imagen...");
+        btnSeleccionarImagen.getStyleClass().add("btn-secondary");
+        Label lblRutaImagen = new Label(producto.getImagenUrl() != null ? "Imagen actual conservada" : "Sin imagen");
+        lblRutaImagen.setStyle("-fx-font-size: 10px; -fx-text-fill: #6b7280;");
+        
+        final String[] newImageUrl = {null}; // Array para ser mutable dentro del lambda
+
+        btnSeleccionarImagen.setOnAction(event -> {
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Cambiar Imagen");
+            fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Imágenes", "*.png", "*.jpg", "*.jpeg"));
+            File file = fileChooser.showOpenDialog(btnSeleccionarImagen.getScene().getWindow());
+            
+            if (file != null) {
+                lblRutaImagen.setText("Subiendo: " + file.getName() + "...");
+                btnSeleccionarImagen.setDisable(true);
+                
+                ThreadManager.getInstance().execute(() -> {
+                    try {
+                        String uploadedUrl = subirImagenAlServidor(file); // Reutilizamos el método existente
+                        Platform.runLater(() -> {
+                            lblRutaImagen.setText("Nueva: " + file.getName());
+                            lblRutaImagen.setStyle("-fx-text-fill: green; -fx-font-size: 10px;");
+                            newImageUrl[0] = uploadedUrl;
+                            btnSeleccionarImagen.setDisable(false);
+                        });
+                    } catch (Exception e) {
+                        Platform.runLater(() -> {
+                            lblRutaImagen.setText("Error al subir.");
+                            mostrarAlertaError("Error", "Fallo la subida: " + e.getMessage());
+                            btnSeleccionarImagen.setDisable(false);
+                        });
+                    }
+                });
+            }
+        });
+
+        grid.add(new Label("Nombre:"), 0, 0); grid.add(nombreField, 1, 0);
+        grid.add(new Label("Descrip:"), 0, 1); grid.add(descripcionField, 1, 1);
+        grid.add(new Label("Precio:"), 0, 2); grid.add(precioField, 1, 2);
+        grid.add(lblImagen, 0, 3); 
+        VBox imgBox = new VBox(5, btnSeleccionarImagen, lblRutaImagen);
+        grid.add(imgBox, 1, 3);
+
+        dialog.getDialogPane().setContent(grid);
+
+        dialog.setResultConverter(dialogButton -> {
+            if (dialogButton == guardarButtonType) {
+                try {
+                    ProductoDTO dto = new ProductoDTO();
+                    dto.setIdProducto(producto.getIdProducto()); // ID Importante para actualizar
+                    dto.setNombre(nombreField.getText());
+                    dto.setDescripcion(descripcionField.getText());
+                    dto.setPrecio(Double.parseDouble(precioField.getText()));
+                    dto.setIdCategoria(producto.getIdCategoria()); // Mantenemos la categoría original
+                    
+                    // Si se subió nueva imagen, úsala. Si no, usa la original.
+                    if (newImageUrl[0] != null) {
+                        dto.setImagenUrl(newImageUrl[0]);
+                    } else {
+                        dto.setImagenUrl(producto.getImagenUrl());
+                    }
+                    return dto;
+                } catch (Exception e) { return null; }
+            }
+            return null;
+        });
+
+        Optional<ProductoDTO> result = dialog.showAndWait();
+        result.ifPresent(productoEditado -> {
+            infoLabel.setText("Actualizando producto...");
+            ThreadManager.getInstance().execute(() -> {
+                try {
+                    productoService.actualizarProducto(productoEditado.getIdProducto(), productoEditado);
+                    Platform.runLater(() -> {
+                        infoLabel.setText("Producto actualizado correctamente.");
+                        infoLabel.getStyleClass().setAll("lbl-success");
+                        cargarDatosIniciales(); // Refrescar para ver cambios
+                    });
+                } catch (Exception e) {
+                    Platform.runLater(() -> handleGenericError("Error al actualizar", e));
+                }
+            });
+        });
+    }
+
+    // --- NUEVO: Manejador para Eliminar Producto ---
+    private void handleEliminarProducto(ProductoDTO producto) {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Eliminar Producto");
+        alert.setHeaderText("¿Estás seguro de eliminar: " + producto.getNombre() + "?");
+        alert.setContentText("Esta acción no se puede deshacer.");
+
+        Optional<ButtonType> result = alert.showAndWait();
+        if (result.isPresent() && result.get() == ButtonType.OK) {
+            infoLabel.setText("Eliminando producto...");
+            ThreadManager.getInstance().execute(() -> {
+                try {
+                    productoService.eliminarProducto(producto.getIdProducto());
+                    Platform.runLater(() -> {
+                        infoLabel.setText("Producto eliminado.");
+                        infoLabel.getStyleClass().setAll("lbl-success");
+                        cargarDatosIniciales(); // Refrescar la vista
+                    });
+                } catch (Exception e) {
+                    Platform.runLater(() -> handleGenericError("Error al eliminar", e));
+                }
+            });
+        }
     }
 
     private void procesarMensajeWebSocket(String jsonMessage) {
