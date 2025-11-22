@@ -61,7 +61,9 @@ import proyectopos.restauranteappfrontend.model.dto.PedidoMesaDTO;
 import proyectopos.restauranteappfrontend.model.dto.ProductoDTO;
 import proyectopos.restauranteappfrontend.model.dto.WebSocketMessageDTO;
 import proyectopos.restauranteappfrontend.services.CategoriaService;
+import proyectopos.restauranteappfrontend.services.DataCacheService; // IMPORTADO
 import proyectopos.restauranteappfrontend.services.HttpClientService;
+import proyectopos.restauranteappfrontend.services.ImageCacheService;
 import proyectopos.restauranteappfrontend.services.MesaService;
 import proyectopos.restauranteappfrontend.services.PedidoMesaService;
 import proyectopos.restauranteappfrontend.services.ProductoService;
@@ -272,7 +274,9 @@ public class DashboardController implements CleanableController {
             }
 
             if (urlFinal != null) {
-                imageView.setImage(new Image(urlFinal, true));
+                // Pide al caché. Si ya existe, es instantáneo.
+                Image imagen = ImageCacheService.getInstance().getImage(urlFinal);
+                imageView.setImage(imagen);
             }
 
         } catch (Exception e) {
@@ -420,6 +424,10 @@ public class DashboardController implements CleanableController {
                     Platform.runLater(() -> {
                         infoLabel.setText("Producto actualizado.");
                         infoLabel.getStyleClass().setAll("lbl-success");
+                        
+                        // --- IMPORTANTE: Limpiar caché para forzar recarga con datos nuevos ---
+                        DataCacheService.getInstance().limpiarCache(); 
+                        
                         cargarDatosIniciales(); 
                     });
                 } catch (Exception e) {
@@ -445,6 +453,10 @@ public class DashboardController implements CleanableController {
                     Platform.runLater(() -> {
                         infoLabel.setText("Producto eliminado.");
                         infoLabel.getStyleClass().setAll("lbl-success");
+                        
+                        // --- IMPORTANTE: Limpiar caché para reflejar la eliminación ---
+                        DataCacheService.getInstance().limpiarCache();
+                        
                         cargarDatosIniciales();
                     });
                 } catch (Exception e) {
@@ -644,7 +656,22 @@ public class DashboardController implements CleanableController {
 
             try { mesas = mesaService.getAllMesas(); } catch (Exception e) { errorGeneral = e; }
             try { categorias = categoriaService.getAllCategorias(); } catch (Exception e) { errorGeneral = e; }
-            try { productos = productoService.getAllProductos(); } catch (Exception e) { errorGeneral = e; }
+            
+            // --- MODIFICACIÓN: USO DE CACHÉ DE PRODUCTOS ---
+            try {
+                // Intentamos obtener del caché primero
+                if (DataCacheService.getInstance().getProductos() != null) {
+                    productos = DataCacheService.getInstance().getProductos();
+                    System.out.println("Productos cargados desde CACHÉ (RAM).");
+                } else {
+                    // Si no está en caché, llamamos al backend y guardamos
+                    productos = productoService.getAllProductos();
+                    DataCacheService.getInstance().setProductos(productos);
+                    System.out.println("Productos cargados desde BACKEND.");
+                }
+            } catch (Exception e) { errorGeneral = e; }
+            // -----------------------------------------------
+
             try {
                 List<PedidoMesaDTO> todosLosPedidos = pedidoMesaService.getAllPedidos();
                 pedidosActivosInicial = todosLosPedidos.stream()
@@ -1009,7 +1036,11 @@ public class DashboardController implements CleanableController {
             ThreadManager.getInstance().execute(() -> {
                 try {
                     productoService.crearProducto(p);
-                    Platform.runLater(this::cargarDatosIniciales);
+                    Platform.runLater(() -> {
+                         // --- IMPORTANTE: Limpiar caché tras CREAR ---
+                         DataCacheService.getInstance().limpiarCache();
+                         cargarDatosIniciales();
+                    });
                 } catch (Exception e) { e.printStackTrace(); }
             });
         });
