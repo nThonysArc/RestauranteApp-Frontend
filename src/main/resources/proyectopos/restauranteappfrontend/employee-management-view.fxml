@@ -57,7 +57,7 @@
              <Button fx:id="cancelEditButton" onAction="#handleCancelarEdicion" text="Cancelar Edición" styleClass="btn-secondary" visible="false" managed="false"/>
              <Label fx:id="statusLabel" text="" />
         </HBox>
-        <Label text="Empleados Existentes" styleClass="h3" VBox.vgrow="NEVER">
+        <Label text="Empleados:" styleClass="h3" VBox.vgrow="NEVER">
              <VBox.margin>
                   <Insets top="20.0" />
              </VBox.margin>

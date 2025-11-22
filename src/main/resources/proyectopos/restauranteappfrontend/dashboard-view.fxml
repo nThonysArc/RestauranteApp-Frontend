@@ -21,7 +21,7 @@
     <top>
         <HBox alignment="CENTER_LEFT" spacing="20" style="-fx-background-color: white; -fx-padding: 15 25; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 10, 0, 0, 2);">
            
-            <Label text="Restaurante POS" styleClass="h2" style="-fx-text-fill: -fx-accent;"/>
+            <Label text="Raíz Iqueña" styleClass="h2" style="-fx-text-fill: -fx-accent;"/>
             <Separator orientation="VERTICAL" />
             <Label fx:id="infoLabel" text="Bienvenido" styleClass="lbl-info" style="-fx-font-size: 14px;"/>
             <padding>

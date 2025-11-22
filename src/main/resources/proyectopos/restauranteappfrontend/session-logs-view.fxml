@@ -19,7 +19,7 @@
     </padding>
     
     <children>
-        <Label text="Historial de Accesos (Logs)" styleClass="h2" />
+        <Label text="Historial de Accesos" styleClass="h2" />
 
         <HBox spacing="10.0" alignment="CENTER_LEFT">
             <TextField fx:id="usuarioFilterField" promptText="Buscar por usuario..." />
