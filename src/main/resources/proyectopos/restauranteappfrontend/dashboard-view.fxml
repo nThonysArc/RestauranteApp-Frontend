@@ -62,12 +62,12 @@
                     
                     <VBox spacing="10" HBox.hgrow="NEVER" prefWidth="220" styleClass="card" style="-fx-padding: 10;">
                         <Label text="Categorías" styleClass="h3" style="-fx-font-size: 14px;"/>
-                        <ListView fx:id="categoriasListView" VBox.vgrow="SOMETIMES" styleClass="list-view"/>
+                        <ListView fx:id="categoriasListView" VBox.vgrow="NEVER" prefHeight="200.0" minHeight="100.0" styleClass="list-view"/>
                         
                         <Separator/>
-                        
+        
                         <Label text="Subcategorías" styleClass="h3" style="-fx-font-size: 14px;"/>
-                        <ListView fx:id="subCategoriasListView" VBox.vgrow="ALWAYS" styleClass="list-view"/>
+                        <ListView fx:id="subCategoriasListView" VBox.vgrow="ALWAYS" minHeight="150.0" styleClass="list-view"/>
                     </VBox>
                     
                     <VBox spacing="10" HBox.hgrow="ALWAYS">
