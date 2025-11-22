@@ -20,6 +20,7 @@
 
     <top>
         <HBox alignment="CENTER_LEFT" spacing="20" style="-fx-background-color: white; -fx-padding: 15 25; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 10, 0, 0, 2);">
+           
             <Label text="Restaurante POS" styleClass="h2" style="-fx-text-fill: -fx-accent;"/>
             <Separator orientation="VERTICAL" />
             <Label fx:id="infoLabel" text="Bienvenido" styleClass="lbl-info" style="-fx-font-size: 14px;"/>
@@ -30,6 +31,7 @@
     </top>
 
     <center>
+  
         <StackPane>
             <padding>
                 <Insets top="20" right="20" bottom="20" left="20"/>
@@ -37,6 +39,7 @@
 
             <VBox spacing="20" alignment="TOP_CENTER">
                 <HBox alignment="CENTER_LEFT">
+                   
                     <Label text="Seleccione una Mesa" styleClass="h2" style="-fx-text-fill: #374151;"/>
                 </HBox>
                 
@@ -44,33 +47,37 @@
                     <content>
                         <TilePane fx:id="mesasContainer" hgap="20" vgap="20" prefColumns="6" alignment="TOP_CENTER" 
                                   style="-fx-padding: 20;">
+              
                             <Label text="Cargando mesas..." />
                         </TilePane>
                     </content>
                 </ScrollPane>
             </VBox>
 
+           
             <VBox fx:id="gestionPedidoPane" spacing="10" visible="false" managed="false" 
                   style="-fx-background-color: -fx-background;">
                 
                 <HBox alignment="CENTER_LEFT" spacing="15">
                     <Button text="← Volver a Mesas" onAction="#handleVolverMesas" styleClass="btn-secondary"/>
+               
                     <Label fx:id="mesaSeleccionadaLabel" text="Mesa: (Ninguna)" styleClass="h3"/>
                 </HBox>
 
                 <HBox spacing="20" VBox.vgrow="ALWAYS">
                     
                     <VBox spacing="10" HBox.hgrow="NEVER" prefWidth="220" styleClass="card" style="-fx-padding: 10;">
+           
                         <Label text="Categorías" styleClass="h3" style="-fx-font-size: 14px;"/>
                         <ListView fx:id="categoriasListView" VBox.vgrow="NEVER" prefHeight="200.0" minHeight="100.0" styleClass="list-view"/>
                         
                         <Separator/>
-        
+      
                         <Label text="Subcategorías" styleClass="h3" style="-fx-font-size: 14px;"/>
                         <ListView fx:id="subCategoriasListView" VBox.vgrow="ALWAYS" minHeight="150.0" styleClass="list-view"/>
                     </VBox>
                     
-                    <VBox spacing="10" HBox.hgrow="ALWAYS">
+                    <VBox fx:id="contenedorProductos" spacing="10" HBox.hgrow="ALWAYS">
                         <Label text="Menú" styleClass="h3"/>
                         <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" style="-fx-background-color: transparent; -fx-background: transparent;">
                             <content>

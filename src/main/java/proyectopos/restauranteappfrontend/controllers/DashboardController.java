@@ -21,7 +21,6 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
-import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.TilePane;
@@ -39,8 +38,8 @@ import proyectopos.restauranteappfrontend.services.MesaService;
 import proyectopos.restauranteappfrontend.services.PedidoMesaService;
 import proyectopos.restauranteappfrontend.services.ProductoService;
 import proyectopos.restauranteappfrontend.services.WebSocketService;
-import proyectopos.restauranteappfrontend.util.SessionManager; // <--- NUEVO
-import proyectopos.restauranteappfrontend.util.ThreadManager; // <--- NUEVO
+import proyectopos.restauranteappfrontend.util.SessionManager; 
+import proyectopos.restauranteappfrontend.util.ThreadManager; 
 
 // Implementamos DashboardUpdateListener para reaccionar a eventos de negocio sin procesar JSON aquí
 public class DashboardController implements CleanableController, DashboardUpdateListener {
@@ -52,6 +51,9 @@ public class DashboardController implements CleanableController, DashboardUpdate
     @FXML private ListView<CategoriaDTO> subCategoriasListView;
     @FXML private TilePane productosContainer;
     @FXML private Label mesaSeleccionadaLabel;
+
+    // --- MODIFICACIÓN: Inyectamos el contenedor padre para añadir botones ---
+    @FXML private VBox contenedorProductos; 
 
     @FXML private OrderPanelController orderPanelController;
 
@@ -431,8 +433,10 @@ public class DashboardController implements CleanableController, DashboardUpdate
 
     private void configurarBotonesAdmin() {
         String userRole = SessionManager.getInstance().getRole();
-        if (adminButtonContainer != null && adminButtonContainer.getParent() != null) {
-             ((VBox)adminButtonContainer.getParent()).getChildren().remove(adminButtonContainer);
+        
+        // Limpiar botones anteriores si existen
+        if (adminButtonContainer != null && contenedorProductos != null) {
+             contenedorProductos.getChildren().remove(adminButtonContainer);
         }
         adminButtonContainer = null;
 
@@ -449,15 +453,13 @@ public class DashboardController implements CleanableController, DashboardUpdate
             adminButtonContainer.setAlignment(Pos.CENTER_LEFT);
             adminButtonContainer.setPadding(new Insets(0, 0, 10, 0));
 
-            try {
-                Node scrollPane = productosContainer.getParent().getParent(); 
-                if (scrollPane instanceof ScrollPane && scrollPane.getParent() instanceof VBox) {
-                    VBox parentVBox = (VBox) scrollPane.getParent();
-                    if (!parentVBox.getChildren().contains(adminButtonContainer)) {
-                         parentVBox.getChildren().add(1, adminButtonContainer); 
-                    }
+            // Lógica corregida: Usamos directamente el contenedor inyectado
+            if (contenedorProductos != null) {
+                if (!contenedorProductos.getChildren().contains(adminButtonContainer)) {
+                     // Añadimos los botones después del Label "Menú" (índice 1)
+                     contenedorProductos.getChildren().add(1, adminButtonContainer); 
                 }
-            } catch (Exception e) { /* Ignorar error visual */ }
+            }
         }
     }
 
