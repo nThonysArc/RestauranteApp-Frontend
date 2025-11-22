@@ -6,14 +6,11 @@
 <?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.Separator?>
-<?import javafx.scene.control.TableColumn?>
-<?import javafx.scene.control.TableView?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.TilePane?>
 <?import javafx.scene.layout.VBox?>
-<?import javafx.scene.text.Font?>
 
 <BorderPane xmlns="http://javafx.com/javafx/20.0.1"
             xmlns:fx="http://javafx.com/fxml/1"
@@ -79,45 +76,13 @@
                             <content>
                                 <TilePane fx:id="productosContainer" hgap="20" vgap="20" prefColumns="4" 
                                           style="-fx-padding: 10;">
-                                    </TilePane>
+                                </TilePane>
                             </content>
                         </ScrollPane>
                     </VBox>
 
-                    <VBox spacing="15" HBox.hgrow="NEVER" prefWidth="380" styleClass="card">
-                        <Label text="Orden Actual" styleClass="h3"/>
+                    <fx:include fx:id="orderPanel" source="order-panel.fxml"/>
 
-                        <TableView fx:id="pedidoActualTableView" VBox.vgrow="ALWAYS">
-                            <columns>
-                                <TableColumn fx:id="pedidoNombreCol" text="Producto" prefWidth="160"/>
-                                <TableColumn fx:id="pedidoCantidadCol" text="Cant." prefWidth="50" style="-fx-alignment: CENTER;"/>
-                                <TableColumn fx:id="pedidoPrecioCol" text="P.U." prefWidth="70" style="-fx-alignment: CENTER-RIGHT;"/>
-                                <TableColumn fx:id="pedidoSubtotalCol" text="Total" prefWidth="80" style="-fx-alignment: CENTER-RIGHT;"/>
-                            </columns>
-                            <columnResizePolicy><TableView fx:constant="CONSTRAINED_RESIZE_POLICY" /></columnResizePolicy>
-                            <placeholder><Label text="Seleccione productos del menú"/></placeholder>
-                        </TableView>
-
-                        <VBox spacing="8" style="-fx-padding: 10; -fx-background-color: #f9fafb; -fx-background-radius: 10;">
-                            <HBox alignment="CENTER_RIGHT">
-                                <Label text="Subtotal: " style="-fx-text-fill: #6b7280;"/>
-                                <Label fx:id="subTotalPedidoLabel" text="S/ 0.00" style="-fx-font-weight: bold;"/>
-                            </HBox>
-                            <HBox alignment="CENTER_RIGHT">
-                                <Label text="IGV (18%): " style="-fx-text-fill: #6b7280;"/>
-                                <Label fx:id="igvPedidoLabel" text="S/ 0.00" style="-fx-font-weight: bold;"/>
-                            </HBox>
-                            <Separator/>
-                            <HBox alignment="CENTER_RIGHT">
-                                <Label text="Total: " styleClass="h3"/>
-                                <Label fx:id="totalPedidoLabel" text="S/ 0.00" styleClass="h2" style="-fx-text-fill: -fx-accent;"/>
-                            </HBox>
-                        </VBox>
-
-                        <Button fx:id="crearPedidoButton" text="Enviar a Cocina" onAction="#handleEnviarPedido" 
-                                styleClass="btn-primary" maxWidth="Infinity" prefHeight="50" 
-                                style="-fx-font-size: 16px;"/>
-                    </VBox>
                 </HBox>
             </VBox>
 
