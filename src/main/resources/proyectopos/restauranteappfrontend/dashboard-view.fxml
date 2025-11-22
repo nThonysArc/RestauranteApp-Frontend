@@ -10,7 +10,7 @@
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.Priority?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.TilePane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
@@ -22,95 +22,106 @@
             styleClass="background">
 
     <top>
-        <VBox style="-fx-background-color: #1f2937; -fx-padding: 10; -fx-border-color: #4b5563 transparent transparent transparent; -fx-border-width: 1;">
-            <Label text="PANEL PRINCIPAL" styleClass="h1" />
-            <Label fx:id="infoLabel" text="Bienvenido" styleClass="lbl-info"/>
-        </VBox>
+        <HBox alignment="CENTER_LEFT" spacing="20" style="-fx-background-color: white; -fx-padding: 15 25; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 10, 0, 0, 2);">
+            <Label text="Restaurante POS" styleClass="h2" style="-fx-text-fill: -fx-accent;"/>
+            <Separator orientation="VERTICAL" />
+            <Label fx:id="infoLabel" text="Bienvenido" styleClass="lbl-info" style="-fx-font-size: 14px;"/>
+            <padding>
+                <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+            </padding>
+        </HBox>
     </top>
 
     <center>
-        <HBox spacing="10" style="-fx-padding: 10;">
+        <StackPane>
+            <padding>
+                <Insets top="20" right="20" bottom="20" left="20"/>
+            </padding>
 
-            <VBox spacing="10" HBox.hgrow="ALWAYS"> 
-                <VBox styleClass="card" VBox.vgrow="ALWAYS"> 
-                    <Label text="Plano de Mesas" styleClass="h3"/>
-                    <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" style="-fx-background-color: transparent;"> 
-                        <content>
-                            <TilePane fx:id="mesasContainer" hgap="10" vgap="10" prefColumns="6">
-                                <padding><Insets top="10"/></padding>
-                                <Label text="Cargando mesas..." />
-                            </TilePane>
-                        </content>
-                    </ScrollPane>
-                </VBox>
+            <VBox spacing="20" alignment="TOP_CENTER">
+                <HBox alignment="CENTER_LEFT">
+                    <Label text="Seleccione una Mesa" styleClass="h2" style="-fx-text-fill: #374151;"/>
+                </HBox>
+                
+                <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" style="-fx-background-color: transparent; -fx-background: transparent;">
+                    <content>
+                        <TilePane fx:id="mesasContainer" hgap="20" vgap="20" prefColumns="6" alignment="TOP_CENTER" 
+                                  style="-fx-padding: 20;">
+                            <Label text="Cargando mesas..." />
+                        </TilePane>
+                    </content>
+                </ScrollPane>
             </VBox>
 
-            <Separator orientation="VERTICAL" />
-
-            <VBox fx:id="gestionPedidoPane" spacing="10" HBox.hgrow="NEVER" prefWidth="700" 
-                  visible="false" managed="false">
-
-                <HBox spacing="10" VBox.vgrow="ALWAYS">
-                    <VBox spacing="5" HBox.hgrow="NEVER" prefWidth="250">
-                        <Label text="Categorías" styleClass="h3"/>
-                        <ListView fx:id="categoriasListView" VBox.vgrow="SOMETIMES">
-                            <placeholder><Label text="Cargando..."/></placeholder>
-                        </ListView>
-                        <Label text="Subcategorías" styleClass="h3"/>
-                        <ListView fx:id="subCategoriasListView" VBox.vgrow="ALWAYS">
-                            <placeholder><Label text="Seleccione categoría"/></placeholder>
-                        </ListView>
-                    </VBox>
-                    
-                    <VBox spacing="5" HBox.hgrow="ALWAYS">
-                        <Label text="Productos" styleClass="h3"/>
-                        
-                        <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" style="-fx-background-color: transparent;">
-                            <content>
-                                <TilePane fx:id="productosContainer" hgap="15" vgap="15" prefColumns="3" style="-fx-padding: 10;">
-                                     </TilePane>
-                            </content>
-                        </ScrollPane>
-
-                    </VBox>
+            <VBox fx:id="gestionPedidoPane" spacing="10" visible="false" managed="false" 
+                  style="-fx-background-color: -fx-background;">
+                
+                <HBox alignment="CENTER_LEFT" spacing="15">
+                    <Button text="← Volver a Mesas" onAction="#handleVolverMesas" styleClass="btn-secondary"/>
+                    <Label fx:id="mesaSeleccionadaLabel" text="Mesa: (Ninguna)" styleClass="h3"/>
                 </HBox>
 
-                <VBox spacing="10" styleClass="card"> 
-                    <Label text="Pedido Actual" styleClass="h2"/>
-                    <Label fx:id="mesaSeleccionadaLabel" text="Mesa: (Ninguna)" style="-fx-font-weight: bold;"/>
-
-                    <TableView fx:id="pedidoActualTableView" prefHeight="200" VBox.vgrow="NEVER">
-                        <columns>
-                            <TableColumn fx:id="pedidoNombreCol" text="Producto" prefWidth="180"/>
-                            <TableColumn fx:id="pedidoCantidadCol" text="Cant." prefWidth="50"/>
-                            <TableColumn fx:id="pedidoPrecioCol" text="P. Unit." prefWidth="70"/>
-                            <TableColumn fx:id="pedidoSubtotalCol" text="Subtotal" prefWidth="80"/>
-                        </columns>
-                        <columnResizePolicy><TableView fx:constant="CONSTRAINED_RESIZE_POLICY" /></columnResizePolicy>
-                        <placeholder><Label text="Añada productos (click en imagen)"/></placeholder>
-                    </TableView>
-
-                    <VBox spacing="5" style="-fx-padding: 10 0 0 0;">
+                <HBox spacing="20" VBox.vgrow="ALWAYS">
+                    
+                    <VBox spacing="10" HBox.hgrow="NEVER" prefWidth="220" styleClass="card" style="-fx-padding: 10;">
+                        <Label text="Categorías" styleClass="h3" style="-fx-font-size: 14px;"/>
+                        <ListView fx:id="categoriasListView" VBox.vgrow="SOMETIMES" styleClass="list-view"/>
+                        
                         <Separator/>
-                        <HBox alignment="CENTER_RIGHT">
-                            <Label text="Subtotal: " style="-fx-text-fill: #9ca3af;"/>
-                            <Label fx:id="subTotalPedidoLabel" text="S/ 0.00" style="-fx-font-weight: bold; -fx-text-fill: #9ca3af;"/>
-                        </HBox>
-                        <HBox alignment="CENTER_RIGHT">
-                            <Label text="IGV (18%): " style="-fx-text-fill: #9ca3af;"/>
-                            <Label fx:id="igvPedidoLabel" text="S/ 0.00" style="-fx-font-weight: bold; -fx-text-fill: #9ca3af;"/>
-                        </HBox>
-                        <HBox alignment="CENTER_RIGHT">
-                            <Label text="Total: " styleClass="h3"/>
-                            <Label fx:id="totalPedidoLabel" text="S/ 0.00" styleClass="h3" style="-fx-text-fill: -fx-accent;"/>
-                        </HBox>
+                        
+                        <Label text="Subcategorías" styleClass="h3" style="-fx-font-size: 14px;"/>
+                        <ListView fx:id="subCategoriasListView" VBox.vgrow="ALWAYS" styleClass="list-view"/>
+                    </VBox>
+                    
+                    <VBox spacing="10" HBox.hgrow="ALWAYS">
+                        <Label text="Menú" styleClass="h3"/>
+                        <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" style="-fx-background-color: transparent; -fx-background: transparent;">
+                            <content>
+                                <TilePane fx:id="productosContainer" hgap="20" vgap="20" prefColumns="4" 
+                                          style="-fx-padding: 10;">
+                                    </TilePane>
+                            </content>
+                        </ScrollPane>
                     </VBox>
 
-                    <Button fx:id="crearPedidoButton" text="Enviar Pedido a Cocina" onAction="#handleEnviarPedido" styleClass="btn-primary" maxWidth="Infinity" prefHeight="40"/>
-                </VBox>
+                    <VBox spacing="15" HBox.hgrow="NEVER" prefWidth="380" styleClass="card">
+                        <Label text="Orden Actual" styleClass="h3"/>
+
+                        <TableView fx:id="pedidoActualTableView" VBox.vgrow="ALWAYS">
+                            <columns>
+                                <TableColumn fx:id="pedidoNombreCol" text="Producto" prefWidth="160"/>
+                                <TableColumn fx:id="pedidoCantidadCol" text="Cant." prefWidth="50" style="-fx-alignment: CENTER;"/>
+                                <TableColumn fx:id="pedidoPrecioCol" text="P.U." prefWidth="70" style="-fx-alignment: CENTER-RIGHT;"/>
+                                <TableColumn fx:id="pedidoSubtotalCol" text="Total" prefWidth="80" style="-fx-alignment: CENTER-RIGHT;"/>
+                            </columns>
+                            <columnResizePolicy><TableView fx:constant="CONSTRAINED_RESIZE_POLICY" /></columnResizePolicy>
+                            <placeholder><Label text="Seleccione productos del menú"/></placeholder>
+                        </TableView>
+
+                        <VBox spacing="8" style="-fx-padding: 10; -fx-background-color: #f9fafb; -fx-background-radius: 10;">
+                            <HBox alignment="CENTER_RIGHT">
+                                <Label text="Subtotal: " style="-fx-text-fill: #6b7280;"/>
+                                <Label fx:id="subTotalPedidoLabel" text="S/ 0.00" style="-fx-font-weight: bold;"/>
+                            </HBox>
+                            <HBox alignment="CENTER_RIGHT">
+                                <Label text="IGV (18%): " style="-fx-text-fill: #6b7280;"/>
+                                <Label fx:id="igvPedidoLabel" text="S/ 0.00" style="-fx-font-weight: bold;"/>
+                            </HBox>
+                            <Separator/>
+                            <HBox alignment="CENTER_RIGHT">
+                                <Label text="Total: " styleClass="h3"/>
+                                <Label fx:id="totalPedidoLabel" text="S/ 0.00" styleClass="h2" style="-fx-text-fill: -fx-accent;"/>
+                            </HBox>
+                        </VBox>
+
+                        <Button fx:id="crearPedidoButton" text="Enviar a Cocina" onAction="#handleEnviarPedido" 
+                                styleClass="btn-primary" maxWidth="Infinity" prefHeight="50" 
+                                style="-fx-font-size: 16px;"/>
+                    </VBox>
+                </HBox>
             </VBox>
 
-        </HBox>
+        </StackPane>
     </center>
 
 </BorderPane>
