@@ -1,11 +1,21 @@
 package proyectopos.restauranteappfrontend.controllers;
 
-import java.io.File; // Nuevo import
+import java.io.File;
+import java.io.IOException;
+import java.math.BigInteger;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -41,7 +51,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.TilePane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
-import javafx.stage.FileChooser; // Nuevo import
+import javafx.stage.FileChooser;
 import proyectopos.restauranteappfrontend.model.dto.CategoriaDTO;
 import proyectopos.restauranteappfrontend.model.dto.DetallePedidoMesaDTO;
 import proyectopos.restauranteappfrontend.model.dto.MesaDTO;
@@ -54,6 +64,7 @@ import proyectopos.restauranteappfrontend.services.MesaService;
 import proyectopos.restauranteappfrontend.services.PedidoMesaService;
 import proyectopos.restauranteappfrontend.services.ProductoService;
 import proyectopos.restauranteappfrontend.services.WebSocketService;
+import proyectopos.restauranteappfrontend.util.AppConfig; // Import necesario para la URL
 import proyectopos.restauranteappfrontend.util.SessionManager;
 import proyectopos.restauranteappfrontend.util.ThreadManager;
 
@@ -65,7 +76,6 @@ public class DashboardController implements CleanableController {
     @FXML private ListView<CategoriaDTO> categoriasListView;
     @FXML private ListView<CategoriaDTO> subCategoriasListView;
     
-    // TableView por TilePane para las tarjetas ---
     @FXML private TilePane productosContainer; 
     
     @FXML private Label mesaSeleccionadaLabel;
@@ -112,7 +122,6 @@ public class DashboardController implements CleanableController {
         categoriasListView.setPlaceholder(new Label("Cargando categorías..."));
         subCategoriasListView.setPlaceholder(new Label("Seleccione categoría"));
         
-        // Inicializar contenedor de productos
         if(productosContainer != null) {
             productosContainer.getChildren().clear();
             productosContainer.getChildren().add(new Label("Cargando productos..."));
@@ -158,7 +167,6 @@ public class DashboardController implements CleanableController {
                         }
                         infoLabel.setText("Seleccione una categoría");
                     }
-                    // Actualizar la vista de tarjetas
                     renderizarProductos();
                 }
         );
@@ -186,18 +194,15 @@ public class DashboardController implements CleanableController {
                             infoLabel.setText("Seleccione una categoría");
                         }
                     }
-                    // Actualizar la vista de tarjetas
                     renderizarProductos();
                 }
         );
         
-        // --- SUSCRIPCIÓN WEBSOCKET ---
         WebSocketService.getInstance().subscribe("/topic/pedidos", (jsonMessage) -> {
             Platform.runLater(() -> procesarMensajeWebSocket(jsonMessage));
         });
     }
 
-    // --- Renderizar productos como Tarjetas ---
     private void renderizarProductos() {
         if (productosContainer == null) return;
         
@@ -214,9 +219,7 @@ public class DashboardController implements CleanableController {
         }
     }
 
-    // --- Crear el nodo visual de la tarjeta ---
     private Node crearTarjetaProducto(ProductoDTO producto) {
-        // 1. Contenedor Principal (Tarjeta)
         VBox card = new VBox(5);
         card.setAlignment(Pos.CENTER);
         card.setPadding(new Insets(10));
@@ -224,7 +227,6 @@ public class DashboardController implements CleanableController {
         card.getStyleClass().add("card"); 
         card.setStyle("-fx-cursor: hand; -fx-background-color: white; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 5, 0, 0, 2);");
 
-        // 2. Imagen
         ImageView imageView = new ImageView();
         imageView.setFitHeight(100);
         imageView.setFitWidth(140);
@@ -240,13 +242,11 @@ public class DashboardController implements CleanableController {
                          ? urlImagen 
                          : "https://via.placeholder.com/150?text=" + producto.getNombre().replace(" ", "+"); 
             
-            // Cargar en background para no congelar UI
             imageView.setImage(new Image(url, true)); 
         } catch (Exception e) {
             System.err.println("No se pudo cargar imagen para: " + producto.getNombre());
         }
 
-        // 3. Nombre y Precio
         Label lblNombre = new Label(producto.getNombre());
         lblNombre.setWrapText(true);
         lblNombre.setAlignment(Pos.CENTER);
@@ -256,7 +256,6 @@ public class DashboardController implements CleanableController {
         Label lblPrecio = new Label(String.format("S/ %.2f", producto.getPrecio()));
         lblPrecio.setStyle("-fx-text-fill: #d97706; -fx-font-size: 13px; -fx-font-weight: bold;");
 
-        // 4. Evento de Clic (Añadir al pedido)
         card.setOnMouseClicked(event -> {
             if (event.getButton().equals(MouseButton.PRIMARY)) {
                 handleSeleccionarProducto(producto);
@@ -271,9 +270,6 @@ public class DashboardController implements CleanableController {
         return card;
     }
 
-    /**
-     * Procesa el mensaje JSON del WebSocket para realizar actualizaciones parciales.
-     */
     private void procesarMensajeWebSocket(String jsonMessage) {
         try {
             WebSocketMessageDTO msg = gson.fromJson(jsonMessage, WebSocketMessageDTO.class);
@@ -410,7 +406,6 @@ public class DashboardController implements CleanableController {
         });
     }
 
-    // --- Métodos de configuración UI ---
     private void configurarContenedorMesas() { /* Sin cambios */ }
 
     private void configurarTablaPedidoActual() {
@@ -427,7 +422,6 @@ public class DashboardController implements CleanableController {
     private void configurarBotonesAdmin() {
         String userRole = SessionManager.getInstance().getRole();
         
-        // Limpiar contenedor anterior si existía
         if (adminButtonContainer != null && adminButtonContainer.getParent() != null) {
              ((VBox)adminButtonContainer.getParent()).getChildren().remove(adminButtonContainer);
         }
@@ -827,7 +821,6 @@ public class DashboardController implements CleanableController {
         descripcionField.setWrapText(true); descripcionField.setPrefRowCount(3);
         TextField precioField = new TextField(); precioField.setPromptText("Precio (ej. 15.50)");
         
-        // --- MODIFICACIÓN PARA IMÁGENES CON FILECHOOSER ---
         Label lblImagen = new Label("Imagen:");
         Button btnSeleccionarImagen = new Button("Seleccionar archivo...");
         btnSeleccionarImagen.getStyleClass().add("btn-secondary");
@@ -838,7 +831,6 @@ public class DashboardController implements CleanableController {
         Label lblRutaImagen = new Label("Sin imagen");
         lblRutaImagen.setStyle("-fx-font-size: 10px; -fx-text-fill: #6b7280;");
         
-        // Variable para guardar la URL (wrapper para usar en lambda)
         final String[] selectedImageUrl = {null}; 
         
         btnSeleccionarImagen.setOnAction(event -> {
@@ -849,13 +841,35 @@ public class DashboardController implements CleanableController {
             );
             File file = fileChooser.showOpenDialog(btnSeleccionarImagen.getScene().getWindow());
             if (file != null) {
-                String localUrl = file.toURI().toString();
-                imgPreview.setImage(new Image(localUrl));
-                lblRutaImagen.setText(file.getName());
-                selectedImageUrl[0] = localUrl; 
-                // NOTA: Aquí se debería implementar la lógica para subir 'file' al servidor 
-                // y actualizar 'selectedImageUrl[0]' con la URL remota.
-                // Por ahora, usamos la ruta local para visualización en este equipo.
+                lblRutaImagen.setText("Subiendo: " + file.getName() + "...");
+                btnSeleccionarImagen.setDisable(true);
+                imgPreview.setImage(null); // Limpiar mientras carga
+
+                ThreadManager.getInstance().execute(() -> {
+                    try {
+                        // 1. Subir imagen y obtener URL remota
+                        String uploadedUrl = subirImagenAlServidor(file);
+                        
+                        Platform.runLater(() -> {
+                            lblRutaImagen.setText(file.getName() + " (Subida)");
+                            lblRutaImagen.setStyle("-fx-text-fill: green; -fx-font-size: 10px;");
+                            // Mostrar la imagen localmente para rapidez, o usar la remota
+                            imgPreview.setImage(new Image(file.toURI().toString())); 
+                            
+                            // 2. Guardar la URL remota en la variable que usará el producto
+                            selectedImageUrl[0] = uploadedUrl;
+                            btnSeleccionarImagen.setDisable(false);
+                        });
+                    } catch (Exception e) {
+                        Platform.runLater(() -> {
+                            lblRutaImagen.setText("Error al subir.");
+                            lblRutaImagen.setStyle("-fx-text-fill: red; -fx-font-size: 10px;");
+                            mostrarAlertaError("Error de Subida", "No se pudo subir la imagen: " + e.getMessage());
+                            btnSeleccionarImagen.setDisable(false);
+                            e.printStackTrace();
+                        });
+                    }
+                });
             }
         });
 
@@ -884,7 +898,6 @@ public class DashboardController implements CleanableController {
         grid.add(new Label("Descripción:"), 0, 1); grid.add(descripcionField, 1, 1);
         grid.add(new Label("Precio:"), 0, 2); grid.add(precioField, 1, 2);
         
-        // Agregamos los controles de imagen modificados
         grid.add(lblImagen, 0, 3); 
         VBox imagenBox = new VBox(5, btnSeleccionarImagen, lblRutaImagen, imgPreview);
         grid.add(imagenBox, 1, 3);
@@ -912,9 +925,9 @@ public class DashboardController implements CleanableController {
                     double precio = Double.parseDouble(precioField.getText().trim());
                     if (precio <= 0) throw new NumberFormatException("Precio debe ser positivo");
                     np.setPrecio(precio); 
-                    // Usamos la URL seleccionada mediante el FileChooser
+                    
                     if (selectedImageUrl[0] != null) {
-                        np.setImagenUrl(selectedImageUrl[0]);
+                        np.setImagenUrl(selectedImageUrl[0]); // Guardamos la URL del servidor
                     }
                     np.setIdCategoria(comboSubcategoria.getValue().getIdCategoria());
                     return np;
@@ -938,6 +951,61 @@ public class DashboardController implements CleanableController {
                 } catch (Exception e) { Platform.runLater(() -> handleGenericError("Error al crear el producto", e)); }
             });
         });
+    }
+    
+    /**
+     * Método privado para subir la imagen al backend usando Multipart.
+     */
+    private String subirImagenAlServidor(File file) throws Exception {
+        String boundary = new BigInteger(256, new Random()).toString();
+        String baseUrl = AppConfig.getInstance().getApiBaseUrl();
+        String uploadEndpoint = baseUrl + "/api/media/upload";
+        String token = SessionManager.getInstance().getToken();
+
+        // Construir el cuerpo Multipart manualmente
+        Map<String, Object> data = new HashMap<>();
+        data.put("file", file.toPath());
+
+        HttpRequest.BodyPublisher body = ofMimeMultipartData(data, boundary);
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(uploadEndpoint))
+                .header("Content-Type", "multipart/form-data;boundary=" + boundary)
+                .header("Authorization", "Bearer " + token)
+                .POST(body)
+                .build();
+
+        HttpClient client = HttpClient.newHttpClient();
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+        if (response.statusCode() == 200) {
+            return response.body(); // El backend devuelve la URL como string
+        } else {
+            throw new IOException("Error del servidor (" + response.statusCode() + "): " + response.body());
+        }
+    }
+
+    // Helper para construir multipart (Java 11 standard no lo tiene nativo simple)
+    public static HttpRequest.BodyPublisher ofMimeMultipartData(Map<String, Object> data, String boundary) throws IOException {
+        var byteArrays = new ArrayList<byte[]>();
+        byte[] separator = ("--" + boundary + "\r\nContent-Disposition: form-data; name=").getBytes(StandardCharsets.UTF_8);
+        for (Map.Entry<String, Object> entry : data.entrySet()) {
+            byteArrays.add(separator);
+
+            if (entry.getValue() instanceof Path) {
+                var path = (Path) entry.getValue();
+                String mimeType = Files.probeContentType(path);
+                byteArrays.add(("\"" + entry.getKey() + "\"; filename=\"" + path.getFileName()
+                        + "\"\r\nContent-Type: " + mimeType + "\r\n\r\n").getBytes(StandardCharsets.UTF_8));
+                byteArrays.add(Files.readAllBytes(path));
+                byteArrays.add("\r\n".getBytes(StandardCharsets.UTF_8));
+            } else {
+                byteArrays.add(("\"" + entry.getKey() + "\"\r\n\r\n" + entry.getValue() + "\r\n")
+                        .getBytes(StandardCharsets.UTF_8));
+            }
+        }
+        byteArrays.add(("--" + boundary + "--").getBytes(StandardCharsets.UTF_8));
+        return HttpRequest.BodyPublishers.ofByteArrays(byteArrays);
     }
     
     private void actualizarListaCompletaYTotal() {
