@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<GridPane hgap="10" vgap="10" xmlns="http://javafx.com/javafx/20.0.1" xmlns:fx="http://javafx.com/fxml/1" 
+          fx:controller="proyectopos.restauranteappfrontend.controllers.ProductFormController">
+    <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
+    
+    <Label text="Nombre:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+    <TextField fx:id="nombreField" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+    <Label text="Descripción:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+    <TextArea fx:id="descripcionField" prefRowCount="3" wrapText="true" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+    <Label text="Precio:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+    <TextField fx:id="precioField" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+    <Label text="Categoría Principal:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+    <ComboBox fx:id="catPadreCombo" prefWidth="200" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+
+    <Label text="Subcategoría:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+    <ComboBox fx:id="subCatCombo" prefWidth="200" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+
+    <Label text="Imagen:" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
+    <VBox spacing="5" GridPane.rowIndex="5" GridPane.columnIndex="1">
+        <Button text="Seleccionar archivo..." onAction="#handleSeleccionarImagen" styleClass="btn-secondary"/>
+        <Label fx:id="rutaImagenLabel" text="Sin cambios" style="-fx-font-size: 10px; -fx-text-fill: grey;"/>
+    </VBox>
+</GridPane>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox fx:id="cardContainer" alignment="TOP_CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="240.0" prefWidth="180.0" spacing="10.0" styleClass="producto-card" xmlns="http://javafx.com/javafx/20.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="proyectopos.restauranteappfrontend.controllers.ProductoCardController">
+   <padding>
+      <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
+   </padding>
+   <children>
+      <ImageView fx:id="productoImage" fitHeight="120.0" fitWidth="120.0" pickOnBounds="true" preserveRatio="true" />
+      <Label fx:id="nombreLabel" alignment="CENTER" maxHeight="40.0" styleClass="producto-titulo" text="Nombre del Producto" textAlignment="CENTER" wrapText="true" />
+      <Label fx:id="precioLabel" styleClass="precio-label" text="S/ 0.00" />
+   </children>
+</VBox>

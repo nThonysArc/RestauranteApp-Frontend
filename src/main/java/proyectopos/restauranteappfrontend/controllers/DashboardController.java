@@ -1,21 +1,11 @@
 package proyectopos.restauranteappfrontend.controllers;
 
-import java.io.File;
 import java.io.IOException;
-import java.math.BigInteger;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -26,34 +16,29 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
+import javafx.scene.Parent;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
-import javafx.scene.control.ContextMenu; 
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
-import javafx.scene.control.MenuItem; 
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
-import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
-import javafx.scene.input.MouseButton;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.TilePane;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.Text;
-import javafx.stage.FileChooser;
 import proyectopos.restauranteappfrontend.model.dto.CategoriaDTO;
 import proyectopos.restauranteappfrontend.model.dto.DetallePedidoMesaDTO;
 import proyectopos.restauranteappfrontend.model.dto.MesaDTO;
@@ -61,17 +46,14 @@ import proyectopos.restauranteappfrontend.model.dto.PedidoMesaDTO;
 import proyectopos.restauranteappfrontend.model.dto.ProductoDTO;
 import proyectopos.restauranteappfrontend.model.dto.WebSocketMessageDTO;
 import proyectopos.restauranteappfrontend.services.CategoriaService;
-import proyectopos.restauranteappfrontend.services.DataCacheService; // IMPORTADO
+import proyectopos.restauranteappfrontend.services.DataCacheService;
 import proyectopos.restauranteappfrontend.services.HttpClientService;
-import proyectopos.restauranteappfrontend.services.ImageCacheService;
 import proyectopos.restauranteappfrontend.services.MesaService;
 import proyectopos.restauranteappfrontend.services.PedidoMesaService;
 import proyectopos.restauranteappfrontend.services.ProductoService;
 import proyectopos.restauranteappfrontend.services.WebSocketService;
-import proyectopos.restauranteappfrontend.util.AppConfig;
 import proyectopos.restauranteappfrontend.util.SessionManager;
 import proyectopos.restauranteappfrontend.util.ThreadManager;
-import javafx.scene.control.ScrollPane;
 
 public class DashboardController implements CleanableController {
 
@@ -235,6 +217,7 @@ public class DashboardController implements CleanableController {
 
         if (filteredProductos != null && !filteredProductos.isEmpty()) {
             for (ProductoDTO p : filteredProductos) {
+                // --- REFACTORIZADO: Uso de componente FXML ---
                 productosContainer.getChildren().add(crearTarjetaProducto(p));
             }
         } else {
@@ -244,197 +227,111 @@ public class DashboardController implements CleanableController {
         }
     }
 
-    // --- DISEÑO TARJETA DE PRODUCTO ACTUALIZADO ---
+    // --- MÉTODO REFACTORIZADO: Carga la tarjeta desde FXML ---
     private Node crearTarjetaProducto(ProductoDTO producto) {
-        // Contenedor principal (Tarjeta) con estilo nuevo
-        VBox card = new VBox(10);
-        card.getStyleClass().add("producto-card"); // Usamos la nueva clase CSS
-        card.setPrefSize(180, 240); // Tamaño ajustado para imagen vertical
-        card.setAlignment(Pos.TOP_CENTER);
-        card.setPadding(new Insets(15));
-
-        // Imagen
-        ImageView imageView = new ImageView();
-        imageView.setFitHeight(120);
-        imageView.setFitWidth(120);
-        imageView.setPreserveRatio(true);
-
         try {
-            String urlImagen = producto.getImagenUrl();
-            String urlFinal = null;
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/proyectopos/restauranteappfrontend/producto-card.fxml"));
+            Node cardNode = loader.load();
 
-            if (urlImagen != null && !urlImagen.isBlank()) {
-                if (urlImagen.startsWith("http") || urlImagen.startsWith("file:")) {
-                    urlFinal = urlImagen;
-                } else {
-                    urlFinal = AppConfig.getInstance().getApiBaseUrl() + urlImagen;
-                }
-            } else {
-                urlFinal = "https://via.placeholder.com/150?text=" + producto.getNombre().replace(" ", "+");
-            }
-
-            if (urlFinal != null) {
-                // Pide al caché. Si ya existe, es instantáneo.
-                Image imagen = ImageCacheService.getInstance().getImage(urlFinal);
-                imageView.setImage(imagen);
-            }
-
-        } catch (Exception e) {
-            System.err.println("No se pudo cargar imagen para: " + producto.getNombre());
-        }
-
-        // Nombre del producto
-        Label lblNombre = new Label(producto.getNombre());
-        lblNombre.getStyleClass().add("producto-titulo"); // Clase CSS para tipografía
-        lblNombre.setWrapText(true);
-        lblNombre.setAlignment(Pos.CENTER);
-        lblNombre.setTextAlignment(javafx.scene.text.TextAlignment.CENTER);
-        lblNombre.setMaxHeight(40);
-
-        // Precio
-        Label lblPrecio = new Label(String.format("S/ %.2f", producto.getPrecio()));
-        lblPrecio.getStyleClass().add("precio-label"); // Clase CSS para precio destacado
-
-        // --- Lógica de Clic Principal (Añadir al pedido) ---
-        card.setOnMouseClicked(event -> {
-            if (event.getButton().equals(MouseButton.PRIMARY)) {
-                handleSeleccionarProducto(producto);
-                // Efecto visual de clic
-                card.setOpacity(0.5);
-                new java.util.Timer().schedule(new java.util.TimerTask() {
-                    @Override public void run() { Platform.runLater(() -> card.setOpacity(1.0)); }
-                }, 100);
-            }
-        });
-
-        // --- Lógica para el Menú Contextual (ADMIN) ---
-        String userRole = SessionManager.getInstance().getRole();
-        if ("ROLE_ADMIN".equals(userRole)) {
-            ContextMenu contextMenu = new ContextMenu();
-
-            MenuItem itemEditar = new MenuItem("Editar Producto");
-            itemEditar.setOnAction(e -> handleEditarProducto(producto));
-
-            MenuItem itemEliminar = new MenuItem("Eliminar Producto");
-            itemEliminar.setStyle("-fx-text-fill: red;");
-            itemEliminar.setOnAction(e -> handleEliminarProducto(producto));
-
-            contextMenu.getItems().addAll(itemEditar, itemEliminar);
-
-            card.setOnContextMenuRequested(e -> 
-                contextMenu.show(card, e.getScreenX(), e.getScreenY())
+            ProductoCardController controller = loader.getController();
+            // Pasamos los datos y las acciones (callbacks)
+            controller.setData(
+                producto,
+                this::handleSeleccionarProducto, // Clic normal
+                this::handleEditarProducto,      // Acción editar (Admin)
+                this::handleEliminarProducto     // Acción eliminar (Admin)
             );
-        }
 
-        card.getChildren().addAll(imageView, lblNombre, lblPrecio);
-        return card;
+            return cardNode;
+        } catch (IOException e) {
+            System.err.println("Error al cargar tarjeta de producto: " + e.getMessage());
+            return new Label("Error: " + producto.getNombre());
+        }
     }
 
-    // --- Edición de Producto ---
-    private void handleEditarProducto(ProductoDTO producto) {
-        Dialog<ProductoDTO> dialog = new Dialog<>();
-        dialog.setTitle("Editar Producto");
-        dialog.setHeaderText("Modificar: " + producto.getNombre());
+    // --- MÉTODO REFACTORIZADO: Usa ProductFormController ---
+    @FXML
+    private void handleCrearProducto() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/proyectopos/restauranteappfrontend/product-form-view.fxml"));
+            Parent formView = loader.load();
+            ProductFormController controller = loader.getController();
 
-        ButtonType guardarButtonType = new ButtonType("Guardar", ButtonBar.ButtonData.OK_DONE);
-        dialog.getDialogPane().getButtonTypes().addAll(guardarButtonType, ButtonType.CANCEL);
+            Dialog<ProductoDTO> dialog = new Dialog<>();
+            dialog.setTitle("Nuevo Producto");
+            dialog.getDialogPane().setContent(formView);
+            dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
 
-        GridPane grid = new GridPane();
-        grid.setHgap(10); grid.setVgap(10); grid.setPadding(new Insets(20, 50, 10, 10));
+            dialog.setResultConverter(buttonType -> {
+                if (buttonType == ButtonType.OK) {
+                    return controller.getProductoResult();
+                }
+                return null;
+            });
 
-        TextField nombreField = new TextField(producto.getNombre());
-        TextArea descripcionField = new TextArea(producto.getDescripcion());
-        descripcionField.setWrapText(true); descripcionField.setPrefRowCount(3);
-        TextField precioField = new TextField(String.valueOf(producto.getPrecio()));
-
-        Label lblImagen = new Label("Imagen:");
-        Button btnSeleccionarImagen = new Button("Cambiar imagen...");
-        btnSeleccionarImagen.getStyleClass().add("btn-secondary");
-        Label lblRutaImagen = new Label(producto.getImagenUrl() != null ? "Imagen actual conservada" : "Sin imagen");
-        lblRutaImagen.setStyle("-fx-font-size: 10px; -fx-text-fill: #6b7280;");
-        
-        final String[] newImageUrl = {null};
-
-        btnSeleccionarImagen.setOnAction(event -> {
-            FileChooser fileChooser = new FileChooser();
-            fileChooser.setTitle("Cambiar Imagen");
-            fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Imágenes", "*.png", "*.jpg", "*.jpeg"));
-            File file = fileChooser.showOpenDialog(btnSeleccionarImagen.getScene().getWindow());
-            
-            if (file != null) {
-                lblRutaImagen.setText("Subiendo: " + file.getName() + "...");
-                btnSeleccionarImagen.setDisable(true);
-                
+            Optional<ProductoDTO> result = dialog.showAndWait();
+            result.ifPresent(nuevoProducto -> {
                 ThreadManager.getInstance().execute(() -> {
                     try {
-                        String uploadedUrl = subirImagenAlServidor(file); 
+                        productoService.crearProducto(nuevoProducto);
                         Platform.runLater(() -> {
-                            lblRutaImagen.setText("Nueva: " + file.getName());
-                            lblRutaImagen.setStyle("-fx-text-fill: green;");
-                            newImageUrl[0] = uploadedUrl;
-                            btnSeleccionarImagen.setDisable(false);
+                            DataCacheService.getInstance().limpiarCache();
+                            cargarDatosIniciales();
+                            mostrarAlertaInfo("Éxito", "Producto creado correctamente.");
                         });
                     } catch (Exception e) {
-                        Platform.runLater(() -> {
-                            lblRutaImagen.setText("Error al subir.");
-                            mostrarAlertaError("Error", "Fallo la subida: " + e.getMessage());
-                            btnSeleccionarImagen.setDisable(false);
-                        });
+                        Platform.runLater(() -> handleGenericError("Error al crear producto", e));
                     }
                 });
-            }
-        });
-
-        grid.add(new Label("Nombre:"), 0, 0); grid.add(nombreField, 1, 0);
-        grid.add(new Label("Descrip:"), 0, 1); grid.add(descripcionField, 1, 1);
-        grid.add(new Label("Precio:"), 0, 2); grid.add(precioField, 1, 2);
-        grid.add(lblImagen, 0, 3); 
-        VBox imgBox = new VBox(5, btnSeleccionarImagen, lblRutaImagen);
-        grid.add(imgBox, 1, 3);
-
-        dialog.getDialogPane().setContent(grid);
-
-        dialog.setResultConverter(dialogButton -> {
-            if (dialogButton == guardarButtonType) {
-                try {
-                    ProductoDTO dto = new ProductoDTO();
-                    dto.setIdProducto(producto.getIdProducto()); 
-                    dto.setNombre(nombreField.getText());
-                    dto.setDescripcion(descripcionField.getText());
-                    dto.setPrecio(Double.parseDouble(precioField.getText()));
-                    dto.setIdCategoria(producto.getIdCategoria()); 
-                    
-                    if (newImageUrl[0] != null) {
-                        dto.setImagenUrl(newImageUrl[0]);
-                    } else {
-                        dto.setImagenUrl(producto.getImagenUrl());
-                    }
-                    return dto;
-                } catch (Exception e) { return null; }
-            }
-            return null;
-        });
-
-        Optional<ProductoDTO> result = dialog.showAndWait();
-        result.ifPresent(productoEditado -> {
-            infoLabel.setText("Actualizando...");
-            ThreadManager.getInstance().execute(() -> {
-                try {
-                    productoService.actualizarProducto(productoEditado.getIdProducto(), productoEditado);
-                    Platform.runLater(() -> {
-                        infoLabel.setText("Producto actualizado.");
-                        infoLabel.getStyleClass().setAll("lbl-success");
-                        
-                        // --- IMPORTANTE: Limpiar caché para forzar recarga con datos nuevos ---
-                        DataCacheService.getInstance().limpiarCache(); 
-                        
-                        cargarDatosIniciales(); 
-                    });
-                } catch (Exception e) {
-                    Platform.runLater(() -> handleGenericError("Error al actualizar", e));
-                }
             });
-        });
+
+        } catch (IOException e) {
+            handleGenericError("Error al abrir formulario", e);
+        }
+    }
+
+    // --- MÉTODO REFACTORIZADO: Usa ProductFormController ---
+    private void handleEditarProducto(ProductoDTO producto) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/proyectopos/restauranteappfrontend/product-form-view.fxml"));
+            Parent formView = loader.load();
+            ProductFormController controller = loader.getController();
+            
+            // Pasamos los datos del producto al formulario
+            controller.setProducto(producto);
+
+            Dialog<ProductoDTO> dialog = new Dialog<>();
+            dialog.setTitle("Editar Producto");
+            dialog.getDialogPane().setContent(formView);
+            dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+
+            dialog.setResultConverter(buttonType -> {
+                if (buttonType == ButtonType.OK) {
+                    return controller.getProductoResult();
+                }
+                return null;
+            });
+
+            Optional<ProductoDTO> result = dialog.showAndWait();
+            result.ifPresent(productoEditado -> {
+                ThreadManager.getInstance().execute(() -> {
+                    try {
+                        productoService.actualizarProducto(productoEditado.getIdProducto(), productoEditado);
+                        Platform.runLater(() -> {
+                            DataCacheService.getInstance().limpiarCache();
+                            cargarDatosIniciales();
+                            infoLabel.setText("Producto actualizado.");
+                            infoLabel.getStyleClass().setAll("lbl-success");
+                        });
+                    } catch (Exception e) {
+                        Platform.runLater(() -> handleGenericError("Error al actualizar", e));
+                    }
+                });
+            });
+
+        } catch (IOException e) {
+            handleGenericError("Error al abrir formulario", e);
+        }
     }
 
     // --- Eliminación de Producto ---
@@ -480,6 +377,7 @@ public class DashboardController implements CleanableController {
             PedidoMesaDTO pedido = gson.fromJson(msg.getPayload(), PedidoMesaDTO.class);
 
             if (pedido != null && pedido.getIdMesa() != null) {
+                // --- REFACTORIZADO: Lógica movida ---
                 actualizarEstadoMesaEspecifica(msg.getType(), pedido);
 
                 if (mesaSeleccionada != null && mesaSeleccionada.getIdMesa().equals(pedido.getIdMesa())) {
@@ -493,57 +391,46 @@ public class DashboardController implements CleanableController {
         }
     }
 
+    // --- MÉTODO REFACTORIZADO: Usa MesaTileController ---
     private void actualizarEstadoMesaEspecifica(String tipoEvento, PedidoMesaDTO pedido) {
+        // Buscar el nodo (botón/tile) que corresponde a la mesa del pedido
         for (Node node : mesasContainer.getChildren()) {
-            if (node instanceof Button) {
-                Button btn = (Button) node;
-                MesaDTO mesaBtn = (MesaDTO) btn.getUserData();
+            if (node.getUserData() instanceof MesaTileController) {
+                MesaTileController controller = (MesaTileController) node.getUserData();
+                MesaDTO mesaBtn = controller.getMesa();
 
+                // Si encontramos la mesa correspondiente al evento
                 if (mesaBtn != null && mesaBtn.getIdMesa().equals(pedido.getIdMesa())) {
-                    actualizarEstiloBotonMesa(btn, tipoEvento, mesaBtn);
-                    if ("PEDIDO_CERRADO".equals(tipoEvento) || "PEDIDO_CANCELADO".equals(tipoEvento)) {
-                        estadoPedidoCache.remove(mesaBtn.getIdMesa());
-                    } else {
-                        estadoPedidoCache.put(mesaBtn.getIdMesa(), pedido.getEstado());
+                    
+                    // 1. Determinar el nuevo estado base de la mesa
+                    String nuevoEstadoBase = mesaBtn.getEstado(); // Por defecto mantenemos el actual
+                    String nuevoEstadoPedido = null;
+
+                    switch (tipoEvento) {
+                        case "PEDIDO_CREADO":
+                        case "PEDIDO_ACTUALIZADO":
+                            nuevoEstadoBase = "OCUPADA";
+                            estadoPedidoCache.put(mesaBtn.getIdMesa(), pedido.getEstado());
+                            break;
+                        case "PEDIDO_LISTO":
+                            nuevoEstadoBase = "OCUPADA";
+                            nuevoEstadoPedido = "LISTO_PARA_ENTREGAR";
+                            estadoPedidoCache.put(mesaBtn.getIdMesa(), "LISTO_PARA_ENTREGAR");
+                            break;
+                        case "PEDIDO_CERRADO":
+                        case "PEDIDO_CANCELADO":
+                            nuevoEstadoBase = "DISPONIBLE";
+                            estadoPedidoCache.remove(mesaBtn.getIdMesa());
+                            break;
                     }
-                    break;
+
+                    // 2. Delegar la actualización visual al componente pequeño
+                    // Esto debe ejecutarse en el hilo de JavaFX (Platform.runLater ya se llama antes de entrar aquí)
+                    controller.actualizarEstadoVisual(nuevoEstadoBase, nuevoEstadoPedido);
+                    break; // Ya encontramos la mesa, salimos del bucle
                 }
             }
         }
-    }
-
-    private void actualizarEstiloBotonMesa(Button mesaButton, String tipoEvento, MesaDTO mesaDTO) {
-        mesaButton.getStyleClass().removeAll("mesa-libre", "mesa-ocupada", "mesa-pagando", "mesa-reservada", "btn-secondary");
-        VBox buttonContent = (VBox) mesaButton.getGraphic();
-        Text estadoMesaText = (Text) buttonContent.getChildren().get(1);
-
-        switch (tipoEvento) {
-            case "PEDIDO_CREADO":
-            case "PEDIDO_ACTUALIZADO":
-                mesaDTO.setEstado("OCUPADA");
-                mesaButton.getStyleClass().add("mesa-ocupada");
-                estadoMesaText.setText("Ocupada");
-                break;
-
-            case "PEDIDO_LISTO":
-                mesaDTO.setEstado("OCUPADA");
-                mesaButton.getStyleClass().add("mesa-pagando");
-                estadoMesaText.setText("¡LISTO!");
-                break;
-
-            case "PEDIDO_CERRADO":
-            case "PEDIDO_CANCELADO":
-                mesaDTO.setEstado("DISPONIBLE");
-                mesaButton.getStyleClass().add("mesa-libre");
-                estadoMesaText.setText("Libre");
-                break;
-
-            default:
-                if ("DISPONIBLE".equals(mesaDTO.getEstado())) mesaButton.getStyleClass().add("mesa-libre");
-                else if ("OCUPADA".equals(mesaDTO.getEstado())) mesaButton.getStyleClass().add("mesa-ocupada");
-                break;
-        }
-        mesaButton.setUserData(mesaDTO);
     }
 
     private void actualizarPanelDetalleSiCorresponde(String tipoEvento, PedidoMesaDTO pedidoActualizado) {
@@ -726,60 +613,35 @@ public class DashboardController implements CleanableController {
          if (productosContainer != null) productosContainer.setDisable(disabled);
     }
 
+    // --- MÉTODO REFACTORIZADO: Usa MesaTileController ---
     private void mostrarMesas(List<MesaDTO> mesas) {
         mesasContainer.getChildren().clear();
         if (mesas != null && !mesas.isEmpty()) {
             for (MesaDTO mesa : mesas) {
                 if ("BLOQUEADA".equals(mesa.getEstado())) continue;
                 
-                Button mesaButton = new Button();
-                mesaButton.setUserData(mesa);
-                mesaButton.getStyleClass().add("mesa-button");
-                
-                VBox buttonContent = new VBox(-2);
-                buttonContent.setAlignment(Pos.CENTER);
-                Text numeroMesaText = new Text(String.valueOf(mesa.getNumeroMesa()));
-                numeroMesaText.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
-                Text estadoMesaText = new Text();
-                estadoMesaText.setStyle("-fx-font-size: 10px;");
-                
-                String estadoPedidoParaMesa = estadoPedidoCache.get(mesa.getIdMesa());
+                try {
+                    FXMLLoader loader = new FXMLLoader(getClass().getResource("/proyectopos/restauranteappfrontend/mesa-tile.fxml"));
+                    Button mesaNode = loader.load(); // El nodo raíz es un Button
+                    
+                    MesaTileController controller = loader.getController();
+                    
+                    // Verificamos si hay un estado de pedido específico (ej. LISTO)
+                    String estadoPedido = estadoPedidoCache.get(mesa.getIdMesa());
+                    
+                    // Inicializamos la mesa. Si hay estadoPedido especial, lo aplicará visualmente
+                    controller.setMesaData(mesa, this::handleSeleccionarMesa);
+                    controller.actualizarEstadoVisual(mesa.getEstado(), estadoPedido);
 
-                switch (mesa.getEstado()) {
-                    case "DISPONIBLE":
-                        mesaButton.getStyleClass().add("mesa-libre");
-                        estadoMesaText.setText("Libre");
-                        mesaButton.setOnAction(event -> handleSeleccionarMesa(mesa));
-                        break;
-                    case "OCUPADA":
-                        if ("LISTO_PARA_ENTREGAR".equalsIgnoreCase(estadoPedidoParaMesa)) {
-                             mesaButton.getStyleClass().add("mesa-pagando");
-                             estadoMesaText.setText("¡LISTO!");
-                        } else {
-                            mesaButton.getStyleClass().add("mesa-ocupada");
-                            estadoMesaText.setText("Ocupada");
-                        }
-                        mesaButton.setOnAction(event -> handleSeleccionarMesa(mesa));
-                        break;
-                    case "RESERVADA":
-                        mesaButton.getStyleClass().add("mesa-reservada");
-                        estadoMesaText.setText("Rsrv.");
-                        mesaButton.setDisable(true);
-                        break;
-                    default:
-                        mesaButton.getStyleClass().add("btn-secondary");
-                        estadoMesaText.setText(mesa.getEstado());
-                        mesaButton.setDisable(true);
+                    // ¡TRUCO PRO! Guardamos el CONTROLADOR en el userData del nodo, no solo el DTO.
+                    // Esto nos permitirá acceder a sus métodos (como actualizarEstadoVisual) más tarde.
+                    mesaNode.setUserData(controller);
+
+                    mesasContainer.getChildren().add(mesaNode);
+
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
-                
-                // Ajuste de color de texto según estado (CSS maneja el resto)
-                if ("LISTO_PARA_ENTREGAR".equalsIgnoreCase(estadoPedidoParaMesa)) {
-                    numeroMesaText.setStyle(numeroMesaText.getStyle() + "; -fx-fill: #78350f;"); // Amber oscuro
-                } 
-                
-                buttonContent.getChildren().addAll(numeroMesaText, estadoMesaText);
-                mesaButton.setGraphic(buttonContent);
-                mesasContainer.getChildren().add(mesaButton);
             }
         } else {
             mesasContainer.getChildren().add(new Label("Sin mesas."));
@@ -891,7 +753,6 @@ public class DashboardController implements CleanableController {
         });
     }
 
-
     @FXML
     private void handleGestionarCategorias() {
         if (categoriasData.isEmpty()) return;
@@ -946,146 +807,6 @@ public class DashboardController implements CleanableController {
                 Platform.runLater(() -> handleGenericError("Error", e));
             }
         });
-    }
-
-    @FXML
-    private void handleCrearProducto() {
-        if (categoriasData.isEmpty()) return;
-        
-        Dialog<ProductoDTO> dialog = new Dialog<>();
-        dialog.setTitle("Nuevo Producto");
-        dialog.setHeaderText("Detalles del producto");
-        ButtonType crearButtonType = new ButtonType("Crear", ButtonBar.ButtonData.OK_DONE);
-        dialog.getDialogPane().getButtonTypes().addAll(crearButtonType, ButtonType.CANCEL);
-        
-        GridPane grid = new GridPane();
-        grid.setHgap(10); grid.setVgap(10); grid.setPadding(new Insets(20, 150, 10, 10));
-        
-        TextField nombreField = new TextField(); nombreField.setPromptText("Nombre");
-        TextArea descripcionField = new TextArea(); descripcionField.setPromptText("Descripción");
-        descripcionField.setPrefRowCount(2);
-        TextField precioField = new TextField(); precioField.setPromptText("0.00");
-
-        Label lblImagen = new Label("Imagen:");
-        Button btnSeleccionarImagen = new Button("Elegir archivo...");
-        Label lblRutaImagen = new Label("Ninguna");
-        lblRutaImagen.setStyle("-fx-font-size: 10px;");
-
-        final String[] selectedImageUrl = {null};
-
-        btnSeleccionarImagen.setOnAction(event -> {
-            FileChooser fileChooser = new FileChooser();
-            fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Imágenes", "*.png", "*.jpg", "*.jpeg"));
-            File file = fileChooser.showOpenDialog(null);
-            if (file != null) {
-                lblRutaImagen.setText("Subiendo...");
-                btnSeleccionarImagen.setDisable(true);
-                ThreadManager.getInstance().execute(() -> {
-                    try {
-                        String uploadedUrl = subirImagenAlServidor(file);
-                        Platform.runLater(() -> {
-                            lblRutaImagen.setText("OK: " + file.getName());
-                            selectedImageUrl[0] = uploadedUrl;
-                            btnSeleccionarImagen.setDisable(false);
-                        });
-                    } catch (Exception e) {
-                        Platform.runLater(() -> {
-                            lblRutaImagen.setText("Error upload");
-                            btnSeleccionarImagen.setDisable(false);
-                        });
-                    }
-                });
-            }
-        });
-
-        ComboBox<CategoriaDTO> comboCategoriaPadre = new ComboBox<>();
-        comboCategoriaPadre.setItems(categoriasData.stream().filter(c -> c.getIdCategoriaPadre() == null).collect(Collectors.toCollection(FXCollections::observableArrayList)));
-        ComboBox<CategoriaDTO> comboSubcategoria = new ComboBox<>();
-        
-        comboCategoriaPadre.valueProperty().addListener((o, old, catPadre) -> {
-            comboSubcategoria.getItems().clear();
-            if (catPadre != null) {
-                comboSubcategoria.setItems(categoriasData.stream().filter(s -> catPadre.getIdCategoria().equals(s.getIdCategoriaPadre())).collect(Collectors.toCollection(FXCollections::observableArrayList)));
-            }
-        });
-
-        grid.add(new Label("Nombre:"), 0, 0); grid.add(nombreField, 1, 0);
-        grid.add(new Label("Precio:"), 0, 1); grid.add(precioField, 1, 1);
-        grid.add(new Label("Cat:"), 0, 2); grid.add(comboCategoriaPadre, 1, 2);
-        grid.add(new Label("Sub:"), 0, 3); grid.add(comboSubcategoria, 1, 3);
-        grid.add(lblImagen, 0, 4); grid.add(new VBox(5, btnSeleccionarImagen, lblRutaImagen), 1, 4);
-
-        dialog.getDialogPane().setContent(grid);
-
-        dialog.setResultConverter(dialogButton -> {
-            if (dialogButton == crearButtonType) {
-                try {
-                    ProductoDTO np = new ProductoDTO();
-                    np.setNombre(nombreField.getText());
-                    np.setPrecio(Double.parseDouble(precioField.getText()));
-                    np.setImagenUrl(selectedImageUrl[0]);
-                    if (comboSubcategoria.getValue() != null) np.setIdCategoria(comboSubcategoria.getValue().getIdCategoria());
-                    else if (comboCategoriaPadre.getValue() != null) np.setIdCategoria(comboCategoriaPadre.getValue().getIdCategoria());
-                    return np;
-                } catch (Exception e) { return null; }
-            } return null;
-        });
-
-        Optional<ProductoDTO> result = dialog.showAndWait();
-        result.ifPresent(p -> {
-            ThreadManager.getInstance().execute(() -> {
-                try {
-                    productoService.crearProducto(p);
-                    Platform.runLater(() -> {
-                         // --- IMPORTANTE: Limpiar caché tras CREAR ---
-                         DataCacheService.getInstance().limpiarCache();
-                         cargarDatosIniciales();
-                    });
-                } catch (Exception e) { e.printStackTrace(); }
-            });
-        });
-    }
-
-    private String subirImagenAlServidor(File file) throws Exception {
-        String boundary = new BigInteger(256, new Random()).toString();
-        String uploadEndpoint = AppConfig.getInstance().getApiBaseUrl() + "/api/media/upload";
-        String token = SessionManager.getInstance().getToken();
-
-        Map<String, Object> data = new HashMap<>();
-        data.put("file", file.toPath());
-
-        HttpRequest.BodyPublisher body = ofMimeMultipartData(data, boundary);
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(uploadEndpoint))
-                .header("Content-Type", "multipart/form-data;boundary=" + boundary)
-                .header("Authorization", "Bearer " + token)
-                .POST(body)
-                .build();
-
-        HttpClient client = HttpClient.newHttpClient();
-        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-
-        if (response.statusCode() == 200) return response.body();
-        else throw new IOException("Error upload: " + response.statusCode());
-    }
-
-    public static HttpRequest.BodyPublisher ofMimeMultipartData(Map<String, Object> data, String boundary) throws IOException {
-        var byteArrays = new ArrayList<byte[]>();
-        byte[] separator = ("--" + boundary + "\r\nContent-Disposition: form-data; name=").getBytes(StandardCharsets.UTF_8);
-        for (Map.Entry<String, Object> entry : data.entrySet()) {
-            byteArrays.add(separator);
-            if (entry.getValue() instanceof Path) {
-                var path = (Path) entry.getValue();
-                String mimeType = Files.probeContentType(path);
-                byteArrays.add(("\"" + entry.getKey() + "\"; filename=\"" + path.getFileName() + "\"\r\nContent-Type: " + mimeType + "\r\n\r\n").getBytes(StandardCharsets.UTF_8));
-                byteArrays.add(Files.readAllBytes(path));
-                byteArrays.add("\r\n".getBytes(StandardCharsets.UTF_8));
-            } else {
-                byteArrays.add(("\"" + entry.getKey() + "\"\r\n\r\n" + entry.getValue() + "\r\n").getBytes(StandardCharsets.UTF_8));
-            }
-        }
-        byteArrays.add(("--" + boundary + "--").getBytes(StandardCharsets.UTF_8));
-        return HttpRequest.BodyPublishers.ofByteArrays(byteArrays);
     }
 
     private void actualizarListaCompletaYTotal() {
@@ -1175,6 +896,12 @@ public class DashboardController implements CleanableController {
     
     private void mostrarAlertaError(String titulo, String contenido) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle(titulo); alert.setHeaderText(null); alert.setContentText(contenido);
+        alert.showAndWait();
+    }
+    
+    private void mostrarAlertaInfo(String titulo, String contenido) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle(titulo); alert.setHeaderText(null); alert.setContentText(contenido);
         alert.showAndWait();
     }

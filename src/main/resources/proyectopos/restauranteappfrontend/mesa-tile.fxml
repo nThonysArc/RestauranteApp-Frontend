@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.VBox?>
+
+<Button fx:id="mesaButton" mnemonicParsing="false" prefHeight="80.0" prefWidth="80.0" styleClass="mesa-button" xmlns="http://javafx.com/javafx/20.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="proyectopos.restauranteappfrontend.controllers.MesaTileController">
+   <graphic>
+      <VBox alignment="CENTER" spacing="-2.0">
+         <children>
+            <Label fx:id="numeroMesaLabel" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #374151;" text="00" />
+            <Label fx:id="estadoLabel" style="-fx-font-size: 10px; -fx-text-fill: #374151;" text="Estado" />
+         </children>
+      </VBox>
+   </graphic>
+</Button>
