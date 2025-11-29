@@ -1,6 +1,7 @@
-/* --- raiz-iquena-theme.css --- */
+
+ /* --- raiz-iquena-theme.css --- */
 /* Tema Actualizado: Estilo Moderno Flat "Coca Coffeetalk" */
-/* Preservando paleta Warm & Gold original */
+/* Refinado para Coherencia, Usabilidad y un toque de calidez peruana sutil */
 
 /* ========================================== */
 /* 1. CARGA DE FUENTES Y CONFIGURACIÓN GLOBAL */
@@ -15,23 +16,28 @@
 
 .root {
     /* -- COLORES BASE (Paleta Cálida del Login) -- */
-    -fx-background: #fff9f1; 
+    /* Ligero ajuste: -fx-background un poco más neutro para mejor contraste con las tarjetas */
+    -fx-background: #fffafa; /* Casi blanco, con un toque de crema muy sutil */
     -fx-base: #ffffff; 
     
     /* Fondos de control más limpios */
     -fx-control-inner-background: #ffffff;
-    -fx-control-inner-background-alt: #fdfbf7;
+    -fx-control-inner-background-alt: #fdfdfd; /* Más sutil el alternativo */
 
-    /* -- ACENTO PRINCIPAL (Naranja Dorado) -- */
+    /* -- ACENTO PRINCIPAL (Naranja Dorado Iqueño) -- */
+    /* Mantenido: Es el corazón del tema */
     -fx-accent: #f59e0b; 
     -fx-focus-color: -fx-accent;
-    -fx-faint-focus-color: rgba(245, 158, 11, 0.15);
+    -fx-faint-focus-color: rgba(245, 158, 11, 0.25); /* Focus un poco más visible */
 
     /* -- TEXTO -- */
-    -fx-text-base-color: #1f2937; /* Gris muy oscuro (casi negro) para mejor lectura */
-    -fx-text-background-color: #4b5563; /* Gris medio */
+    /* Se mejoró la legibilidad en la escala de grises para el texto */
+    -fx-text-base-color: #1a1a1a; /* Negro muy oscuro (90% negro) para máximo contraste */
+    -fx-text-background-color: #444444; /* Gris oscuro para uso secundario */
     -fx-text-fill: -fx-text-base-color;
-    -fx-prompt-text-fill: #9ca3af;
+    -fx-prompt-text-fill: #999999; /* Gris medio para placeholders */
+
+
 
     /* -- COLORES SEMÁNTICOS -- */
     -color-success: #65a30d; /* Verde Lima */
@@ -41,14 +47,34 @@
     -color-secondary: #9ca3af; /* Gris neutro */
 
     /* Fuente Global */
-    -fx-font-family: 'Montserrat';
-    -fx-font-size: 13px;
+    -fx-font-family: 'Montserrat', sans-serif; /* Se añadió fallback */
+    -fx-font-size: 14px; /* Un punto más grande para mejor accesibilidad táctil/visual */
 }
 
 /* ========================================== */
 /* 2. ESTILOS GENERALES DEL SISTEMA */
 /* ========================================== */
+.titulo-app-login {
 
+   
+
+    -fx-font-family: 'Playfair Display', serif;
+
+   
+
+    -fx-text-fill: #d97706; /* El color dorado/naranja de tu marca */
+
+
+
+    -fx-font-weight:800; /* Las fuentes Script no suelen usar bold */
+
+
+
+    -fx-font-size: 38px;
+
+
+
+}
 /* Fondo principal limpio */
 .background, .login-background {
     -fx-background-color: -fx-background;
@@ -57,211 +83,217 @@
 /* --- NUEVO: Tarjetas de Productos (Estilo Catálogo) --- */
 .producto-card {
     -fx-background-color: #ffffff;
-    -fx-background-radius: 15px;
-    -fx-border-radius: 15px;
-    /* Sombra muy suave y difusa (Estilo Moderno) */
-    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 15, 0, 0, 4);
+    -fx-background-radius: 12px; /* Ligeramente menos redondeado */
+    -fx-border-radius: 12px;
+    /* Sombra muy suave y difusa (Moderno Flat, pero visible) */
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.08), 8, 0.0, 0, 3); /* Sombra más corta y definida */
     -fx-cursor: hand;
     -fx-padding: 0;
+    -fx-border-color: #f0f0f0; /* Borde muy sutil para definición */
+    -fx-border-width: 1px;
 }
 
 .producto-card:hover {
-    /* Al pasar el mouse, la sombra se vuelve dorada y la tarjeta "flota" */
-    -fx-effect: dropshadow(three-pass-box, rgba(245, 158, 11, 0.3), 20, 0, 0, 5);
-    -fx-translate-y: -3px; 
-    -fx-background-color: #fffcf5; /* Ligeramente crema */
+    /* El hover debe ser sutil y elegante */
+    -fx-effect: dropshadow(three-pass-box, rgba(245, 158, 11, 0.4), 10, 0, 0, 3); /* Sombra dorada más pequeña */
+    -fx-translate-y: -2px; /* Flotado más sutil */
+    -fx-background-color: #fffaf0; /* Fondo más cálido, como papel antiguo */
+    -fx-border-color: -fx-accent; /* Borde al color de acento */
 }
 
 /* Labels específicos dentro de la tarjeta de producto */
 .producto-titulo {
-    -fx-font-weight: bold;
-    -fx-font-size: 14px;
-    -fx-text-fill: #1f2937;
+    -fx-font-weight: 600; /* Bold más ligero (semi-bold) */
+    -fx-font-size: 15px; /* Un poco más grande */
+    -fx-text-fill: -fx-text-base-color;
     -fx-padding: 5 0 0 0;
 }
 
 .precio-label {
-    -fx-text-fill: -fx-accent; /* Naranja */
-    -fx-font-size: 15px;
+    -fx-text-fill: -color-danger; /* Cambio a Rojo/Naranja para mejor visibilidad del precio */
+    -fx-font-size: 16px;
     -fx-font-weight: bold;
 }
 
 /* --- Contenedores Genéricos (Cards) --- */
 .card, .login-card {
     -fx-background-color: #ffffff;
-    -fx-padding: 20px;
-    -fx-background-radius: 20px; /* Más redondeado */
-    -fx-border-radius: 20px;
-    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.06), 20, 0, 0, 5);
+    -fx-padding: 25px; /* Más espacio interior */
+    -fx-background-radius: 15px; /* Redondeo intermedio */
+    -fx-border-radius: 15px;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.08), 12, 0, 0, 4); /* Sombra más contenida */
     -fx-border-width: 0px;
 }
 
 /* Encabezados */
 .h1, .h2, .h3, .titulo-app {
-    -fx-font-family: 'Playfair Display';
-    -fx-text-fill: #d97706;
-    -fx-font-weight: bold;
+    -fx-font-family: 'Playfair Display', serif; /* Se añadió fallback */
+    -fx-text-fill: #b35900; /* Dorado-Marrón más rico y tradicional (cacao/café) */
+    -fx-font-weight: 800; /* Más peso */
 }
-.h1 { -fx-font-size: 26pt; }
-.h2 { -fx-font-size: 18pt; } /* Ajustado para dashboard */
-.h3 { -fx-font-size: 14pt; }
-.titulo-app { -fx-font-size: 28px; }
+.h1 { -fx-font-size: 24pt; } /* Ligeramente más pequeños para POS */
+.h2 { -fx-font-size: 16pt; }
+.h3 { -fx-font-size: 13pt; }
+.titulo-app { -fx-font-size: 26px; }
 
 /* Labels de Información */
-.lbl-info { -fx-text-fill: #6b7280; -fx-font-size: 12px; }
-.lbl-success { -fx-text-fill: -color-success; -fx-font-weight: bold; }
-.lbl-warning { -fx-text-fill: -color-warning; -fx-font-weight: bold; }
-.lbl-danger  { -fx-text-fill: -color-danger; -fx-font-weight: bold; }
+.lbl-info { -fx-text-fill: #777777; -fx-font-size: 13px; }
+/* Mantenidos, pero el color base ha sido refinado */
 
 /* --- Botones (Estilo Píldora/Redondeado) --- */
 .button, .btn-login {
-    -fx-font-family: 'Montserrat';
+    -fx-font-family: 'Montserrat', sans-serif;
     -fx-text-fill: white;
-    -fx-font-weight: bold;
-    -fx-background-radius: 25px; /* Estilo Píldora */
-    -fx-border-radius: 25px;
-    -fx-padding: 8px 20px;
+    -fx-font-weight: 600;
+    -fx-background-radius: 20px; /* Un poco menos píldora (más ancho) */
+    -fx-border-radius: 20px;
+    -fx-padding: 10px 22px; /* Más padding vertical */
     -fx-cursor: hand;
     -fx-background-color: -color-secondary;
-    -fx-effect: null; /* Flat design, sin sombra dura por defecto */
+    -fx-effect: null; 
 }
 .button:hover, .btn-login:hover {
-    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.15), 8, 0, 0, 2);
-    -fx-opacity: 0.9;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 5, 0, 0, 1); /* Sombra de hover más sutil y compacta */
+    -fx-opacity: 1.0; /* Quitado el opacity para evitar cambio de color, solo la sombra */
 }
 .button:pressed {
     -fx-translate-y: 1px;
+    -fx-opacity: 0.9;
 }
 
 /* Variantes */
 .btn-primary, .btn-login { -fx-background-color: -fx-accent; }
 .btn-success { -fx-background-color: -color-success; }
 .btn-danger { -fx-background-color: -color-danger; }
-.btn-warning { -fx-background-color: -color-warning; -fx-text-fill: white; }
+.btn-warning { -fx-background-color: #d97706; -fx-text-fill: white; } /* Dorado más oscuro para warning */
 .btn-info { -fx-background-color: -color-info; }
-.btn-secondary { -fx-background-color: #e5e7eb; -fx-text-fill: #374151; } /* Gris claro */
+.btn-secondary { -fx-background-color: #eeeeee; -fx-text-fill: #444444; } /* Gris más claro y texto más oscuro */
 
 /* --- Botones de Mesa (Dashboard) --- */
 .mesa-button {
-    -fx-font-size: 14pt;
-    -fx-min-width: 80px;
-    -fx-min-height: 80px;
-    -fx-max-width: 80px;
-    -fx-max-height: 80px;
-    -fx-alignment: center;
-    -fx-content-display: center;
-    -fx-background-radius: 20px; /* Cuadrado redondeado (Squircle) */
-    -fx-border-radius: 20px;
-    -fx-border-width: 0px;
+    -fx-font-size: 15pt;
+    -fx-min-width: 90px; /* Mesas ligeramente más grandes */
+    -fx-min-height: 90px;
+    -fx-max-width: 90px;
+    -fx-max-height: 90px;
+    -fx-background-radius: 15px; 
+    -fx-border-radius: 15px;
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 5, 0, 0, 2);
-    -fx-background-color: white; /* Fondo por defecto */
-    -fx-text-fill: #374151;
+    -fx-background-color: white; 
+    -fx-text-fill: #333333;
 }
-/* Estados de Mesa - Borde o fondo sutil */
+/* Estados de Mesa - Borde más grueso y claro */
 .mesa-libre { 
     -fx-background-color: white; 
     -fx-border-color: -color-success; 
-    -fx-border-width: 2px;
-    -fx-border-radius: 20px;
+    -fx-border-width: 3px; /* Borde más visible */
 }
 .mesa-ocupada { 
-    -fx-background-color: #fff7ed; /* Fondo naranja muy claro */
+    -fx-background-color: #fff7e6; /* Fondo más cálido */
     -fx-border-color: -fx-accent;
-    -fx-border-width: 2px;
-    -fx-border-radius: 20px;
+    -fx-border-width: 3px;
 } 
 .mesa-pagando { 
-    -fx-background-color: #fef3c7; 
-    -fx-border-color: -color-warning;
-    -fx-border-width: 2px;
-    -fx-border-radius: 20px;
+    -fx-background-color: #fff0d6; /* Fondo amarillo/naranja intermedio */
+    -fx-border-color: #d97706; /* Dorado más oscuro */
+    -fx-border-width: 3px;
 }
 
 /* Texto dentro de los botones de mesa */
 .mesa-button Text {
-    -fx-fill: #374151; /* Siempre gris oscuro para legibilidad */
+    -fx-fill: -fx-text-base-color;
     -fx-font-family: 'Montserrat';
-    -fx-font-weight: bold;
+    -fx-font-weight: 700; /* Texto más pesado */
 }
 
 /* --- Listas de Categorías (Estilo Navegación Lateral) --- */
 .list-view {
     -fx-background-color: transparent;
     -fx-border-width: 0;
-    -fx-padding: 5px;
+    -fx-padding: 0; /* Menos padding para un look más compacto */
 }
 .list-cell {
     -fx-background-color: transparent;
-    -fx-text-fill: #6b7280; /* Gris */
-    -fx-padding: 10px 15px;
+    -fx-text-fill: #444444; /* Texto un poco más oscuro por defecto */
+    -fx-padding: 12px 15px; /* Más padding vertical */
     -fx-font-family: 'Montserrat';
     -fx-font-size: 14px;
-    -fx-alignment: center-left;
-    -fx-border-radius: 10px;
-    -fx-background-radius: 10px;
+    -fx-border-radius: 6px; /* Menos redondeado */
+    -fx-background-radius: 6px;
 }
 .list-cell:filled:selected, .list-cell:filled:hover {
-    -fx-background-color: #fff7ed; /* Fondo naranja muy suave */
-    -fx-text-fill: -fx-accent; /* Texto Naranja */
-    -fx-font-weight: bold;
+    -fx-background-color: #fff5e6; /* Fondo naranja/crema más sutil */
+    -fx-text-fill: #b35900; /* Texto en color de encabezado (Cacao) */
+    -fx-font-weight: 700;
 }
 .list-view .placeholder .label {
-    -fx-text-fill: #9ca3af;
+    -fx-text-fill: #999999;
 }
 
 /* --- Tablas (Carrito) --- */
+/* Se mejoró la definición de las filas */
 .table-view {
-    -fx-background-color: transparent;
-    -fx-border-width: 0;
+    -fx-background-color: #ffffff; /* Fondo blanco para las tablas */
+    -fx-border-width: 1px;
+    -fx-border-color: #f0f0f0;
+    -fx-background-radius: 10px;
+    -fx-border-radius: 10px;
 }
 .table-view .column-header-background {
-    -fx-background-color: transparent;
+    -fx-background-color: #f7f7f7; /* Fondo sutil para el header */
     -fx-border-width: 0 0 1px 0;
     -fx-border-color: #e5e7eb;
 }
 .table-view .column-header .label {
-    -fx-text-fill: #9ca3af;
-    -fx-font-size: 11px;
-    -fx-font-weight: normal;
+    -fx-text-fill: #666666; /* Gris más oscuro para mejor lectura */
+    -fx-font-size: 12px;
+    -fx-font-weight: 600; /* Semi-bold para el header */
 }
 .table-view .cell {
     -fx-border-width: 0;
-    -fx-padding: 8px 5px;
+    -fx-padding: 10px 8px; /* Más padding vertical */
 }
 .table-view .table-row-cell {
     -fx-background-color: transparent;
-    -fx-border-color: transparent transparent #f3f4f6 transparent;
+    -fx-border-color: transparent transparent #f0f0f0 transparent; /* Línea de división más suave */
     -fx-border-width: 1px;
 }
 .table-view .table-row-cell:selected {
-    -fx-background-color: #fff7ed;
+    -fx-background-color: #fff9e6; /* Selección más suave y amarilla */
     -fx-background-insets: 0;
 }
 
 /* --- Inputs --- */
 .text-field, .password-field, .text-area {
-    -fx-background-color: #f9fafb;
-    -fx-border-color: #e5e7eb;
-    -fx-border-radius: 10px;
-    -fx-background-radius: 10px;
+    -fx-background-color: #ffffff; /* Fondo blanco */
+    -fx-border-color: #dddddd; /* Borde más claro */
+    -fx-border-radius: 8px; /* Menos redondeado */
+    -fx-background-radius: 8px;
     -fx-padding: 10px;
+    -fx-text-fill: -fx-text-base-color;
 }
-.text-field:focused {
+.text-field:focused, .password-field:focused, .text-area:focused {
     -fx-background-color: white;
     -fx-border-color: -fx-accent;
+    -fx-border-width: 2px; /* Borde más grueso al enfocar */
 }
 
 /* ComboBox */
 .combo-box-base {
-    -fx-background-color: #f9fafb;
-    -fx-border-color: #e5e7eb;
-    -fx-border-radius: 10px;
-    -fx-background-radius: 10px;
+    -fx-background-color: #ffffff;
+    -fx-border-color: #dddddd;
+    -fx-border-radius: 8px;
+    -fx-background-radius: 8px;
+    -fx-padding: 0 0 0 5; /* Ajuste sutil del padding */
 }
 
 /* ScrollBars minimalistas */
 .scroll-bar { -fx-background-color: transparent; }
 .scroll-bar .thumb {
-    -fx-background-color: #d1d5db;
-    -fx-background-radius: 5px;
+    -fx-background-color: #cccccc; /* Gris más claro */
+    -fx-background-radius: 4px;
+    -fx-opacity: 0.8;
+}
+.scroll-bar:vertical .thumb {
+    -fx-min-height: 20;
 }
