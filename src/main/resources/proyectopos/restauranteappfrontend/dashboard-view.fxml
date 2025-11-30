@@ -19,8 +19,8 @@
             styleClass="background">
 
     <top>
-        <HBox alignment="CENTER_LEFT" spacing="20" style="-fx-background-color: white; -fx-padding: 15 25; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 10, 0, 0, 2);">
-           
+        <HBox alignment="CENTER_LEFT" spacing="20"
+              style="-fx-background-color: white; -fx-padding: 15 25; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 10, 0, 0, 2);">
             <Label text="Raíz Iqueña" styleClass="h2" style="-fx-text-fill: -fx-accent;"/>
             <Separator orientation="VERTICAL" />
             <Label fx:id="infoLabel" text="Bienvenido" styleClass="lbl-info" style="-fx-font-size: 14px;"/>
@@ -31,66 +31,80 @@
     </top>
 
     <center>
-  
         <StackPane>
             <padding>
-                <Insets top="20" right="20" bottom="20" left="20"/>
+                <Insets top="10" right="20" bottom="15" left="20"/>
             </padding>
 
-            <VBox spacing="20" alignment="TOP_CENTER">
+            <!-- VISTA DE MESAS (principal) -->
+            <VBox spacing="25" alignment="TOP_CENTER">
+
                 <HBox alignment="CENTER_LEFT">
-                   
-                    <Label text="Seleccione una Mesa" styleClass="h2" style="-fx-text-fill: #374151;"/>
+                    <Label text="Seleccione una Mesa" styleClass="h2 text-title"/>
                 </HBox>
-                
-                <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" style="-fx-background-color: transparent; -fx-background: transparent;">
+
+                <ScrollPane fitToWidth="true" fitToHeight="true" styleClass="scroll-transparent" VBox.vgrow="ALWAYS">
                     <content>
-                        <TilePane fx:id="mesasContainer" hgap="20" vgap="20" prefColumns="6" alignment="TOP_CENTER" 
-                                  style="-fx-padding: 20;">
-              
-                            <Label text="Cargando mesas..." />
+                        <TilePane fx:id="mesasContainer" hgap="15" vgap="15" prefColumns="6"
+                                  alignment="TOP_CENTER" style="-fx-padding: 10;">
+                            <Label text="Cargando mesas..." styleClass="text-muted"/>
                         </TilePane>
                     </content>
                 </ScrollPane>
+
             </VBox>
 
-           
-            <VBox fx:id="gestionPedidoPane" spacing="10" visible="false" managed="false" 
-                  style="-fx-background-color: -fx-background;">
-                
+            <!-- PANEL que aparece cuando se selecciona una mesa -->
+            <VBox fx:id="gestionPedidoPane" spacing="15" visible="false" managed="false"
+                  styleClass="pedido-pane" VBox.vgrow="ALWAYS">
+
                 <HBox alignment="CENTER_LEFT" spacing="15">
                     <Button text="← Volver a Mesas" onAction="#handleVolverMesas" styleClass="btn-secondary"/>
-               
                     <Label fx:id="mesaSeleccionadaLabel" text="Mesa: (Ninguna)" styleClass="h3"/>
                 </HBox>
 
-                <HBox spacing="20" VBox.vgrow="ALWAYS">
+                <!-- CONTENIDO: Categorías | Productos | Order Panel -->
+                <HBox spacing="12" VBox.vgrow="ALWAYS">
+
+                <!-- COLUMNA 1: CATEGORÍAS -->
+                <VBox spacing="12" HBox.hgrow="NEVER" minWidth="210" maxWidth="230"
+                styleClass="card" style="-fx-padding: 12;">
+
+                <Label text="Categorías" styleClass="h3" style="-fx-font-size: 15;"/>
+
+                 <ListView fx:id="categoriasListView"
+                VBox.vgrow="NEVER"
+                  prefHeight="250"
+                 styleClass="list-view"/>
+
+                <Separator style="-fx-opacity:0.5;"/>   
+
+                <Label text="Subcategorías" styleClass="h3" style="-fx-font-size: 15;"/>
+
+                <ListView 
+                fx:id="subCategoriasListView"
+                VBox.vgrow="ALWAYS"
+              styleClass="list-view"/>
+                </VBox>
+
                     
-                    <VBox spacing="10" HBox.hgrow="NEVER" prefWidth="220" styleClass="card" style="-fx-padding: 10;">
-           
-                        <Label text="Categorías" styleClass="h3" style="-fx-font-size: 14px;"/>
-                        <ListView fx:id="categoriasListView" VBox.vgrow="NEVER" prefHeight="200.0" minHeight="100.0" styleClass="list-view"/>
-                        
-                        <Separator/>
-      
-                        <Label text="Subcategorías" styleClass="h3" style="-fx-font-size: 14px;"/>
-                        <ListView fx:id="subCategoriasListView" VBox.vgrow="ALWAYS" minHeight="150.0" styleClass="list-view"/>
-                    </VBox>
                     
-                    <VBox fx:id="contenedorProductos" spacing="10" HBox.hgrow="ALWAYS">
+
+                    <!-- COLUMNA 2: PRODUCTOS (catálogo) -->
+                    <VBox fx:id="contenedorProductos" spacing="10" HBox.hgrow="SOMETIMES" maxWidth="700" VBox.vgrow="ALWAYS">
                         <Label text="Menú" styleClass="h3"/>
-                        <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" style="-fx-background-color: transparent; -fx-background: transparent;">
+                        <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" styleClass="scroll-transparent">
                             <content>
-                                <TilePane fx:id="productosContainer" hgap="20" vgap="20" prefColumns="4" 
-                                          style="-fx-padding: 10;">
-                                </TilePane>
+                                <TilePane fx:id="productosContainer" hgap="20" vgap="20" prefColumns="4" style="-fx-padding: 10;"/>
                             </content>
                         </ScrollPane>
                     </VBox>
 
-                    <fx:include fx:id="orderPanel" source="order-panel.fxml"/>
+                    <!-- COLUMNA 3: PANEL DE ORDEN (incluir FXML) -->
+                    <fx:include fx:id="orderPanel" source="order-panel.fxml" HBox.hgrow="NEVER"/>
 
                 </HBox>
+
             </VBox>
 
         </StackPane>

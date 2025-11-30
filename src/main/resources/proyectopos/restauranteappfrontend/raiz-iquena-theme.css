@@ -80,34 +80,43 @@
     -fx-background-color: -fx-background;
 }
 
-/* --- NUEVO: Tarjetas de Productos (Estilo Catálogo) --- */
+/* ===== Tarjeta de producto ===== */
 .producto-card {
     -fx-background-color: #ffffff;
-    -fx-background-radius: 12px; /* Ligeramente menos redondeado */
-    -fx-border-radius: 12px;
-    /* Sombra muy suave y difusa (Moderno Flat, pero visible) */
-    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.08), 8, 0.0, 0, 3); /* Sombra más corta y definida */
-    -fx-cursor: hand;
-    -fx-padding: 0;
-    -fx-border-color: #f0f0f0; /* Borde muy sutil para definición */
-    -fx-border-width: 1px;
+    -fx-background-radius: 18px;
+    -fx-padding: 18px 12px 20px 12px;
+    -fx-alignment: center;
+    -fx-spacing: 12px;
+
+    /* sombra suave */
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.12), 10, 0.15, 0, 2);
+
+    /* transición suave */
+    -fx-transition: all 0.25s ease;
 }
 
 .producto-card:hover {
-    /* El hover debe ser sutil y elegante */
-    -fx-effect: dropshadow(three-pass-box, rgba(245, 158, 11, 0.4), 10, 0, 0, 3); /* Sombra dorada más pequeña */
-    -fx-translate-y: -2px; /* Flotado más sutil */
-    -fx-background-color: #fffaf0; /* Fondo más cálido, como papel antiguo */
-    -fx-border-color: -fx-accent; /* Borde al color de acento */
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.20), 16, 0.25, 0, 3);
+    -fx-scale-x: 1.03;
+    -fx-scale-y: 1.03;
 }
 
-/* Labels específicos dentro de la tarjeta de producto */
-.producto-titulo {
-    -fx-font-weight: 600; /* Bold más ligero (semi-bold) */
-    -fx-font-size: 15px; /* Un poco más grande */
-    -fx-text-fill: -fx-text-base-color;
-    -fx-padding: 5 0 0 0;
+/* Imagen del producto más centrada */
+.producto-card ImageView {
+    -fx-fit-width: 120px !important;
+    -fx-fit-height: 120px !important;
+    -fx-preserve-ratio: true;
 }
+
+/* Título */
+.producto-titulo {
+    -fx-font-size: 14px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #374151;
+    -fx-text-alignment: center;
+}
+
+
 
 .precio-label {
     -fx-text-fill: -color-danger; /* Cambio a Rojo/Naranja para mejor visibilidad del precio */
@@ -172,10 +181,13 @@
 /* --- Botones de Mesa (Dashboard) --- */
 .mesa-button {
     -fx-font-size: 15pt;
-    -fx-min-width: 90px; /* Mesas ligeramente más grandes */
-    -fx-min-height: 90px;
-    -fx-max-width: 90px;
-    -fx-max-height: 90px;
+    -fx-pref-width: 100px;
+    -fx-pref-height: 100px;
+    -fx-min-width: 100px;
+    -fx-min-height: 100px;
+    -fx-max-width: 100px;
+    -fx-max-height: 100px;
+
     -fx-background-radius: 15px; 
     -fx-border-radius: 15px;
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 5, 0, 0, 2);
@@ -205,29 +217,39 @@
     -fx-font-family: 'Montserrat';
     -fx-font-weight: 700; /* Texto más pesado */
 }
-
-/* --- Listas de Categorías (Estilo Navegación Lateral) --- */
+/* --- LISTAS DE CATEGORÍAS --- */
 .list-view {
     -fx-background-color: transparent;
     -fx-border-width: 0;
-    -fx-padding: 0; /* Menos padding para un look más compacto */
+    -fx-padding: 0; 
 }
+
 .list-cell {
     -fx-background-color: transparent;
-    -fx-text-fill: #444444; /* Texto un poco más oscuro por defecto */
-    -fx-padding: 12px 15px; /* Más padding vertical */
+    -fx-text-fill: #3d3d3d;
+    -fx-padding: 8px 12px; /* Más compacto */
     -fx-font-family: 'Montserrat';
     -fx-font-size: 14px;
-    -fx-border-radius: 6px; /* Menos redondeado */
-    -fx-background-radius: 6px;
+    -fx-background-radius: 6;
+    -fx-border-radius: 6;
 }
-.list-cell:filled:selected, .list-cell:filled:hover {
-    -fx-background-color: #fff5e6; /* Fondo naranja/crema más sutil */
-    -fx-text-fill: #b35900; /* Texto en color de encabezado (Cacao) */
-    -fx-font-weight: 700;
+
+/* Hover + Selección */
+.list-cell:filled:selected, 
+.list-cell:filled:hover {
+    -fx-background-color: #ffe9cc;      /* Mantiene tu estilo crema */
+    -fx-text-fill: #a34f00;
+    -fx-font-weight: 600;
 }
+
+/* Placeholder */
 .list-view .placeholder .label {
-    -fx-text-fill: #999999;
+    -fx-text-fill: #aaaaaa;
+}
+
+/* Mejor separación visual */
+.list-view {
+    -fx-cell-size: 36px;  /* Todas las celdas del mismo alto, se ve más limpio */
 }
 
 /* --- Tablas (Carrito) --- */
@@ -296,4 +318,50 @@
 }
 .scroll-bar:vertical .thumb {
     -fx-min-height: 20;
+}
+
+
+/* ===== Panel derecho (resumen del pedido) ===== */
+.order-summary-box {
+    -fx-background-color: #f3f4f6;
+    -fx-background-radius: 14px;
+    -fx-padding: 14px;
+    -fx-spacing: 10px;
+}
+
+/* Etiquetas de texto ligeras */
+.order-summary-label {
+    -fx-text-fill: #6b7280;
+    -fx-font-size: 13px;
+}
+
+/* Valores */
+.order-summary-value {
+    -fx-font-weight: bold;
+    -fx-font-size: 14px;
+}
+
+/* Total destacado */
+.order-summary-total {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2563eb;
+}
+.text-title {
+    -fx-text-fill: #374151;
+}
+
+.text-muted {
+    -fx-text-fill: #6b7280;
+}
+
+.scroll-transparent {
+    -fx-background-color: transparent;
+    -fx-background: transparent;
+    -fx-padding: 0;
+}
+
+.pedido-pane {
+    -fx-background-color: -fx-background;
+    -fx-padding: 20;
 }
