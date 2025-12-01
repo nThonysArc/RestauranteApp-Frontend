@@ -1,289 +1,318 @@
 package proyectopos.restauranteappfrontend.controllers;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map; // 1. Import necesario para Map.of
 import java.util.stream.Collectors;
 
-import com.google.gson.Gson; // Necesario para deserializar el mensaje del WebSocket
+import com.google.gson.Gson;
 
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList; 
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
-import javafx.scene.control.Button; 
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
-import javafx.scene.control.SelectionMode; 
 import javafx.scene.layout.TilePane;
 import javafx.scene.layout.VBox;
-import proyectopos.restauranteappfrontend.model.dto.DetallePedidoMesaDTO;
+import proyectopos.restauranteappfrontend.model.dto.DetallePedidoWebDTO;
 import proyectopos.restauranteappfrontend.model.dto.PedidoMesaDTO;
-import proyectopos.restauranteappfrontend.model.dto.WebSocketMessageDTO; // Asegúrate de haber creado esta clase
-import proyectopos.restauranteappfrontend.services.HttpClientService;
+import proyectopos.restauranteappfrontend.model.dto.PedidoWebDTO;
+import proyectopos.restauranteappfrontend.model.dto.WebSocketMessageDTO;
+import proyectopos.restauranteappfrontend.services.HttpClientService; // 2. Import del servicio HTTP
 import proyectopos.restauranteappfrontend.services.PedidoMesaService;
+import proyectopos.restauranteappfrontend.services.PedidoWebService;
 import proyectopos.restauranteappfrontend.services.WebSocketService;
 import proyectopos.restauranteappfrontend.util.ThreadManager;
 
-
 public class KitchenController implements CleanableController {
 
-    @FXML private TilePane pedidosContainer;
+    @FXML private TilePane pedidosContainer;    // Contenedor Mesas
+    @FXML private TilePane deliveryContainer;   // Contenedor Delivery/Web
     @FXML private Label statusLabelKitchen;
 
     private final PedidoMesaService pedidoMesaService = new PedidoMesaService();
+    private final PedidoWebService pedidoWebService = new PedidoWebService();
+    
+    // 3. Instancia del cliente HTTP necesaria para las peticiones PUT
+    private final HttpClientService httpClient = new HttpClientService(); 
+    
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss");
     private final Gson gson = new Gson();
 
     @FXML
     public void initialize() {
-        statusLabelKitchen.setText("Cargando pedidos pendientes...");
-        statusLabelKitchen.getStyleClass().setAll("lbl-info");
+        statusLabelKitchen.setText("Cargando sistema de cocina...");
         pedidosContainer.getChildren().clear();
+        deliveryContainer.getChildren().clear();
 
-        // Carga inicial completa
-        cargarPedidosPendientes();
+        // 1. Cargar datos iniciales
+        cargarTodosLosPedidos();
 
-        // Suscripción a WebSockets con manejo de objetos (Delta Updates)
+        // 2. Suscripción a WebSockets
         WebSocketService.getInstance().subscribe("/topic/pedidos", (jsonMessage) -> {
             Platform.runLater(() -> procesarMensajeWebSocket(jsonMessage));
         });
     }
 
-    /**
-     * Procesa el mensaje JSON recibido por WebSocket para actualizar la UI
-     * sin necesidad de recargar toda la lista del servidor.
-     */
     private void procesarMensajeWebSocket(String jsonMessage) {
         try {
             WebSocketMessageDTO msg = gson.fromJson(jsonMessage, WebSocketMessageDTO.class);
-            
             if (msg == null || msg.getType() == null) return;
 
-            // Eventos que añaden o actualizan un pedido (Nuevos items)
-            if ("PEDIDO_CREADO".equals(msg.getType()) || "PEDIDO_ACTUALIZADO".equals(msg.getType())) {
-                PedidoMesaDTO pedido = gson.fromJson(msg.getPayload(), PedidoMesaDTO.class);
-                if (pedido != null) {
-                    System.out.println("WebSocket (Cocina): Pedido " + pedido.getIdPedidoMesa() + " recibido/actualizado.");
-                    actualizarTarjetaPedido(pedido);
-                }
-            } 
-            // Eventos que remueven el pedido de la vista de cocina (Ya está listo o cerrado)
-            else if ("PEDIDO_LISTO".equals(msg.getType()) || 
-                     "PEDIDO_CERRADO".equals(msg.getType()) || 
-                     "PEDIDO_CANCELADO".equals(msg.getType())) {
-                 
-                 PedidoMesaDTO pedido = gson.fromJson(msg.getPayload(), PedidoMesaDTO.class);
-                 if (pedido != null) {
-                     System.out.println("WebSocket (Cocina): Pedido " + pedido.getIdPedidoMesa() + " finalizado. Removiendo.");
-                     removerTarjetaPedido(pedido.getIdPedidoMesa());
-                 }
+            switch (msg.getType()) {
+                // --- EVENTOS DE MESAS ---
+                case "PEDIDO_CREADO":
+                case "PEDIDO_ACTUALIZADO":
+                    PedidoMesaDTO pedidoMesa = gson.fromJson(msg.getPayload(), PedidoMesaDTO.class);
+                    if (pedidoMesa != null) actualizarTarjetaMesa(pedidoMesa);
+                    break;
+                case "PEDIDO_LISTO":
+                case "PEDIDO_CERRADO":
+                case "PEDIDO_CANCELADO":
+                    PedidoMesaDTO pedidoCerrado = gson.fromJson(msg.getPayload(), PedidoMesaDTO.class);
+                    if (pedidoCerrado != null) removerTarjetaMesa(pedidoCerrado.getIdPedidoMesa());
+                    break;
+
+                // --- EVENTOS WEB / DELIVERY ---
+                case "NUEVO_PEDIDO_WEB":
+                    PedidoWebDTO pedidoWeb = gson.fromJson(msg.getPayload(), PedidoWebDTO.class);
+                    if (pedidoWeb != null) {
+                        System.out.println("WebSocket: Nuevo pedido web ID " + pedidoWeb.getIdPedidoWeb());
+                        agregarTarjetaWeb(pedidoWeb);
+                        reproducirSonidoAlerta();
+                    }
+                    break;
+                
+                // Caso extra: Si otra pantalla actualiza el estado (Sincronización)
+                case "PEDIDO_WEB_ACTUALIZADO":
+                    PedidoWebDTO webActualizado = gson.fromJson(msg.getPayload(), PedidoWebDTO.class);
+                    if (webActualizado != null) {
+                        // Si ya no es PENDIENTE ni EN_COCINA, lo quitamos
+                        if (!"PENDIENTE".equals(webActualizado.getEstado()) && !"EN_COCINA".equals(webActualizado.getEstado())) {
+                             removerTarjetaWeb(webActualizado.getIdPedidoWeb());
+                        }
+                    }
+                    break;
             }
             
         } catch (Exception e) {
-            System.err.println("Error procesando mensaje WebSocket: " + e.getMessage());
+            System.err.println("Error WS: " + e.getMessage());
             e.printStackTrace();
-            // Si falla la actualización parcial, hacemos fallback a la recarga completa
-            cargarPedidosPendientes(); 
         }
     }
 
-    /**
-     * Busca si ya existe una tarjeta para el pedido. Si existe, la reemplaza.
-     * Si no, la añade al final.
-     */
-    private void actualizarTarjetaPedido(PedidoMesaDTO pedido) {
-        // Verificar si tiene items con estado PENDIENTE para cocina
-        boolean tienePendientes = pedido.getDetalles() != null && pedido.getDetalles().stream()
-                .anyMatch(d -> "PENDIENTE".equalsIgnoreCase(d.getEstadoDetalle()));
-
-        // Si no tiene pendientes, no debería estar en esta pantalla
-        if (!tienePendientes) {
-            removerTarjetaPedido(pedido.getIdPedidoMesa());
-            return;
-        }
-
-        // Buscar tarjeta existente por ID (guardado en userData)
-        Node tarjetaExistente = null;
-        for (Node node : pedidosContainer.getChildren()) {
-            if (node.getUserData() instanceof Long && ((Long) node.getUserData()).equals(pedido.getIdPedidoMesa())) {
-                tarjetaExistente = node;
-                break;
-            }
-        }
-
-        // Crear la nueva vista de la tarjeta
-        Node nuevaTarjeta = crearTarjetaPedido(pedido);
-
-        if (tarjetaExistente != null) {
-            // Reemplazar en el mismo lugar
-            int index = pedidosContainer.getChildren().indexOf(tarjetaExistente);
-            pedidosContainer.getChildren().set(index, nuevaTarjeta);
-        } else {
-            // Añadir nueva
-            pedidosContainer.getChildren().add(nuevaTarjeta);
-            // Quitar mensaje de "No hay pedidos" si existe
-            pedidosContainer.getChildren().removeIf(n -> n instanceof Label && ((Label)n).getText().startsWith("No hay pedidos"));
-        }
-        
-        statusLabelKitchen.setText("Pedido Mesa " + pedido.getNumeroMesa() + " actualizado.");
-        statusLabelKitchen.getStyleClass().setAll("lbl-success");
-    }
-
-    private void removerTarjetaPedido(Long idPedido) {
-        boolean removido = pedidosContainer.getChildren().removeIf(node -> 
-            node.getUserData() instanceof Long && ((Long) node.getUserData()).equals(idPedido)
-        );
-        
-        if (removido && pedidosContainer.getChildren().isEmpty()) {
-             pedidosContainer.getChildren().add(new Label("No hay pedidos pendientes en este momento."));
-        }
-    }
-
-    // --- Carga inicial completa (Fallback) ---
-    private void cargarPedidosPendientes() {
-        statusLabelKitchen.setText("Sincronizando...");
-        statusLabelKitchen.getStyleClass().setAll("lbl-warning");
-
+    // --- LÓGICA DE CARGA INICIAL ---
+    private void cargarTodosLosPedidos() {
         ThreadManager.getInstance().execute(() -> {
             try {
-                List<PedidoMesaDTO> todosLosPedidos = pedidoMesaService.getAllPedidos();
-                List<PedidoMesaDTO> pedidosPendientes = todosLosPedidos.stream()
+                // A. Cargar Pedidos de Mesa
+                List<PedidoMesaDTO> mesas = pedidoMesaService.getAllPedidos();
+                List<PedidoMesaDTO> pendientesMesa = mesas.stream()
                         .filter(p -> "ABIERTO".equalsIgnoreCase(p.getEstado()))
-                        .filter(p -> p.getDetalles() != null && p.getDetalles().stream()
-                                .anyMatch(d -> "PENDIENTE".equalsIgnoreCase(d.getEstadoDetalle())))
+                        .filter(p -> p.getDetalles().stream().anyMatch(d -> "PENDIENTE".equalsIgnoreCase(d.getEstadoDetalle())))
                         .collect(Collectors.toList());
 
+                // B. Cargar Pedidos Web
+                List<PedidoWebDTO> pendientesWeb = pedidoWebService.getPedidosWebActivos();
+
                 Platform.runLater(() -> {
-                    mostrarPedidosEnUI(pedidosPendientes);
-                    statusLabelKitchen.setText("Sincronizado. " + pedidosPendientes.size() + " comandas pendientes.");
+                    mostrarMesasEnUI(pendientesMesa);
+                    mostrarWebEnUI(pendientesWeb);
+                    statusLabelKitchen.setText("Actualizado: " + pendientesMesa.size() + " mesas, " + pendientesWeb.size() + " delivery.");
                     statusLabelKitchen.getStyleClass().setAll("lbl-success");
                 });
 
-            } catch (HttpClientService.AuthenticationException e) {
-                 Platform.runLater(() -> handleError("Error de autenticación.", e));
-            } catch (IOException | InterruptedException e) {
-                 Platform.runLater(() -> handleError("Error de red.", e));
             } catch (Exception e) {
-                 Platform.runLater(() -> handleError("Error inesperado.", e));
+                Platform.runLater(() -> {
+                    statusLabelKitchen.setText("Error de conexión: " + e.getMessage());
+                    statusLabelKitchen.getStyleClass().setAll("lbl-danger");
+                });
             }
         });
     }
 
-    private void mostrarPedidosEnUI(List<PedidoMesaDTO> pedidos) {
+    // --- UI PARA PEDIDOS DE MESA ---
+    private void mostrarMesasEnUI(List<PedidoMesaDTO> pedidos) {
         pedidosContainer.getChildren().clear();
-
-        if (pedidos == null || pedidos.isEmpty()) {
-            pedidosContainer.getChildren().add(new Label("No hay pedidos pendientes en este momento."));
-            return;
-        }
-
-        for (PedidoMesaDTO pedido : pedidos) {
-            Node tarjetaPedido = crearTarjetaPedido(pedido);
-            pedidosContainer.getChildren().add(tarjetaPedido);
-        }
+        if (pedidos.isEmpty()) pedidosContainer.getChildren().add(new Label("Todavía no hay pedidos"));
+        pedidos.forEach(this::actualizarTarjetaMesa);
     }
 
-    private VBox crearTarjetaPedido(PedidoMesaDTO pedido) {
+    private void actualizarTarjetaMesa(PedidoMesaDTO pedido) {
+        boolean tienePendientes = pedido.getDetalles().stream().anyMatch(d -> "PENDIENTE".equalsIgnoreCase(d.getEstadoDetalle()));
+        if (!tienePendientes) {
+            removerTarjetaMesa(pedido.getIdPedidoMesa());
+            return;
+        }
+        Node tarjetaNueva = crearTarjetaMesaUI(pedido);
+        reemplazarOAgregar(pedidosContainer, pedido.getIdPedidoMesa(), tarjetaNueva);
+    }
+    
+    // --- UI PARA PEDIDOS WEB ---
+    private void mostrarWebEnUI(List<PedidoWebDTO> pedidos) {
+        deliveryContainer.getChildren().clear();
+        if (pedidos.isEmpty()) deliveryContainer.getChildren().add(new Label("Sin pedidos web."));
+        pedidos.forEach(this::agregarTarjetaWeb);
+    }
+
+    private void agregarTarjetaWeb(PedidoWebDTO pedido) {
+        Node tarjeta = crearTarjetaWebUI(pedido);
+        reemplazarOAgregar(deliveryContainer, pedido.getIdPedidoWeb(), tarjeta);
+    }
+
+    // --- CREACIÓN DE TARJETAS ---
+    
+    private Node crearTarjetaMesaUI(PedidoMesaDTO pedido) {
         VBox tarjeta = new VBox(10);
         tarjeta.setPadding(new Insets(10));
-        // Clase CSS específica sugerida anteriormente, o usa 'card'
-        tarjeta.getStyleClass().add("kitchen-command-card"); 
-        if (!tarjeta.getStyleClass().contains("card")) tarjeta.getStyleClass().add("card"); // Fallback
-        
+        tarjeta.getStyleClass().add("kitchen-command-card");
         tarjeta.setPrefWidth(250);
-        tarjeta.setMinWidth(250);
-        
-        // IMPORTANTE: Guardar el ID en el nodo para buscarlo después
         tarjeta.setUserData(pedido.getIdPedidoMesa());
 
         Label titulo = new Label("Mesa " + pedido.getNumeroMesa());
         titulo.setStyle("-fx-font-weight: bold; -fx-font-size: 14pt;");
-
-        String horaFormateada = pedido.getFechaHoraCreacion();
-        try {
-            LocalDateTime fechaHora = LocalDateTime.parse(pedido.getFechaHoraCreacion());
-            horaFormateada = fechaHora.format(TIME_FORMATTER);
-        } catch (Exception e) { /* Ignorar error */ }
-        Label horaLabel = new Label("Hora: " + horaFormateada);
-        horaLabel.setStyle("-fx-font-size: 10pt; -fx-text-fill: #9ca3af;");
-
-        ListView<String> productosList = new ListView<>();
+        
+        ListView<String> lista = new ListView<>();
         ObservableList<String> items = FXCollections.observableArrayList();
-        
-        if (pedido.getDetalles() != null) { 
-            List<DetallePedidoMesaDTO> detallesPendientes = pedido.getDetalles().stream()
-                    .filter(d -> "PENDIENTE".equalsIgnoreCase(d.getEstadoDetalle()))
-                    .collect(Collectors.toList());
+        pedido.getDetalles().stream()
+              .filter(d -> "PENDIENTE".equalsIgnoreCase(d.getEstadoDetalle()))
+              .forEach(d -> items.add(d.getCantidad() + " x " + d.getNombreProducto()));
+        lista.setItems(items);
+        lista.setPrefHeight(150);
 
-            for (DetallePedidoMesaDTO detalle : detallesPendientes) {
-                items.add(detalle.getCantidad() + " x " + detalle.getNombreProducto());
-            }
-        }
-        
-        productosList.setItems(items);
-        productosList.setPrefHeight(150); // Un poco más alto para ver mejor
-        productosList.setFocusTraversable(false);
-        productosList.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-
-        Button btnListo = new Button("Marcar Listo");
+        Button btnListo = new Button("Mesa Lista");
         btnListo.getStyleClass().addAll("btn-success");
         btnListo.setMaxWidth(Double.MAX_VALUE);
-        btnListo.setOnAction(event -> handleMarcarListo(pedido, tarjeta));
+        btnListo.setOnAction(e -> handleMarcarMesaLista(pedido, tarjeta));
 
-        tarjeta.getChildren().addAll(titulo, horaLabel, productosList, btnListo);
-
+        tarjeta.getChildren().addAll(titulo, new Label(formatearHora(pedido.getFechaHoraCreacion())), lista, btnListo);
         return tarjeta;
     }
 
-    private void handleMarcarListo(PedidoMesaDTO pedido, Node tarjetaNode) {
-        tarjetaNode.setOpacity(0.5);
-        tarjetaNode.setDisable(true);
-        statusLabelKitchen.setText("Procesando Mesa " + pedido.getNumeroMesa() + "...");
-        statusLabelKitchen.getStyleClass().setAll("lbl-warning");
+    private Node crearTarjetaWebUI(PedidoWebDTO pedido) {
+        VBox tarjeta = new VBox(10);
+        tarjeta.setPadding(new Insets(10));
+        tarjeta.getStyleClass().add("card"); 
+        tarjeta.setStyle("-fx-background-color: #e0f2fe; -fx-border-color: #0284c7;");
+        tarjeta.setPrefWidth(250);
+        tarjeta.setUserData(pedido.getIdPedidoWeb());
 
+        Label titulo = new Label("Delivery #" + pedido.getIdPedidoWeb());
+        titulo.setStyle("-fx-font-weight: bold; -fx-font-size: 14pt; -fx-text-fill: #0369a1;");
+        
+        Label cliente = new Label(pedido.getNombreCliente());
+        cliente.setStyle("-fx-font-weight: bold;");
+        
+        Label direccion = new Label("📍 " + pedido.getDireccionEntrega());
+        direccion.setWrapText(true);
+
+        ListView<String> lista = new ListView<>();
+        ObservableList<String> items = FXCollections.observableArrayList();
+        if (pedido.getDetalles() != null) {
+            for (DetallePedidoWebDTO det : pedido.getDetalles()) {
+                String item = det.getCantidad() + " x " + det.getNombreProducto();
+                if (det.getObservaciones() != null && !det.getObservaciones().isEmpty()) {
+                    item += "\n (" + det.getObservaciones() + ")";
+                }
+                items.add(item);
+            }
+        }
+        lista.setItems(items);
+        lista.setPrefHeight(150);
+
+        Button btnDespachar = new Button("Despachar");
+        btnDespachar.getStyleClass().addAll("btn-primary");
+        btnDespachar.setMaxWidth(Double.MAX_VALUE);
+        
+        // --- LÓGICA CORREGIDA DEL BOTÓN ---
+        btnDespachar.setOnAction(e -> {
+            btnDespachar.setDisable(true); 
+
+            ThreadManager.getInstance().execute(() -> {
+                try {
+                    // Creamos el body JSON para enviar al backend
+                    Map<String, String> body = Map.of("estado", "EN_CAMINO");
+                    
+                    // Llamada PUT al backend usando httpClient
+                    httpClient.put("/api/web/pedidos/" + pedido.getIdPedidoWeb() + "/estado", body, PedidoWebDTO.class);
+                    
+                    // Actualizamos la UI inmediatamente
+                    Platform.runLater(() -> {
+                        removerTarjetaWeb(pedido.getIdPedidoWeb());
+                    });
+
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    Platform.runLater(() -> {
+                        btnDespachar.setDisable(false);
+                        statusLabelKitchen.setText("Error al despachar: " + ex.getMessage());
+                        statusLabelKitchen.getStyleClass().setAll("lbl-danger");
+                    });
+                }
+            });
+        });
+
+        tarjeta.getChildren().addAll(titulo, cliente, direccion, lista, btnDespachar);
+        return tarjeta;
+    }
+
+    // --- UTILIDADES ---
+
+    private void reemplazarOAgregar(TilePane container, Long id, Node nodoNuevo) {
+        Node existente = null;
+        for (Node n : container.getChildren()) {
+            if (n.getUserData() instanceof Long && ((Long)n.getUserData()).equals(id)) {
+                existente = n;
+                break;
+            }
+        }
+        
+        container.getChildren().removeIf(n -> n instanceof Label && ((Label)n).getText().startsWith("Sin "));
+
+        if (existente != null) {
+            int idx = container.getChildren().indexOf(existente);
+            container.getChildren().set(idx, nodoNuevo);
+        } else {
+            container.getChildren().add(nodoNuevo);
+        }
+    }
+
+    private void removerTarjetaMesa(Long id) {
+        pedidosContainer.getChildren().removeIf(n -> n.getUserData() instanceof Long && ((Long)n.getUserData()).equals(id));
+        if (pedidosContainer.getChildren().isEmpty()) pedidosContainer.getChildren().add(new Label("Sin comandas de salón."));
+    }
+    
+    // Método auxiliar para remover tarjetas web (usado por el botón y el WebSocket)
+    private void removerTarjetaWeb(Long id) {
+        deliveryContainer.getChildren().removeIf(n -> n.getUserData() instanceof Long && ((Long)n.getUserData()).equals(id));
+        if (deliveryContainer.getChildren().isEmpty()) deliveryContainer.getChildren().add(new Label("Sin pedidos web."));
+    }
+
+    private String formatearHora(String fechaIso) {
+        try {
+            return LocalDateTime.parse(fechaIso).format(TIME_FORMATTER);
+        } catch (Exception e) { return ""; }
+    }
+
+    private void handleMarcarMesaLista(PedidoMesaDTO pedido, Node nodo) {
+        nodo.setDisable(true);
         ThreadManager.getInstance().execute(() -> {
             try {
-                // Esta llamada al backend actualizará la BD y enviará el WS "PEDIDO_LISTO"
-                PedidoMesaDTO pedidoActualizado = pedidoMesaService.marcarPendientesComoListos(pedido.getIdPedidoMesa());
-                
-                Platform.runLater(() -> {
-                    if (pedidoActualizado != null) {
-                        statusLabelKitchen.setText("Mesa " + pedido.getNumeroMesa() + " lista.");
-                        statusLabelKitchen.getStyleClass().setAll("lbl-success");
-                        // No necesitamos remover manualmente aquí, el WebSocket recibirá "PEDIDO_LISTO"
-                        // y llamará a removerTarjetaPedido, pero por reactividad inmediata lo hacemos:
-                        removerTarjetaPedido(pedido.getIdPedidoMesa());
-                    } else {
-                        handleError("No se pudo actualizar el pedido.", null);
-                        tarjetaNode.setOpacity(1.0);
-                        tarjetaNode.setDisable(false);
-                    }
-                });
-
+                pedidoMesaService.marcarPendientesComoListos(pedido.getIdPedidoMesa());
             } catch (Exception e) {
-                 Platform.runLater(() -> { 
-                     handleError("Error al marcar pedido: " + e.getMessage(), e); 
-                     tarjetaNode.setOpacity(1.0); 
-                     tarjetaNode.setDisable(false); 
-                 });
+                Platform.runLater(() -> nodo.setDisable(false));
             }
         });
     }
 
-    private void handleError(String message, Exception e) {
-        System.err.println(message);
-        if (e != null) { e.printStackTrace(); }
-        statusLabelKitchen.setText(message);
-        statusLabelKitchen.getStyleClass().setAll("lbl-danger");
+    private void reproducirSonidoAlerta() {
+        // Toolkit.getDefaultToolkit().beep(); 
     }
 
-    @Override 
-    public void cleanup() {
-        System.out.println("Limpiando KitchenController.");
-        // Aquí se podrían desuscribir del tópico si WebSocketService soportara unsubscription por ID
-    }
+    @Override public void cleanup() { }
 }
