@@ -3,32 +3,92 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.TilePane?>
 <?import javafx.scene.layout.VBox?>
-<?import javafx.scene.text.Font?>
 
-<VBox spacing="10.0" styleClass="background" xmlns="http://javafx.com/javafx/20.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="proyectopos.restauranteappfrontend.controllers.KitchenController">
-   <padding>
-      <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
-   </padding>
-   <children>
-      <Label text="Pedidos Pendientes para Cocina" styleClass="h2">
-         <VBox.margin>
-            <Insets bottom="10.0" />
-         </VBox.margin>
-      </Label>
+<VBox spacing="10.0" styleClass="background"
+      xmlns="http://javafx.com/javafx/20.0.1"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="proyectopos.restauranteappfrontend.controllers.KitchenController">
 
-      <ScrollPane fitToWidth="true" hbarPolicy="NEVER" styleClass="card" VBox.vgrow="ALWAYS">
-         <content>
-            <TilePane fx:id="pedidosContainer" hgap="15.0" vgap="15.0" prefColumns="4">
-               <padding>
-                  <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
-               </padding>
-               <Label text="Cargando pedidos..." />
-            </TilePane>
-         </content>
-      </ScrollPane>
+    <padding>
+        <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+    </padding>
 
-      <Label fx:id="statusLabelKitchen" text="Inicializando..." />
-   </children>
+    <children>
+
+        <Label text="Pedidos Pendientes para Cocina" styleClass="h2">
+            <VBox.margin>
+                <Insets bottom="10.0" />
+            </VBox.margin>
+        </Label>
+
+        <!-- División en 2 columnas simétricas -->
+        <HBox spacing="20" VBox.vgrow="ALWAYS">
+
+            <!--        Pedidos del Mozo       -->
+            <VBox spacing="10" HBox.hgrow="ALWAYS" prefWidth="0">
+
+                <Label text="Pedidos del Salón (Mozo)" styleClass="h3" />
+
+                <ScrollPane fitToWidth="true"
+                            hbarPolicy="NEVER"
+                            styleClass="card"
+                            VBox.vgrow="ALWAYS">
+
+                    <content>
+                        <TilePane fx:id="pedidosContainer"
+                                  hgap="15.0"
+                                  vgap="15.0"
+                                  alignment="CENTER"
+                                  prefColumns="3">
+
+                            <padding>
+                                <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                            </padding>
+
+                            <Label text="Cargando pedidos..." />
+                        </TilePane>
+                    </content>
+
+                </ScrollPane>
+
+            </VBox>
+
+            <!--        Pedidos Delivery       -->
+            <VBox spacing="10" HBox.hgrow="ALWAYS" prefWidth="0">
+
+                <Label text="Pedidos Delivery" styleClass="h3" />
+
+                <ScrollPane fitToWidth="true"
+                            hbarPolicy="NEVER"
+                            styleClass="card"
+                            VBox.vgrow="ALWAYS">
+
+                    <content>
+                        <TilePane fx:id="deliveryContainer"
+                                  hgap="15"
+                                  vgap="15"
+                                  alignment="CENTER"
+                                  prefColumns="3">
+
+                            <padding>
+                                <Insets top="10" right="10" bottom="10" left="10" />
+                            </padding>
+
+                            <Label text="(Sin pedidos Delivery aún)" />
+                        </TilePane>
+                    </content>
+
+                </ScrollPane>
+
+            </VBox>
+
+        </HBox>
+
+        <Label fx:id="statusLabelKitchen" text="Inicializando..." />
+
+    </children>
+
 </VBox>

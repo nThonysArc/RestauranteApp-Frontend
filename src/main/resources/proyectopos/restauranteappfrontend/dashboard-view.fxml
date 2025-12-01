@@ -43,14 +43,20 @@
                     <Label text="Seleccione una Mesa" styleClass="h2 text-title"/>
                 </HBox>
 
-                <ScrollPane fitToWidth="true" fitToHeight="true" styleClass="scroll-transparent" VBox.vgrow="ALWAYS">
-                    <content>
-                        <TilePane fx:id="mesasContainer" hgap="15" vgap="15" prefColumns="6"
-                                  alignment="TOP_CENTER" style="-fx-padding: 10;">
-                            <Label text="Cargando mesas..." styleClass="text-muted"/>
-                        </TilePane>
-                    </content>
-                </ScrollPane>
+<ScrollPane fitToWidth="true" fitToHeight="true" styleClass="scroll-transparent" VBox.vgrow="ALWAYS">
+    <content>
+        <TilePane fx:id="mesasContainer"
+          hgap="20" vgap="20"
+          prefColumns="6"
+          alignment="TOP_CENTER"
+          prefTileWidth="180"
+          prefTileHeight="180"
+          style="-fx-padding: 20;">
+    <Label text="Cargando mesas..." styleClass="text-muted"/>
+</TilePane>
+    </content>
+</ScrollPane>
+
 
             </VBox>
 

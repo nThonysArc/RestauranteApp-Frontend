@@ -9,70 +9,127 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox spacing="10.0" styleClass="background" xmlns="http://javafx.com/javafx/20.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="proyectopos.restauranteappfrontend.controllers.CashierController">
-    <padding>
-        <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
-    </padding>
-    <children>
-        <Label text="Caja - Pedidos Pendientes de Cobro" styleClass="h2">
-         <VBox.margin>
-            <Insets bottom="10.0" />
-         </VBox.margin>
-      </Label>
+<VBox spacing="15.0" styleClass="background"
+      xmlns="http://javafx.com/javafx/20.0.1"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="proyectopos.restauranteappfrontend.controllers.CashierController">
 
-        <HBox spacing="15.0" VBox.vgrow="ALWAYS">
-            <VBox spacing="5.0" HBox.hgrow="ALWAYS">
-                <Label text="Pedidos Listos" styleClass="h3" />
-                <TableView fx:id="pedidosListosTable" VBox.vgrow="ALWAYS">
-                    <columns>
-                        <TableColumn fx:id="mesaCol" prefWidth="70.0" text="Mesa #" />
-                        <TableColumn fx:id="meseroCol" prefWidth="150.0" text="Mesero" />
-                        <TableColumn fx:id="horaCol" prefWidth="100.0" text="Hora Pedido" />
-                        <TableColumn fx:id="totalCol" prefWidth="100.0" text="Total" style="-fx-alignment: CENTER-RIGHT;"/>
-                        <TableColumn fx:id="estadoPedidoCol" prefWidth="150.0" text="Estado" />
-                    </columns>
-                    <columnResizePolicy><TableView fx:constant="CONSTRAINED_RESIZE_POLICY" /></columnResizePolicy>
-                    <placeholder>
-                        <Label text="Cargando pedidos listos..." />
-                    </placeholder>
-                </TableView>
+    <padding>
+        <Insets top="15" right="15" bottom="15" left="15"/>
+    </padding>
+
+    <!-- TÍTULO PRINCIPAL -->
+    <Label text="Caja – Pedidos Pendientes de Cobro"
+           styleClass="h2"
+           style="-fx-text-fill: -fx-accent;">
+        <VBox.margin>
+            <Insets bottom="10"/>
+        </VBox.margin>
+    </Label>
+
+    <HBox spacing="20" VBox.vgrow="ALWAYS">
+
+        <!-- LISTA DE PEDIDOS -->
+        <VBox spacing="10" HBox.hgrow="ALWAYS">
+            <Label text="Pedidos Listos"
+                   styleClass="h3"
+                   style="-fx-text-fill: #374151;"/>
+
+            <TableView fx:id="pedidosListosTable"
+                       VBox.vgrow="ALWAYS">
+                <columns>
+                    <TableColumn fx:id="mesaCol" prefWidth="70.0" text="Mesa #"/>
+                    <TableColumn fx:id="meseroCol" prefWidth="150.0" text="Mesero"/>
+                    <TableColumn fx:id="horaCol" prefWidth="120.0" text="Hora Pedido"/>
+                    <TableColumn fx:id="totalCol" prefWidth="120.0"
+                                 text="Total" style="-fx-alignment: CENTER-RIGHT;"/>
+                    <TableColumn fx:id="estadoPedidoCol" prefWidth="150.0" text="Estado"/>
+                </columns>
+                <columnResizePolicy>
+                    <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
+                </columnResizePolicy>
+
+                <placeholder>
+                    <Label text="Cargando pedidos listos..."/>
+                </placeholder>
+            </TableView>
+        </VBox>
+
+        <Separator orientation="VERTICAL"/>
+
+        <!-- DETALLE DEL PEDIDO -->
+        <VBox fx:id="detallePedidoPane"
+              spacing="12"
+              HBox.hgrow="NEVER"
+              prefWidth="450"
+              styleClass="card"
+              disable="true">
+
+            <!-- TÍTULO DEL PANEL -->
+            <Label fx:id="pedidoSeleccionadoLabel"
+                   text="Detalle Pedido: (Seleccione un pedido)"
+                   styleClass="h3"
+                   style="-fx-font-size: 16px; -fx-text-fill: #374151;"/>
+
+            <!-- TABLA DETALLES -->
+            <TableView fx:id="detallePedidoTable" VBox.vgrow="ALWAYS">
+                <columns>
+                    <TableColumn fx:id="detalleProductoCol" prefWidth="200" text="Producto"/>
+                    <TableColumn fx:id="detalleCantidadCol" prefWidth="60" text="Cant."
+                                 style="-fx-alignment: CENTER;"/>
+                    <TableColumn fx:id="detallePrecioCol" prefWidth="90"
+                                 text="P. Unit." style="-fx-alignment: CENTER-RIGHT;"/>
+                    <TableColumn fx:id="detalleSubtotalCol" prefWidth="110"
+                                 text="Subtotal" style="-fx-alignment: CENTER-RIGHT;"/>
+                </columns>
+
+                <columnResizePolicy>
+                    <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
+                </columnResizePolicy>
+
+                <placeholder>
+                    <Label text="Seleccione un pedido de la izquierda."/>
+                </placeholder>
+            </TableView>
+
+            <!-- RESUMEN DE MONTOS -->
+            <VBox spacing="3" style="-fx-padding: 10 0 0 0;">
+
+                <Separator/>
+
+                <HBox alignment="CENTER_RIGHT">
+                    <Label text="Subtotal: " style="-fx-text-fill: #6b7280;"/>
+                    <Label fx:id="subTotalDetalleLabel" text="S/ 0.00"
+                           style="-fx-font-weight: 700; -fx-text-fill: #6b7280;"/>
+                </HBox>
+
+                <HBox alignment="CENTER_RIGHT">
+                    <Label text="IGV (18%): " style="-fx-text-fill: #6b7280;"/>
+                    <Label fx:id="igvDetalleLabel" text="S/ 0.00"
+                           style="-fx-font-weight: 700; -fx-text-fill: #6b7280;"/>
+                </HBox>
+
+                <HBox alignment="CENTER_RIGHT" style="-fx-padding: 8 0 0 0;">
+                    <Label text="Total a Cobrar: " styleClass="h3"/>
+                    <Label fx:id="totalDetalleLabel"
+                           text="S/ 0.00"
+                           styleClass="h3"
+                           style="-fx-text-fill: -fx-accent; -fx-font-size: 18px;"/>
+                </HBox>
             </VBox>
 
-            <Separator orientation="VERTICAL" />
+            <!-- BOTÓN -->
+            <Button fx:id="cerrarPedidoButton"
+                    text="Cerrar Pedido y Liberar Mesa"
+                    onAction="#handleCerrarPedido"
+                    styleClass="btn-success"
+                    maxWidth="Infinity"
+                    prefHeight="45"
+                    disable="true"/>
+        </VBox>
+    </HBox>
 
-            <VBox fx:id="detallePedidoPane" spacing="10.0" HBox.hgrow="NEVER" prefWidth="450.0" styleClass="card" disable="true"> <Label fx:id="pedidoSeleccionadoLabel" text="Detalle Pedido: (Seleccione un pedido)" styleClass="h3"/>
-
-                <TableView fx:id="detallePedidoTable" VBox.vgrow="ALWAYS">
-                    <columns>
-                        <TableColumn fx:id="detalleProductoCol" prefWidth="200.0" text="Producto" />
-                        <TableColumn fx:id="detalleCantidadCol" prefWidth="50.0" text="Cant." style="-fx-alignment: CENTER;"/>
-                        <TableColumn fx:id="detallePrecioCol" prefWidth="80.0" text="P. Unit." style="-fx-alignment: CENTER-RIGHT;"/>
-                        <TableColumn fx:id="detalleSubtotalCol" prefWidth="100.0" text="Subtotal" style="-fx-alignment: CENTER-RIGHT;"/>
-                    </columns>
-                    <columnResizePolicy><TableView fx:constant="CONSTRAINED_RESIZE_POLICY" /></columnResizePolicy>
-                     <placeholder>
-                        <Label text="Seleccione un pedido de la izquierda." />
-                    </placeholder>
-                </TableView>
-
-                <VBox spacing="2.0" style="-fx-padding: 10 0 0 0;">
-                    <Separator/>
-                     <HBox alignment="CENTER_RIGHT">
-                        <Label text="Subtotal: " style="-fx-text-fill: #9ca3af;"/>
-                        <Label fx:id="subTotalDetalleLabel" text="S/ 0.00" style="-fx-font-weight: bold; -fx-text-fill: #9ca3af;"/>
-                    </HBox>
-                    <HBox alignment="CENTER_RIGHT">
-                        <Label text="IGV (18%): " style="-fx-text-fill: #9ca3af;"/>
-                        <Label fx:id="igvDetalleLabel" text="S/ 0.00" style="-fx-font-weight: bold; -fx-text-fill: #9ca3af;"/>
-                    </HBox>
-                    <HBox alignment="CENTER_RIGHT" style="-fx-padding: 5 0 0 0;">
-                        <Label text="Total a Cobrar: " styleClass="h3"/>
-                        <Label fx:id="totalDetalleLabel" text="S/ 0.00" styleClass="h3" style="-fx-text-fill: -fx-accent;"/>
-                    </HBox>
-                </VBox>
-
-                <Button fx:id="cerrarPedidoButton" text="Cerrar Pedido y Liberar Mesa" onAction="#handleCerrarPedido" styleClass="btn-success" maxWidth="Infinity" prefHeight="40" disable="true"/> </VBox>
-        </HBox>
-        <Label fx:id="statusLabelCashier" text="Inicializando..." />
-    </children>
+    <Label fx:id="statusLabelCashier"
+           text="Inicializando..."
+           style="-fx-text-fill: #9ca3af;"/>
 </VBox>

@@ -4,22 +4,31 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.VBox?>
 
-<Button fx:id="mesaButton" mnemonicParsing="false" 
-        prefHeight="150.0" prefWidth="150.0"
+<Button fx:id="mesaButton" mnemonicParsing="false"
+        prefHeight="155.0" prefWidth="155.0"
         styleClass="mesa-button"
-        xmlns="http://javafx.com/javafx/20.0.1" 
-        xmlns:fx="http://javafx.com/fxml/1" 
+        xmlns="http://javafx.com/javafx/20.0.1"
+        xmlns:fx="http://javafx.com/fxml/1"
         fx:controller="proyectopos.restauranteappfrontend.controllers.MesaTileController">
-   <graphic>
-      <VBox alignment="CENTER" spacing="-4.0">
-         <children>
-            <Label fx:id="numeroMesaLabel" 
-                   style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #374151;" 
-                   text="00" />
-            <Label fx:id="estadoLabel" 
-                   style="-fx-font-size: 10px; -fx-text-fill: #374151;" 
-                   text="Estado" />
-         </children>
-      </VBox>
-   </graphic>
+
+    <graphic>
+        <VBox alignment="CENTER" spacing="2">
+            <children>
+                <Label fx:id="numeroMesaLabel"
+                       style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #374151;"
+                       text="00" />
+
+                <Label fx:id="estadoLabel"
+                       style="-fx-font-size: 11px; -fx-text-fill: #374151;"
+                       text="Estado" />
+
+                
+                <Label fx:id="capacidadLabel"
+                       style="-fx-font-size: 10px; -fx-text-fill: #6B7280;"
+                       visible="false" managed="false"
+                       text="Cap: 0" />
+            </children>
+        </VBox>
+    </graphic>
+
 </Button>

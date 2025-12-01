@@ -300,26 +300,28 @@
     -fx-border-width: 2px; /* Borde más grueso al enfocar */
 }
 
-/* ComboBox */
-.combo-box-base {
-    -fx-background-color: #ffffff;
+/* Fondo del popup (lista del ComboBox) */
+.combo-box-popup .list-view {
+    -fx-background-color: #ffffff;       /* Fondo blanco real */
+    -fx-control-inner-background: #ffffff;
     -fx-border-color: #dddddd;
     -fx-border-radius: 8px;
     -fx-background-radius: 8px;
-    -fx-padding: 0 0 0 5; /* Ajuste sutil del padding */
 }
 
-/* ScrollBars minimalistas */
-.scroll-bar { -fx-background-color: transparent; }
-.scroll-bar .thumb {
-    -fx-background-color: #cccccc; /* Gris más claro */
-    -fx-background-radius: 4px;
-    -fx-opacity: 0.8;
-}
-.scroll-bar:vertical .thumb {
-    -fx-min-height: 20;
+/* Celdas del ComboBox */
+.combo-box-popup .list-cell {
+    -fx-background-color: #ffffff;
+    -fx-text-fill: #333333;
 }
 
+.combo-box-popup .list-cell:hover {
+    -fx-background-color: #f0f0f0;       /* Hover gris suave */
+}
+
+.combo-box-popup .list-cell:selected {
+    -fx-background-color: #e6e6e6 !important;
+}
 
 /* ===== Panel derecho (resumen del pedido) ===== */
 .order-summary-box {
