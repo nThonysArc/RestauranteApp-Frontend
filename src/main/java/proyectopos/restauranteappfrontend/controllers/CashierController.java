@@ -244,8 +244,6 @@ public class CashierController {
             statusLabelCashier.getStyleClass().setAll("lbl-warning");
             cerrarPedidoButton.setDisable(true);
             Long pedidoIdParaCerrar = pedidoSeleccionado.getIdPedidoMesa();
-
-            // MODIFICADO: Uso de ThreadManager
             ThreadManager.getInstance().execute(() -> {
                 try {
                     pedidoMesaService.cerrarPedido(pedidoIdParaCerrar);

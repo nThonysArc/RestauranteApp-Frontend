@@ -41,7 +41,6 @@ import proyectopos.restauranteappfrontend.services.WebSocketService;
 import proyectopos.restauranteappfrontend.util.SessionManager; 
 import proyectopos.restauranteappfrontend.util.ThreadManager; 
 
-// Implementamos DashboardUpdateListener para reaccionar a eventos de negocio sin procesar JSON aquí
 public class DashboardController implements CleanableController, DashboardUpdateListener {
 
     @FXML private Label infoLabel;
@@ -52,7 +51,6 @@ public class DashboardController implements CleanableController, DashboardUpdate
     @FXML private TilePane productosContainer;
     @FXML private Label mesaSeleccionadaLabel;
 
-    // --- MODIFICACIÓN: Inyectamos el contenedor padre para añadir botones ---
     @FXML private VBox contenedorProductos; 
 
     @FXML private OrderPanelController orderPanelController;
@@ -146,10 +144,9 @@ public class DashboardController implements CleanableController, DashboardUpdate
     }
 
     // --- IMPLEMENTACIÓN DE DashboardUpdateListener (Eventos de Negocio) ---
-
     @Override
     public void onSystemRefreshRequested() {
-        // El Handler solicita un refresco total (ej. reconexión o error grave)
+        // El Handler solicita un refresco total 
         ThreadManager.getInstance().execute(this::cargarEstadoMesas);
     }
 
