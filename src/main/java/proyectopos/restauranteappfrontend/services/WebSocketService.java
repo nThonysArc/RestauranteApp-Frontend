@@ -1,19 +1,19 @@
 package proyectopos.restauranteappfrontend.services;
 
 import java.lang.reflect.Type;
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List; // IMPRESCINDIBLE
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-// Imports correctos para Spring Messaging
 import org.springframework.messaging.converter.StringMessageConverter;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaders;
 import org.springframework.messaging.simp.stomp.StompSession;
 import org.springframework.messaging.simp.stomp.StompSessionHandlerAdapter;
-import org.springframework.util.MimeType; 
+import org.springframework.util.MimeType;
 import org.springframework.web.socket.client.WebSocketClient;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
@@ -32,18 +32,21 @@ public class WebSocketService {
         WebSocketClient client = new StandardWebSocketClient();
         this.stompClient = new WebSocketStompClient(client);
         
-        // --- CORRECCIÓN FINAL ---
-        StringMessageConverter converter = new StringMessageConverter();
-        
-        // EL ERROR ESTABA AQUÍ: Es 'setSupportedMimeTypes', no 'MediaTypes'
-        converter.setSupportedMimeTypes(Arrays.asList(
-            new MimeType("application", "json"),
-            new MimeType("text", "plain"),
-            new MimeType("*", "*")
-        ));
-        
-        this.stompClient.setMessageConverter(converter);
-        // ------------------------
+        // --- SOLUCIÓN DEFINITIVA Y SIN ERRORES DE COMPILACIÓN ---
+        // En lugar de configurar el converter (que daba error), creamos uno personalizado
+        // que acepta JSON sí o sí.
+        this.stompClient.setMessageConverter(new StringMessageConverter() {
+            @Override
+            public List<MimeType> getSupportedMimeTypes() {
+                // Definimos manualmente la lista para evitar problemas con Arrays.asList
+                List<MimeType> types = new ArrayList<>();
+                types.add(new MimeType("application", "json")); // Aceptar JSON
+                types.add(new MimeType("text", "plain"));       // Aceptar Texto
+                types.add(new MimeType("*", "*"));              // Aceptar Todo
+                return types;
+            }
+        });
+        // --------------------------------------------------------
 
         String apiUrl = AppConfig.getInstance().getApiBaseUrl();
         if (apiUrl != null) {
@@ -110,11 +113,13 @@ public class WebSocketService {
         stompSession.subscribe(topic, new StompSessionHandlerAdapter() {
             @Override
             public Type getPayloadType(StompHeaders headers) {
+                // Pedimos String. Nuestro converter personalizado se encargará.
                 return String.class;
             }
 
             @Override
             public void handleFrame(StompHeaders headers, Object payload) {
+                // Ahora es seguro que llegará como String
                 if (payload instanceof String) {
                     messageHandler.accept((String) payload);
                 } else if (payload instanceof byte[]) {

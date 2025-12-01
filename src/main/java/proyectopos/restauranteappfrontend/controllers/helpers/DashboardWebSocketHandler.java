@@ -13,7 +13,6 @@ public class DashboardWebSocketHandler {
 
     private final Gson gson;
     private final DashboardUpdateListener listener;
-    // Necesitamos acceso al estado actual de los pedidos para tomar decisiones
     private final Map<Long, String> estadoPedidoCache;
 
     public DashboardWebSocketHandler(DashboardUpdateListener listener, Map<Long, String> estadoPedidoCache) {
@@ -26,7 +25,6 @@ public class DashboardWebSocketHandler {
         try {
             WebSocketMessageDTO msg = gson.fromJson(jsonMessage, WebSocketMessageDTO.class);
 
-            // 1. Manejo de mensajes de control o nulos
             if (msg == null || msg.getType() == null) {
                 if (esMensajeDeControl(jsonMessage)) {
                     listener.onSystemRefreshRequested();
@@ -34,19 +32,15 @@ public class DashboardWebSocketHandler {
                 return;
             }
 
-            // 2. Parseo del Payload
             PedidoMesaDTO pedido = gson.fromJson(msg.getPayload(), PedidoMesaDTO.class);
             if (pedido == null || pedido.getIdMesa() == null) return;
 
-            // 3. Calcular nuevos estados
             calcularYNotificarEstadoMesa(msg.getType(), pedido);
-
-            // 4. Verificar si afecta a la selección actual
             verificarImpactoEnSeleccion(msg.getType(), pedido, mesaSeleccionadaActual);
 
         } catch (Exception e) {
             System.err.println("Error procesando WS: " + e.getMessage());
-            listener.onSystemRefreshRequested(); // Fallback seguro
+            listener.onSystemRefreshRequested(); 
         }
     }
 
@@ -55,7 +49,7 @@ public class DashboardWebSocketHandler {
     }
 
     private void calcularYNotificarEstadoMesa(String tipoEvento, PedidoMesaDTO pedido) {
-        String nuevoEstadoBase = "OCUPADA"; // Valor por defecto
+        String nuevoEstadoBase = "OCUPADA"; 
         String nuevoEstadoPedido = null;
         boolean limpiarCache = false;
 
@@ -74,14 +68,13 @@ public class DashboardWebSocketHandler {
                 limpiarCache = true;
                 break;
             default:
-                return; // Evento desconocido, no hacemos nada
+                return; 
         }
 
         if (limpiarCache) {
             estadoPedidoCache.remove(pedido.getIdMesa());
         }
 
-        // Notificar al Dashboard solo con los datos puros
         listener.onMesaStatusChanged(pedido.getIdMesa(), nuevoEstadoBase, nuevoEstadoPedido);
     }
 
@@ -91,7 +84,8 @@ public class DashboardWebSocketHandler {
         }
 
         if ("PEDIDO_CERRADO".equals(tipoEvento) || "PEDIDO_CANCELADO".equals(tipoEvento)) {
-            listener.onPedidoActiveClosed("El pedido de esta mesa ha sido cerrado externamente.");
+            // --- CAMBIO: Mensaje corto y profesional ---
+            listener.onPedidoActiveClosed("Pedido finalizado"); 
         } else {
             listener.onPedidoActiveUpdated(pedido);
         }
