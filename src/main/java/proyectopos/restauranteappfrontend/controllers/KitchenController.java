@@ -3,7 +3,7 @@ package proyectopos.restauranteappfrontend.controllers;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Map; // 1. Import necesario para Map.of
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.gson.Gson;
@@ -23,7 +23,7 @@ import proyectopos.restauranteappfrontend.model.dto.DetallePedidoWebDTO;
 import proyectopos.restauranteappfrontend.model.dto.PedidoMesaDTO;
 import proyectopos.restauranteappfrontend.model.dto.PedidoWebDTO;
 import proyectopos.restauranteappfrontend.model.dto.WebSocketMessageDTO;
-import proyectopos.restauranteappfrontend.services.HttpClientService; // 2. Import del servicio HTTP
+import proyectopos.restauranteappfrontend.services.HttpClientService;
 import proyectopos.restauranteappfrontend.services.PedidoMesaService;
 import proyectopos.restauranteappfrontend.services.PedidoWebService;
 import proyectopos.restauranteappfrontend.services.WebSocketService;
@@ -37,8 +37,6 @@ public class KitchenController implements CleanableController {
 
     private final PedidoMesaService pedidoMesaService = new PedidoMesaService();
     private final PedidoWebService pedidoWebService = new PedidoWebService();
-    
-    // 3. Instancia del cliente HTTP necesaria para las peticiones PUT
     private final HttpClientService httpClient = new HttpClientService(); 
     
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss");
@@ -61,6 +59,8 @@ public class KitchenController implements CleanableController {
 
     private void procesarMensajeWebSocket(String jsonMessage) {
         try {
+            System.out.println("COCINA WS RECIBIDO: " + jsonMessage); // DEBUG
+
             WebSocketMessageDTO msg = gson.fromJson(jsonMessage, WebSocketMessageDTO.class);
             if (msg == null || msg.getType() == null) return;
 
@@ -71,28 +71,30 @@ public class KitchenController implements CleanableController {
                     PedidoMesaDTO pedidoMesa = gson.fromJson(msg.getPayload(), PedidoMesaDTO.class);
                     if (pedidoMesa != null) actualizarTarjetaMesa(pedidoMesa);
                     break;
+                
+                // AQUÍ ESTABA EL PROBLEMA:
                 case "PEDIDO_LISTO":
                 case "PEDIDO_CERRADO":
                 case "PEDIDO_CANCELADO":
                     PedidoMesaDTO pedidoCerrado = gson.fromJson(msg.getPayload(), PedidoMesaDTO.class);
-                    if (pedidoCerrado != null) removerTarjetaMesa(pedidoCerrado.getIdPedidoMesa());
+                    if (pedidoCerrado != null) {
+                        System.out.println("Intentando remover tarjeta ID: " + pedidoCerrado.getIdPedidoMesa());
+                        removerTarjetaMesa(pedidoCerrado.getIdPedidoMesa());
+                    }
                     break;
 
                 // --- EVENTOS WEB / DELIVERY ---
                 case "NUEVO_PEDIDO_WEB":
                     PedidoWebDTO pedidoWeb = gson.fromJson(msg.getPayload(), PedidoWebDTO.class);
                     if (pedidoWeb != null) {
-                        System.out.println("WebSocket: Nuevo pedido web ID " + pedidoWeb.getIdPedidoWeb());
                         agregarTarjetaWeb(pedidoWeb);
                         reproducirSonidoAlerta();
                     }
                     break;
                 
-                // Caso extra: Si otra pantalla actualiza el estado (Sincronización)
                 case "PEDIDO_WEB_ACTUALIZADO":
                     PedidoWebDTO webActualizado = gson.fromJson(msg.getPayload(), PedidoWebDTO.class);
                     if (webActualizado != null) {
-                        // Si ya no es PENDIENTE ni EN_COCINA, lo quitamos
                         if (!"PENDIENTE".equals(webActualizado.getEstado()) && !"EN_COCINA".equals(webActualizado.getEstado())) {
                              removerTarjetaWeb(webActualizado.getIdPedidoWeb());
                         }
@@ -101,45 +103,92 @@ public class KitchenController implements CleanableController {
             }
             
         } catch (Exception e) {
-            System.err.println("Error WS: " + e.getMessage());
+            System.err.println("Error WS en Cocina: " + e.getMessage());
             e.printStackTrace();
         }
     }
 
-    // --- LÓGICA DE CARGA INICIAL ---
+    // --- UTILIDADES ---
+
+    // CORRECCIÓN 1: Comparar IDs como String para evitar problemas Long vs Integer
+    private void removerTarjetaMesa(Long id) {
+        if (id == null) return;
+        String idStr = String.valueOf(id);
+        
+        boolean eliminado = pedidosContainer.getChildren().removeIf(n -> {
+            if (n.getUserData() == null) return false;
+            return n.getUserData().toString().equals(idStr);
+        });
+
+        if (eliminado) System.out.println("Tarjeta mesa " + id + " eliminada correctamente.");
+
+        if (pedidosContainer.getChildren().isEmpty()) {
+            pedidosContainer.getChildren().add(new Label("Sin comandas de salón."));
+        }
+    }
+
+    // CORRECCIÓN 2: Lo mismo para Web
+    private void removerTarjetaWeb(Long id) {
+        if (id == null) return;
+        String idStr = String.valueOf(id);
+        deliveryContainer.getChildren().removeIf(n -> n.getUserData() != null && n.getUserData().toString().equals(idStr));
+        if (deliveryContainer.getChildren().isEmpty()) deliveryContainer.getChildren().add(new Label("Sin pedidos web."));
+    }
+
+    // CORRECCIÓN 3: Reemplazar también usando String
+    private void reemplazarOAgregar(TilePane container, Long id, Node nodoNuevo) {
+        Node existente = null;
+        String idStr = String.valueOf(id);
+
+        for (Node n : container.getChildren()) {
+            if (n.getUserData() != null && n.getUserData().toString().equals(idStr)) {
+                existente = n;
+                break;
+            }
+        }
+        
+        container.getChildren().removeIf(n -> n instanceof Label);
+
+        if (existente != null) {
+            int idx = container.getChildren().indexOf(existente);
+            container.getChildren().set(idx, nodoNuevo);
+        } else {
+            container.getChildren().add(nodoNuevo);
+        }
+    }
+
+    // --- RESTO DE LÓGICA ---
+
     private void cargarTodosLosPedidos() {
         ThreadManager.getInstance().execute(() -> {
             try {
-                // A. Cargar Pedidos de Mesa
                 List<PedidoMesaDTO> mesas = pedidoMesaService.getAllPedidos();
                 List<PedidoMesaDTO> pendientesMesa = mesas.stream()
                         .filter(p -> "ABIERTO".equalsIgnoreCase(p.getEstado()))
                         .filter(p -> p.getDetalles().stream().anyMatch(d -> "PENDIENTE".equalsIgnoreCase(d.getEstadoDetalle())))
                         .collect(Collectors.toList());
 
-                // B. Cargar Pedidos Web
                 List<PedidoWebDTO> pendientesWeb = pedidoWebService.getPedidosWebActivos();
 
                 Platform.runLater(() -> {
                     mostrarMesasEnUI(pendientesMesa);
                     mostrarWebEnUI(pendientesWeb);
-                    statusLabelKitchen.setText("Actualizado: " + pendientesMesa.size() + " mesas, " + pendientesWeb.size() + " delivery.");
+                    statusLabelKitchen.setText("Actualizado: " + pendientesMesa.size() + " mesas, " + pendientesWeb.size() + " web.");
                     statusLabelKitchen.getStyleClass().setAll("lbl-success");
                 });
 
             } catch (Exception e) {
                 Platform.runLater(() -> {
-                    statusLabelKitchen.setText("Error de conexión: " + e.getMessage());
+                    statusLabelKitchen.setText("Conexión: " + e.getMessage());
                     statusLabelKitchen.getStyleClass().setAll("lbl-danger");
                 });
             }
         });
     }
 
-    // --- UI PARA PEDIDOS DE MESA ---
     private void mostrarMesasEnUI(List<PedidoMesaDTO> pedidos) {
         pedidosContainer.getChildren().clear();
-        if (pedidos.isEmpty()) pedidosContainer.getChildren().add(new Label("Todavía no hay pedidos"));
+        if (pedidos.isEmpty()) pedidosContainer.getChildren().add(new Label("Sin comandas de salón."));
         pedidos.forEach(this::actualizarTarjetaMesa);
     }
 
@@ -153,7 +202,6 @@ public class KitchenController implements CleanableController {
         reemplazarOAgregar(pedidosContainer, pedido.getIdPedidoMesa(), tarjetaNueva);
     }
     
-    // --- UI PARA PEDIDOS WEB ---
     private void mostrarWebEnUI(List<PedidoWebDTO> pedidos) {
         deliveryContainer.getChildren().clear();
         if (pedidos.isEmpty()) deliveryContainer.getChildren().add(new Label("Sin pedidos web."));
@@ -165,14 +213,12 @@ public class KitchenController implements CleanableController {
         reemplazarOAgregar(deliveryContainer, pedido.getIdPedidoWeb(), tarjeta);
     }
 
-    // --- CREACIÓN DE TARJETAS ---
-    
     private Node crearTarjetaMesaUI(PedidoMesaDTO pedido) {
         VBox tarjeta = new VBox(10);
         tarjeta.setPadding(new Insets(10));
         tarjeta.getStyleClass().add("kitchen-command-card");
         tarjeta.setPrefWidth(250);
-        tarjeta.setUserData(pedido.getIdPedidoMesa());
+        tarjeta.setUserData(pedido.getIdPedidoMesa()); // ID guardado aquí
 
         Label titulo = new Label("Mesa " + pedido.getNumeroMesa());
         titulo.setStyle("-fx-font-weight: bold; -fx-font-size: 14pt;");
@@ -188,7 +234,7 @@ public class KitchenController implements CleanableController {
         Button btnListo = new Button("Mesa Lista");
         btnListo.getStyleClass().addAll("btn-success");
         btnListo.setMaxWidth(Double.MAX_VALUE);
-        btnListo.setOnAction(e -> handleMarcarMesaLista(pedido, tarjeta));
+        btnListo.setOnAction(e -> handleMarcarMesaLista(pedido, btnListo));
 
         tarjeta.getChildren().addAll(titulo, new Label(formatearHora(pedido.getFechaHoraCreacion())), lista, btnListo);
         return tarjeta;
@@ -229,29 +275,17 @@ public class KitchenController implements CleanableController {
         btnDespachar.getStyleClass().addAll("btn-primary");
         btnDespachar.setMaxWidth(Double.MAX_VALUE);
         
-        // --- LÓGICA CORREGIDA DEL BOTÓN ---
         btnDespachar.setOnAction(e -> {
             btnDespachar.setDisable(true); 
-
             ThreadManager.getInstance().execute(() -> {
                 try {
-                    // Creamos el body JSON para enviar al backend
                     Map<String, String> body = Map.of("estado", "EN_CAMINO");
-                    
-                    // Llamada PUT al backend usando httpClient
                     httpClient.put("/api/web/pedidos/" + pedido.getIdPedidoWeb() + "/estado", body, PedidoWebDTO.class);
-                    
-                    // Actualizamos la UI inmediatamente
-                    Platform.runLater(() -> {
-                        removerTarjetaWeb(pedido.getIdPedidoWeb());
-                    });
-
+                    Platform.runLater(() -> removerTarjetaWeb(pedido.getIdPedidoWeb()));
                 } catch (Exception ex) {
-                    ex.printStackTrace();
                     Platform.runLater(() -> {
                         btnDespachar.setDisable(false);
-                        statusLabelKitchen.setText("Error al despachar: " + ex.getMessage());
-                        statusLabelKitchen.getStyleClass().setAll("lbl-danger");
+                        statusLabelKitchen.setText("Error: " + ex.getMessage());
                     });
                 }
             });
@@ -259,38 +293,6 @@ public class KitchenController implements CleanableController {
 
         tarjeta.getChildren().addAll(titulo, cliente, direccion, lista, btnDespachar);
         return tarjeta;
-    }
-
-    // --- UTILIDADES ---
-
-    private void reemplazarOAgregar(TilePane container, Long id, Node nodoNuevo) {
-        Node existente = null;
-        for (Node n : container.getChildren()) {
-            if (n.getUserData() instanceof Long && ((Long)n.getUserData()).equals(id)) {
-                existente = n;
-                break;
-            }
-        }
-        
-        container.getChildren().removeIf(n -> n instanceof Label && ((Label)n).getText().startsWith("Sin "));
-
-        if (existente != null) {
-            int idx = container.getChildren().indexOf(existente);
-            container.getChildren().set(idx, nodoNuevo);
-        } else {
-            container.getChildren().add(nodoNuevo);
-        }
-    }
-
-    private void removerTarjetaMesa(Long id) {
-        pedidosContainer.getChildren().removeIf(n -> n.getUserData() instanceof Long && ((Long)n.getUserData()).equals(id));
-        if (pedidosContainer.getChildren().isEmpty()) pedidosContainer.getChildren().add(new Label("Sin comandas de salón."));
-    }
-    
-    // Método auxiliar para remover tarjetas web (usado por el botón y el WebSocket)
-    private void removerTarjetaWeb(Long id) {
-        deliveryContainer.getChildren().removeIf(n -> n.getUserData() instanceof Long && ((Long)n.getUserData()).equals(id));
-        if (deliveryContainer.getChildren().isEmpty()) deliveryContainer.getChildren().add(new Label("Sin pedidos web."));
     }
 
     private String formatearHora(String fechaIso) {
@@ -305,7 +307,10 @@ public class KitchenController implements CleanableController {
             try {
                 pedidoMesaService.marcarPendientesComoListos(pedido.getIdPedidoMesa());
             } catch (Exception e) {
-                Platform.runLater(() -> nodo.setDisable(false));
+                Platform.runLater(() -> {
+                    nodo.setDisable(false);
+                    statusLabelKitchen.setText("Error al marcar listo: " + e.getMessage());
+                });
             }
         });
     }

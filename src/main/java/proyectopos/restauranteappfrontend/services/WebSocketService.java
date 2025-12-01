@@ -5,12 +5,14 @@ import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaders;
 import org.springframework.messaging.simp.stomp.StompSession;
 import org.springframework.messaging.simp.stomp.StompSessionHandlerAdapter;
+import org.springframework.util.MimeType; // <--- Importar esto
 import org.springframework.web.socket.client.WebSocketClient;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
 import proyectopos.restauranteappfrontend.util.AppConfig;
 
 import java.lang.reflect.Type;
+import java.util.Collections; // Usar Collections.singletonList es más limpio
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -27,13 +29,20 @@ public class WebSocketService {
     private WebSocketService() {
         WebSocketClient client = new StandardWebSocketClient();
         this.stompClient = new WebSocketStompClient(client);
-        this.stompClient.setMessageConverter(new StringMessageConverter());
+
+        // --- SOLUCIÓN CORREGIDA ---
+        StringMessageConverter converter = new StringMessageConverter();
         
-        // Construye la URL de WebSocket (ws://) desde la URL de la API (http://)
+        // Usamos una lista con un MimeType comodín explícito (*/*)
+        // Esto evita el error con MimeTypeUtils.ALL si la librería no lo resuelve bien
+        converter.setSupportedMimeTypes(Collections.singletonList(new MimeType("*", "*")));
+        
+        this.stompClient.setMessageConverter(converter);
+        // ---------------------------
+
         String apiUrl = AppConfig.getInstance().getApiBaseUrl();
         this.wsUrl = apiUrl.replace("http", "ws") + "/ws";
 
-        // Programador para reintentar la conexión si falla
         this.reconnectScheduler = Executors.newSingleThreadScheduledExecutor();
     }
 
@@ -62,7 +71,7 @@ public class WebSocketService {
                 @Override
                 public void handleException(StompSession session, StompCommand command, StompHeaders headers, byte[] payload, Throwable exception) {
                     System.err.println("Error en WebSocket: " + exception.getMessage());
-                    scheduleReconnect();
+                    // No reconectamos inmediatamente aquí para evitar bucles
                 }
 
                 @Override
@@ -84,12 +93,10 @@ public class WebSocketService {
         }
     }
 
-    // Método para que los controladores se suscriban
     public void subscribe(String topic, Consumer<String> messageHandler) {
         if (stompSession == null || !stompSession.isConnected()) {
             System.err.println("No se puede suscribir, la sesión no está activa. Intentando reconectar...");
-            connect(); // Intenta reconectar
-            // Reintenta la suscripción después de conectar
+            connect();
             reconnectScheduler.schedule(() -> subscribe(topic, messageHandler), 6, TimeUnit.SECONDS);
             return;
         }
@@ -102,7 +109,6 @@ public class WebSocketService {
 
             @Override
             public void handleFrame(StompHeaders headers, Object payload) {
-                // Llama al "manejador" (el código en el controlador)
                 messageHandler.accept((String) payload);
             }
         });
@@ -114,6 +120,6 @@ public class WebSocketService {
             stompSession.disconnect();
             System.out.println("WebSocket desconectado.");
         }
-        reconnectScheduler.shutdownNow(); // Detiene los reintentos
+        reconnectScheduler.shutdownNow();
     }
 }
