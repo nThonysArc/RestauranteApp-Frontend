@@ -1,17 +1,19 @@
 package proyectopos.restauranteappfrontend.services;
 
 import java.lang.reflect.Type;
-import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-import org.springframework.messaging.converter.ByteArrayMessageConverter;
+// Imports correctos para Spring Messaging
+import org.springframework.messaging.converter.StringMessageConverter;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaders;
 import org.springframework.messaging.simp.stomp.StompSession;
 import org.springframework.messaging.simp.stomp.StompSessionHandlerAdapter;
+import org.springframework.util.MimeType; 
 import org.springframework.web.socket.client.WebSocketClient;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
@@ -30,11 +32,18 @@ public class WebSocketService {
         WebSocketClient client = new StandardWebSocketClient();
         this.stompClient = new WebSocketStompClient(client);
         
-        // SOLUCIÓN DEFINITIVA:
-        // Usamos ByteArrayMessageConverter. 
-        // Acepta "application/json" sin necesidad de configurar MimeTypes manualmente.
-        // Esto elimina la línea que causaba el error de compilación.
-        this.stompClient.setMessageConverter(new ByteArrayMessageConverter());
+        // --- CORRECCIÓN FINAL ---
+        StringMessageConverter converter = new StringMessageConverter();
+        
+        // EL ERROR ESTABA AQUÍ: Es 'setSupportedMimeTypes', no 'MediaTypes'
+        converter.setSupportedMimeTypes(Arrays.asList(
+            new MimeType("application", "json"),
+            new MimeType("text", "plain"),
+            new MimeType("*", "*")
+        ));
+        
+        this.stompClient.setMessageConverter(converter);
+        // ------------------------
 
         String apiUrl = AppConfig.getInstance().getApiBaseUrl();
         if (apiUrl != null) {
@@ -70,6 +79,7 @@ public class WebSocketService {
                 @Override
                 public void handleException(StompSession session, StompCommand command, StompHeaders headers, byte[] payload, Throwable exception) {
                     System.err.println("Error en WebSocket: " + exception.getMessage());
+                    exception.printStackTrace(); 
                 }
 
                 @Override
@@ -100,15 +110,15 @@ public class WebSocketService {
         stompSession.subscribe(topic, new StompSessionHandlerAdapter() {
             @Override
             public Type getPayloadType(StompHeaders headers) {
-                // Pedimos los datos como arreglo de bytes
-                return byte[].class;
+                return String.class;
             }
 
             @Override
             public void handleFrame(StompHeaders headers, Object payload) {
-                // Convertimos los bytes a String manualmente para que el resto de tu app siga igual
-                if (payload instanceof byte[]) {
-                    String jsonMessage = new String((byte[]) payload, StandardCharsets.UTF_8);
+                if (payload instanceof String) {
+                    messageHandler.accept((String) payload);
+                } else if (payload instanceof byte[]) {
+                    String jsonMessage = new String((byte[]) payload);
                     messageHandler.accept(jsonMessage);
                 }
             }
