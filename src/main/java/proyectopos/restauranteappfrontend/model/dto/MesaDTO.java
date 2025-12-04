@@ -1,12 +1,19 @@
 package proyectopos.restauranteappfrontend.model.dto;
 
-// No necesitamos validaciones aquí, solo los campos y getters/setters
-// Puedes usar Lombok si lo prefieres para simplificar
 public class MesaDTO {
     private Long idMesa;
     private Integer numeroMesa;
     private Integer capacidad;
-    private String estado; // Podrías usar un Enum si quieres más seguridad de tipos
+    private String estado;
+
+    // Campos visuales
+    private Double posX;
+    private Double posY;
+    private Double width;
+    private Double height;
+    private Double rotation;
+    private String forma;
+    private String tipo;
 
     // Constructor vacío (necesario para Gson/Jackson)
     public MesaDTO() {}
@@ -31,4 +38,19 @@ public class MesaDTO {
                 ", estado='" + estado + '\'' +
                 '}';
     }
+
+     public Double getPosX() { return posX; }
+    public void setPosX(Double posX) { this.posX = posX; }
+    public Double getPosY() { return posY; }
+    public void setPosY(Double posY) { this.posY = posY; }
+    public Double getWidth() { return width; }
+    public void setWidth(Double width) { this.width = width; }
+    public Double getHeight() { return height; }
+    public void setHeight(Double height) { this.height = height; }
+    public Double getRotation() { return rotation; }
+    public void setRotation(Double rotation) { this.rotation = rotation; }
+    public String getForma() { return forma; }
+    public void setForma(String forma) { this.forma = forma; }
+    public String getTipo() { return tipo; }
+    public void setTipo(String tipo) { this.tipo = tipo; }
 }
